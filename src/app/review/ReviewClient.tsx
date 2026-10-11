@@ -66,7 +66,7 @@ export function ReviewClient() {
       </header>
 
       <main className="mx-auto w-full max-w-3xl px-4 sm:px-6">
-        <h1 className="text-3xl font-bold">בדיקת מאגר השאלות</h1>
+        <h1 className="font-display text-3xl font-bold">בדיקת מאגר השאלות</h1>
         <p className="mt-2 leading-relaxed opacity-75">
           עוברים על כל שאלה ומסמנים <b>תקין</b> או <b>לתיקון</b>. אם צריך תיקון, נפתח שדה להערה. הכל
           נשמר בטלפון, אז אפשר לעצור ולחזור. בסוף לוחצים &quot;שליחה בוואטסאפ&quot;.
@@ -78,7 +78,7 @@ export function ReviewClient() {
             value={st.name}
             onChange={(e) => setSt((s) => ({ ...s, name: e.target.value }))}
             placeholder="לא חובה"
-            className="flex-1 rounded-xl border border-line bg-raise px-3 py-2.5"
+            className="flex-1 rounded-xl border border-line bg-white px-3 py-2.5"
           />
         </label>
 
@@ -132,7 +132,7 @@ export function ReviewClient() {
         })}
 
         {filter !== "all" && questions.every((q) => !visible(q)) && (
-          <p className="mt-10 rounded-2xl bg-raise p-6 text-center opacity-70">
+          <p className="mt-10 rounded-2xl bg-white p-6 text-center opacity-70">
             {filter === "open" ? "עברת על כל השאלות." : "אין שאלות שסומנו לתיקון."}
           </p>
         )}
@@ -143,7 +143,7 @@ export function ReviewClient() {
             value={st.general}
             onChange={(e) => setSt((s) => ({ ...s, general: e.target.value }))}
             placeholder="רמת קושי, סוגי שאלות שחסרים, מילים שכדאי להוסיף..."
-            className="mt-3 min-h-32 w-full rounded-2xl border border-line bg-raise p-4"
+            className="mt-3 min-h-32 w-full rounded-2xl border border-line bg-white p-4"
           />
         </section>
       </main>
@@ -174,13 +174,13 @@ function ReviewCard({
     verdict === "ok" ? "border-mint" : verdict === "fix" ? "border-coral" : "border-line";
 
   return (
-    <li className={`rounded-3xl border-2 bg-raise p-4 sm:p-5 ${edge}`}>
-      <div className="flex items-center justify-between text-xs">
-        <code dir="ltr" className="font-semibold opacity-60">
+    <li className={`rounded-3xl border-2 bg-white p-4 sm:p-5 ${edge}`}>
+      <div className="flex items-center justify-between text-sm">
+        <code dir="ltr" className="font-semibold opacity-70">
           {q.id}
         </code>
         {q.type === "reading" && (
-          <span className="opacity-60">
+          <span className="opacity-70">
             {getPassage(q.passageId).title}
             {q.paragraph ? ` · פסקה ${q.paragraph}` : " · כל הקטע"}
           </span>

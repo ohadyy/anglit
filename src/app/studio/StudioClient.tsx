@@ -114,31 +114,34 @@ export function StudioClient() {
             </button>
             <TypeLabel q={q} size="stage" />
           </div>
-          <span dir="ltr" className="text-[3.4cqw] font-medium opacity-60">
+          <span dir="ltr" className="text-[3.4cqw] font-medium opacity-70">
             @{site.handle}
           </span>
         </header>
 
         <main
           className={`min-h-0 overflow-y-auto px-[6cqw] pb-[4cqw] [scrollbar-width:none] ${
-            prefs.safeZone ? "h-[58%] flex-none" : "flex-1"
+            prefs.safeZone ? "h-[58%] flex-none" : "flex flex-1 flex-col"
           }`}
         >
-          <QuestionView
-            key={q.id}
-            q={q}
-            size="stage"
-            selected={selected}
-            revealed={revealed}
-            onSelect={pick}
-            showExplanation={prefs.explanation}
-            showPassage={prefs.passage}
-          />
+          {/* my-auto centers the question in the free space; when it is taller than the frame, it starts at the top and scrolls */}
+          <div className="my-auto w-full">
+            <QuestionView
+              key={q.id}
+              q={q}
+              size="stage"
+              selected={selected}
+              revealed={revealed}
+              onSelect={pick}
+              showExplanation={prefs.explanation}
+              showPassage={prefs.passage}
+            />
+          </div>
         </main>
 
         {!prefs.safeZone && (
           <footer
-            className="px-[6cqw] pt-[3cqw] text-center text-[3.4cqw] opacity-60"
+            className="px-[6cqw] pt-[3cqw] text-center text-[3.4cqw] opacity-70"
             style={{ paddingBottom: "max(6cqw, env(safe-area-inset-bottom))" }}
           >
             {copy.studioTagline}
@@ -161,7 +164,7 @@ export function StudioClient() {
               <button
                 type="button"
                 onClick={() => setSheet(true)}
-                className="flex flex-1 flex-col items-center justify-center rounded-full py-1.5 text-xs font-semibold tabular-nums hover:bg-bg/10"
+                className="flex flex-1 flex-col items-center justify-center rounded-full py-1.5 text-sm font-semibold tabular-nums hover:bg-bg/10"
               >
                 <span dir="ltr" className="text-sm">
                   {i + 1}/{list.length}
@@ -279,7 +282,7 @@ function Settings({
           </button>
         </div>
 
-        <p className="mt-5 text-sm opacity-60">סוג שאלה</p>
+        <p className="mt-5 text-sm opacity-70">סוג שאלה</p>
         <div className="mt-2 flex flex-wrap gap-2">
           {filters.map((f) => (
             <button
@@ -295,7 +298,7 @@ function Settings({
           ))}
         </div>
 
-        <p className="mt-5 text-sm opacity-60">צבעים</p>
+        <p className="mt-5 text-sm opacity-70">צבעים</p>
         <div className="mt-2 grid grid-cols-2 gap-2">
           {(["light", "ink"] as const).map((t) => (
             <button
@@ -323,7 +326,7 @@ function Settings({
           />
         </div>
 
-        <p className="mt-5 text-sm opacity-60">שאלה</p>
+        <p className="mt-5 text-sm opacity-70">שאלה</p>
         <ol className="mt-2 flex flex-col gap-1.5">
           {list.map((x, n) => (
             <li key={x.id}>
@@ -334,7 +337,7 @@ function Settings({
                   n === index ? "border-fg" : "border-line"
                 }`}
               >
-                <span className="w-6 shrink-0 text-sm font-semibold tabular-nums opacity-60">{n + 1}</span>
+                <span className="w-6 shrink-0 text-sm font-semibold tabular-nums opacity-70">{n + 1}</span>
                 <span dir="ltr" className="flex-1 truncate text-left text-sm">
                   {x.stem}
                 </span>
@@ -343,7 +346,7 @@ function Settings({
           ))}
         </ol>
 
-        <p className="mt-6 rounded-2xl bg-raise p-4 text-sm leading-relaxed">
+        <p className="mt-6 rounded-2xl bg-white p-4 text-sm leading-relaxed">
           <b>טיפ לצילום נקי:</b> באייפון, שיתוף ← &quot;הוספה למסך הבית&quot;, ופותחים את הסטודיו מהאייקון.
           ככה אין שורת כתובת בצילום. מחליפים שאלה בהחלקה ימינה ושמאלה, גם כשהכפתורים מוסתרים.
         </p>
@@ -367,7 +370,7 @@ function Switch({
     <label className="flex cursor-pointer items-center gap-3 px-4 py-3">
       <span className="flex-1">
         <span className="block text-sm font-medium">{label}</span>
-        {sub && <span className="block text-xs opacity-60">{sub}</span>}
+        {sub && <span className="block text-sm opacity-70">{sub}</span>}
       </span>
       <input type="checkbox" checked={on} onChange={(e) => set(e.target.checked)} className="peer sr-only" />
       <span

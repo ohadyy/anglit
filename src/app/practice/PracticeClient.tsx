@@ -1,17 +1,148 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { copy } from "@/content/copy";
-import { TYPE_LABELS, type QuestionType } from "@/content/questions";
+import type { Passage, Question, QuestionType } from "@/content/questions";
+import { ALL_TYPES, TYPE_LABELS } from "@/content/questionLabels";
+import { PassageProvider } from "@/components/PassageContext";
 import { QuestionView, TypeLabel } from "@/components/QuestionView";
-import { Wordmark } from "@/components/Logo";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { buildSet, TYPES } from "@/lib/practice";
-import { site } from "@/lib/site";
+import { LockIcon } from "@/components/LockIcon";
 
-export function PracticeClient({ type }: { type?: QuestionType }) {
-  const set = useMemo(() => buildSet(type), [type]);
+export type PracticeMode = QuestionType | "free";
+
+// The server decides what this visitor may see and passes only that: visitors without paid
+// access get the five free questions, and paid access unlocks every question type.
+export type PracticeData = {
+  paid: boolean;
+  /** The five free questions, with the passage they use */
+  free: Question[];
+  /** The questions of the requested type, empty when this visitor may not see them */
+  set: Question[];
+  /** How many questions each type has, for the chooser */
+  counts: Record<QuestionType, number>;
+  passages: Passage[];
+};
+
+export function PracticeClient({ mode, data }: { mode?: PracticeMode; data: PracticeData }) {
+  const { paid, free, set, counts, passages } = data;
+  return (
+    <PassageProvider passages={passages}>
+      {!mode && <TypeChooser paid={paid} counts={counts} />}
+      {mode === "free" && <PracticeSession mode="free" set={free} />}
+      {mode && mode !== "free" && (!paid ? <LockedPractice type={mode} /> : <PracticeSession mode={mode} set={set} />)}
+    </PassageProvider>
+  );
+}
+
+function TypeChooser({ paid, counts }: { paid: boolean; counts: Record<QuestionType, number> }) {
+  return (
+    <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
+      <p className="font-hand text-2xl opacity-70">תרגול חופשי</p>
+      <h1 className="font-display mt-2 text-3xl font-bold sm:text-4xl">בחרו <mark className="pink">סוג שאלה</mark></h1>
+      <p className="mt-3 max-w-xl text-lg leading-relaxed opacity-80">
+        {paid
+          ? "בכל סוג יש הרבה שאלות, בלי לחץ זמן. אחרי כל תשובה תקבלו הסבר, ואפשר לעבור לסוג אחר בכל רגע."
+          : "בחינם אפשר לתרגל 5 שאלות לדוגמה. לתרגול מלא בכל הסוגים יש מסלול בתשלום."}
+      </p>
+
+      <Link
+        href="/practice/words"
+        className="mt-8 flex items-center justify-between rounded-3xl bg-fg p-5 text-bg transition-transform active:scale-[0.98] sm:p-6"
+      >
+        <span>
+          <span className="block text-xl font-bold">שרשרת מילים</span>
+          <span className="mt-1 block text-sm opacity-80">משחק קצר: מילה בעברית, ותשובה באנגלית</span>
+        </span>
+        <span className="text-sm font-semibold">לשחק ←</span>
+      </Link>
+
+      <Link
+        href="/practice/challenge"
+        className="mt-3 flex items-center justify-between rounded-3xl bg-marker p-5 text-ink-deep transition-transform active:scale-[0.98] sm:p-6"
+      >
+        <span>
+          <span className="block text-xl font-bold">אתגר נגד השעון</span>
+          <span className="mt-1 block text-sm opacity-80">12 שניות לשאלה, בלי טעויות — כמה רחוק תגיעו?</span>
+        </span>
+        <span className="text-sm font-semibold">לשחק ←</span>
+      </Link>
+
+      <ul className="mt-4 grid gap-3">
+        {!paid && (
+          <li>
+            <Link
+              href="/practice?type=free"
+              className="group flex items-center justify-between rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-5 transition-colors hover:border-fg/30 sm:p-6"
+            >
+              <span>
+                <span className="block text-xl font-bold">5 שאלות חינם</span>
+                <span className="mt-1 block text-sm opacity-70">מכל הסוגים, עם הסבר לכל תשובה</span>
+              </span>
+              <span className="text-sm font-semibold opacity-70 group-hover:opacity-100">להתחיל ←</span>
+            </Link>
+          </li>
+        )}
+
+        {ALL_TYPES.map((t) => {
+          const card = (
+            <>
+              <span>
+                <span className="block text-xl font-bold">{TYPE_LABELS[t].he}</span>
+                <span dir="ltr" className="mt-1 block text-left text-sm opacity-70">
+                  {TYPE_LABELS[t].en}
+                </span>
+              </span>
+              {paid ? (
+                <span className="text-sm font-semibold tabular-nums opacity-70 group-hover:opacity-100">
+                  {counts[t]} שאלות ←
+                </span>
+              ) : (
+                <span className="flex items-center gap-2 text-sm font-semibold opacity-70">
+                  <LockIcon className="size-4" /> בתשלום
+                </span>
+              )}
+            </>
+          );
+
+          return (
+            <li key={t}>
+              <Link
+                href={paid ? `/practice?type=${t}` : "/pricing"}
+                className="group flex items-center justify-between rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-5 transition-colors hover:border-fg/30 sm:p-6"
+              >
+                {card}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function LockedPractice({ type }: { type: QuestionType }) {
+  return (
+    <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-4 py-16 text-center">
+      <div className="flex size-14 items-center justify-center rounded-full bg-white">
+        <LockIcon />
+      </div>
+      <p className="mt-5 font-hand text-2xl opacity-70">{TYPE_LABELS[type].he}</p>
+      <h1 className="font-display mt-2 text-2xl font-bold">התרגול הזה במסלול בתשלום</h1>
+      <p className="mt-3 leading-relaxed opacity-80">
+        בחינם אפשר לתרגל 5 שאלות לדוגמה מכל הסוגים, עם הסבר מלא לכל תשובה. לתרגול מלא בכל הסוגים יש מסלול בתשלום.
+      </p>
+      <Link href="/pricing" className="mt-8 flex w-full items-center justify-center rounded-full bg-fg px-6 py-4 font-semibold text-bg">
+        לצפייה במסלולים
+      </Link>
+      <Link href="/practice?type=free" className="mt-4 inline-flex min-h-11 items-center text-sm underline opacity-70">
+        לחמש השאלות החינמיות
+      </Link>
+    </div>
+  );
+}
+
+function PracticeSession({ mode, set }: { mode: PracticeMode; set: Question[] }) {
   const [index, setIndex] = useState(0);
   const [picks, setPicks] = useState<(number | null)[]>(() => set.map(() => null));
   const done = index >= set.length;
@@ -49,40 +180,25 @@ export function PracticeClient({ type }: { type?: QuestionType }) {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="mx-auto flex w-full max-w-3xl items-center justify-between gap-4 px-4 pt-4 sm:px-6 sm:pt-5">
-        <Link href="/" aria-label="לעמוד הבית">
-          <Wordmark className="h-6 w-auto" />
+      <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-4 px-4 pt-4 text-sm sm:px-6">
+        <Link href="/practice" className="opacity-70 underline underline-offset-4">
+          כל הסוגים
         </Link>
-        <div className="flex items-center gap-3">
-          {!done && (
-            <span className="text-sm tabular-nums opacity-70">
-              {index + 1} מתוך {set.length}
-            </span>
-          )}
-          <ThemeToggle />
-        </div>
-      </header>
+        {!done && <span className="tabular-nums opacity-70">{index + 1} מתוך {set.length}</span>}
+      </div>
 
       <div className="mx-auto mt-3 w-full max-w-3xl px-4 sm:px-6" aria-hidden>
-        <div className="flex gap-1">
-          {set.map((sq, i) => {
-            const p = picks[i];
-            const tone =
-              p === null
-                ? i === index
-                  ? "bg-fg/50"
-                  : "bg-fg/12"
-                : p === sq.answer
-                  ? "bg-mint"
-                  : "bg-coral";
-            return <span key={sq.id} className={`h-1.5 flex-1 rounded-full transition-colors ${tone}`} />;
-          })}
+        <div className="h-1.5 overflow-hidden rounded-full bg-fg/12">
+          <div
+            className="h-full rounded-full bg-fg transition-[width] duration-300"
+            style={{ width: `${(Math.min(index, set.length) / set.length) * 100}%` }}
+          />
         </div>
       </div>
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-32 pt-6 sm:px-6 sm:pt-8">
         {done ? (
-          <Summary correct={correct} total={set.length} type={type} />
+          <Summary correct={correct} total={set.length} mode={mode} />
         ) : (
           <div key={q.id} className="rise">
             <div className="mb-4">
@@ -95,11 +211,11 @@ export function PracticeClient({ type }: { type?: QuestionType }) {
 
       {!done && (
         <div
-          className="fixed inset-x-0 bottom-0 border-t border-line bg-bg/95 backdrop-blur"
+          className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-bg/95 backdrop-blur"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-            <p className="hidden text-sm opacity-50 sm:block">
+            <p className="hidden text-sm opacity-70 sm:block">
               {revealed ? "Enter לשאלה הבאה" : <>אפשר לענות גם במקשים <bdi dir="ltr">1–4</bdi></>}
             </p>
             <button
@@ -117,11 +233,11 @@ export function PracticeClient({ type }: { type?: QuestionType }) {
   );
 }
 
-function Summary({ correct, total, type }: { correct: number; total: number; type?: QuestionType }) {
-  const others = TYPES.filter((t) => t !== type);
+function Summary({ correct, total, mode }: { correct: number; total: number; mode: PracticeMode }) {
+  const others = ALL_TYPES.filter((t) => t !== mode);
   return (
     <div className="rise">
-      <p className="text-sm opacity-60">סיימתם את התרגול</p>
+      <p className="font-hand text-2xl opacity-70">סיימתם את התרגול</p>
       <p className="mt-2 text-6xl font-bold tabular-nums">
         {correct}
         <span className="opacity-40">/{total}</span>
@@ -131,24 +247,19 @@ function Summary({ correct, total, type }: { correct: number; total: number; typ
           ? "מושלם. עכשיו נשאר רק לשמור על זה בזמן אמת."
           : correct >= total * 0.7
             ? "בסיס טוב. בשבוע של עבודה ממוקדת סוגרים את הפער."
-            : "יש לאן לעלות, ובשביל זה בדיוק בנינו את השבוע."}
+            : "אם אתם רוצים לענות נכון על כל השאלות בזמן אמת, אנחנו מזמינים אתכם להצטרף למחזור הקרוב של \"7 ימים לאמירנט\"."}
       </p>
 
       <div data-invert="" className="mt-10 rounded-3xl p-6 sm:p-8">
         <h2 className="text-2xl font-bold">{copy.practiceEndTitle}</h2>
         <p className="mt-2 opacity-80">{copy.practiceEndText}</p>
-        <a
-          href={site.instagramUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-5 inline-flex rounded-full bg-fg px-6 py-3.5 font-semibold text-bg"
-        >
+        <Link href="/sign-up" className="mt-5 inline-flex rounded-full bg-fg px-6 py-3.5 font-semibold text-bg">
           {copy.practiceEndCta}
-        </a>
+        </Link>
       </div>
 
       <div className="mt-8">
-        <p className="text-sm opacity-60">תרגול נוסף לפי סוג שאלה</p>
+        <p className="text-sm opacity-70">תרגול נוסף לפי סוג שאלה</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {others.map((t) => (
             <a

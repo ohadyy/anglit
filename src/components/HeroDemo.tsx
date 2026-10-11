@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { questions } from "@/content/questions";
+import type { Question } from "@/content/questions";
 import { QuestionView, TypeLabel } from "./QuestionView";
 import { site } from "@/lib/site";
 
-const demo = questions.find((q) => q.id === "sc-05")!;
-
-// A live question in the hero, inverted against the page theme
-export function HeroDemo() {
+// A live question in the hero, inverted against the page theme. The page passes the question in,
+// so this client component does not carry the whole question bank.
+export function HeroDemo({ q: demo }: { q: Question }) {
   const [selected, setSelected] = useState<number | null>(null);
   const revealed = selected !== null;
 
@@ -20,7 +19,7 @@ export function HeroDemo() {
     >
       <div className="mb-5 flex items-center justify-between gap-3">
         <TypeLabel q={demo} />
-        <span className="text-xs opacity-50">{revealed ? "ככה עובדים" : "נסו לענות"}</span>
+        <span className="text-sm opacity-70">{revealed ? "ככה עובדים" : "נסו לענות"}</span>
       </div>
       <QuestionView q={demo} selected={selected} revealed={revealed} onSelect={setSelected} />
       {revealed && (

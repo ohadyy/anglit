@@ -1,0 +1,46 @@
+import Image from "next/image";
+import type { ReactNode } from "react";
+
+// Shared frame for sign-in and sign-up: a centered card, with one small dachshund
+// on the side on large screens. Shapes come from the brand graphics kit.
+export function AuthShell({
+  children,
+  leftPose,
+}: {
+  children: ReactNode;
+  leftPose: string;
+}) {
+  return (
+    <div className="relative flex min-h-dvh flex-col overflow-hidden">
+      {/* The site header (logo, links) is already rendered by SiteChrome, so no second header here */}
+      <main className="relative flex flex-1 items-center justify-center px-4 pb-16">
+        {/* Decorative shapes, aria-hidden and not interactive */}
+        <svg aria-hidden viewBox="0 0 100 100" className="pointer-events-none absolute start-[12%] top-[14%] hidden size-14 text-marker md:block">
+          <path fill="currentColor" d="M50 0C54 36 64 46 100 50C64 54 54 64 50 100C46 64 36 54 0 50C36 46 46 36 50 0Z" />
+        </svg>
+        <svg aria-hidden viewBox="0 0 100 100" className="pointer-events-none absolute end-[14%] top-[18%] hidden size-10 text-fg md:block">
+          <path fill="currentColor" stroke="currentColor" strokeWidth="8" strokeLinejoin="round" d="M40 4H60V36H96V64H60V96H40V64H4V36H40Z" />
+        </svg>
+        <svg aria-hidden viewBox="0 0 100 100" className="pointer-events-none absolute start-[16%] bottom-[16%] hidden size-16 text-fg md:block">
+          <path d="M12 88A40 40 0 0 1 88 88" fill="none" stroke="currentColor" strokeWidth="18" strokeLinecap="round" />
+        </svg>
+        <svg aria-hidden viewBox="0 0 120 24" className="pointer-events-none absolute end-[12%] bottom-[22%] hidden w-28 text-marker md:block">
+          <path d="M2 16c10-10 20-10 30 0s20 10 30 0 20-10 30 0 20 10 26 2" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+
+        {/* One small dachshund, large screens only */}
+        <Image
+          src={leftPose}
+          alt=""
+          width={1168}
+          height={880}
+          aria-hidden
+          className="account-enter pointer-events-none absolute start-[3%] bottom-[10%] hidden w-[260px] lg:block xl:w-[300px]"
+          style={{ "--delay": "120ms" } as React.CSSProperties}
+        />
+
+        <div className="relative z-10 w-full max-w-md">{children}</div>
+      </main>
+    </div>
+  );
+}

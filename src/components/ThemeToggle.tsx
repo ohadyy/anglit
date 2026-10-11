@@ -11,7 +11,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       onClick={toggle}
       aria-label={`מעבר ל${next}`}
       title={next}
-      className={`grid size-10 place-items-center rounded-full border border-line hover:bg-fg/5 ${className}`}
+      className={`grid size-11 place-items-center rounded-full border border-line hover:bg-fg/5 ${className}`}
     >
       {/* Half-filled circle: the two themes side by side */}
       <svg viewBox="0 0 24 24" className="size-5" aria-hidden>

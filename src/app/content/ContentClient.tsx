@@ -64,7 +64,7 @@ export function ContentClient() {
       </header>
 
       <main className="mx-auto w-full max-w-3xl px-4 sm:px-6">
-        <h1 className="text-3xl font-bold">טקסטים לאתר</h1>
+        <h1 className="font-display text-3xl font-bold">טקסטים לאתר</h1>
         <p className="mt-2 leading-relaxed opacity-75">
           לכל טקסט באתר יש את מה שכתוב היום ושתי הצעות. לוחצים על הנוסח שאהבת, ואם אף אחד לא מתאים,
           כותבים נוסח משלך. הבחירות נשמרות בטלפון. בסוף לוחצים &quot;שליחה בוואטסאפ&quot;.
@@ -83,7 +83,7 @@ export function ContentClient() {
             value={st.name}
             onChange={(e) => setSt((s) => ({ ...s, name: e.target.value }))}
             placeholder="לא חובה"
-            className="flex-1 rounded-xl border border-line bg-raise px-3 py-2.5"
+            className="flex-1 rounded-xl border border-line bg-white px-3 py-2.5"
           />
         </label>
 
@@ -111,7 +111,7 @@ export function ContentClient() {
             value={st.general}
             onChange={(e) => setSt((s) => ({ ...s, general: e.target.value }))}
             placeholder="טון, מילים שאתה לא אוהב, מה באמת קורה בכל יום בשבוע, דברים שחסרים..."
-            className="mt-3 min-h-32 w-full rounded-2xl border border-line bg-raise p-4"
+            className="mt-3 min-h-32 w-full rounded-2xl border border-line bg-white p-4"
           />
         </section>
       </main>
@@ -145,7 +145,7 @@ function Row({
   ];
 
   return (
-    <fieldset className="rounded-3xl border border-line bg-raise p-4 sm:p-5">
+    <fieldset className="rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-4 sm:p-5">
       <legend className="sr-only">{row.label}</legend>
       <p className="font-semibold">{row.label}</p>
       {row.note && (
@@ -168,7 +168,7 @@ function Row({
               className="mt-1 size-4 shrink-0 accent-[var(--fg)]"
             />
             <span className="flex flex-col gap-0.5">
-              <span className="text-xs opacity-60">{label}</span>
+              <span className="text-sm opacity-70">{label}</span>
               <span className="leading-snug">{text}</span>
             </span>
           </label>

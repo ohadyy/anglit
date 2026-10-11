@@ -48,12 +48,12 @@ export function FeedbackBar({
     <>
       {text !== null && (
         <div className="mx-auto mt-10 w-full max-w-3xl px-4 sm:px-6">
-          <p className="mb-2 text-sm opacity-60">זה מה שנשלח:</p>
+          <p className="mb-2 text-sm opacity-70">זה מה שנשלח:</p>
           <textarea
             ref={boxRef}
             readOnly
             value={text}
-            className="h-56 w-full rounded-2xl border border-line bg-raise p-4 text-sm leading-relaxed"
+            className="h-56 w-full rounded-2xl border border-line bg-white p-4 text-sm leading-relaxed"
           />
         </div>
       )}
@@ -62,7 +62,7 @@ export function FeedbackBar({
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-2 px-4 py-3 sm:px-6">
-          <p className="w-full text-center text-xs opacity-60 sm:w-auto sm:flex-1 sm:text-start">
+          <p className="w-full text-center text-sm opacity-70 sm:w-auto sm:flex-1 sm:text-start">
             {status}
           </p>
           <button
@@ -82,7 +82,7 @@ export function FeedbackBar({
           <button
             type="button"
             onClick={reset}
-            className="rounded-full px-3 py-3 text-sm opacity-60 hover:opacity-100"
+            className="rounded-full px-3 py-3 text-sm opacity-70 hover:opacity-100"
           >
             איפוס
           </button>

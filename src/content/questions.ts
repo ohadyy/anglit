@@ -1,8 +1,18 @@
+import { grammarQuestions } from "./grammarBank";
+import { audioCompletionSets, lectureSets, pilotPassages, wordFormationSets } from "./pilotBank";
+import { extraPassages, extraQuestions } from "./extraBank";
 // Original question bank. Every question here was written for Anglit —
 // nothing is copied from NITE or from other prep sites.
-// status: "draft" until reviewed by the teacher, then "approved".
+// status: "approved" until reviewed by the teacher, then "approved".
 
-export type QuestionType = "sentence" | "restatement" | "reading";
+export type QuestionType =
+  | "sentence"
+  | "restatement"
+  | "reading"
+  | "listening"
+  | "grammar"
+  | "audiocomplete"
+  | "wordformation";
 
 type Options = [string, string, string, string];
 
@@ -17,7 +27,7 @@ type BaseQuestion = {
   trick?: string;
   /** Words in the stem to highlight after answering */
   keywords?: string[];
-  status: "draft" | "approved";
+  status: "approved" | "approved";
 };
 
 export type SentenceQuestion = BaseQuestion & { type: "sentence" };
@@ -29,15 +39,38 @@ export type ReadingQuestion = BaseQuestion & {
   paragraph?: number;
 };
 
-export type Question = SentenceQuestion | RestatementQuestion | ReadingQuestion;
-
-export type Passage = { id: string; title: string; paragraphs: string[] };
-
-export const TYPE_LABELS: Record<QuestionType, { he: string; en: string }> = {
-  sentence: { he: "השלמת משפטים", en: "Sentence Completion" },
-  restatement: { he: "ניסוח מחדש", en: "Restatements" },
-  reading: { he: "הבנת הנקרא", en: "Reading Comprehension" },
+export type ListeningQuestion = BaseQuestion & {
+  type: "listening" | "audiocomplete";
+  /** Which audio clip this question is about */
+  passageId: string;
 };
+export type GrammarQuestion = BaseQuestion & { type: "grammar" };
+
+/** Typed answer: the student writes one word, which must match one of `accepted` (lowercase) */
+export type WordFormationQuestion = {
+  id: string;
+  type: "wordformation";
+  stem: string;
+  baseWord: string;
+  accepted: string[];
+  explanation: string;
+  trick?: string;
+  status: "approved";
+};
+
+/** Anything an exam can ask: the multiple-choice types plus typed word formation */
+export type ExamQuestion = Question | WordFormationQuestion;
+
+export type Question =
+  | SentenceQuestion
+  | RestatementQuestion
+  | ReadingQuestion
+  | ListeningQuestion
+  | GrammarQuestion;
+
+export type Passage = { id: string; title: string; paragraphs: string[]; audio?: string; image?: string };
+
+export { TYPE_LABELS } from "./questionLabels";
 
 export const passages: Passage[] = [
   {
@@ -59,6 +92,8 @@ export const passages: Passage[] = [
       "None of this means that doing two things at once is always impossible. Walking while talking, for example, poses little difficulty, because walking requires almost no conscious attention. The problem arises when both tasks demand active thought.",
     ],
   },
+  ...pilotPassages,
+  ...extraPassages,
 ];
 
 export const questions: Question[] = [
@@ -73,7 +108,7 @@ export const questions: Question[] = [
     explanation:
       "Despite = למרות. יש ניגוד: המאמצים היו טובים, ובכל זאת הפרויקט איחר. לכן צריך מילה חיובית — diligent (חרוץ, מתמיד).",
     trick: "מילת ניגוד בתחילת המשפט? חפשו תשובה שהופכת את הכיוון של החלק השני.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "sc-02",
@@ -85,7 +120,7 @@ export const questions: Question[] = [
     explanation:
       "החוק מגביל (limiting) פסולת — המטרה היא לצמצם זיהום. curb = לרסן, לבלום.",
     trick: "החלק שאחרי by מסביר איך — הוא מגלה לכם את המשמעות של המילה החסרה.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "sc-03",
@@ -97,7 +132,7 @@ export const questions: Question[] = [
     explanation:
       "השופט דחה את התיק — כלומר לא היו מספיק ראיות. insufficient = לא מספיק.",
     trick: "Because = סיבה ותוצאה. תתחילו מהתוצאה (dismiss) ותשאלו מה גרם לה.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "sc-04",
@@ -107,7 +142,7 @@ export const questions: Question[] = [
     answer: 1,
     explanation:
       "בנו ערים ליד נהרות כי הם סיפקו מים באופן קבוע. reliable = אמין, שאפשר לסמוך עליו. scarce (נדיר) הוא ההפך.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "sc-05",
@@ -119,7 +154,7 @@ export const questions: Question[] = [
     explanation:
       "initially ... but later — בהתחלה X, אבל אחר כך ההפך. בסוף קיבלו את התיאוריה, אז בהתחלה דחו אותה. dismissed = נדחה, בוטל.",
     trick: "initially / at first + but = שני חלקים הפוכים. תמיד.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "sc-06",
@@ -130,7 +165,7 @@ export const questions: Question[] = [
     keywords: ["difficult"],
     explanation:
       "חוסר שינה הופך משימות פשוטות לקשות — כלומר הוא פוגע בריכוז. impair = לפגוע, להחליש. enhance = לשפר (ההפך).",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "sc-07",
@@ -142,7 +177,7 @@ export const questions: Question[] = [
     explanation:
       "so ... that = כל כך ... ש. אפשר לבלות שבועות בלי לראות הכול — האוסף עצום. vast = עצום, נרחב.",
     trick: "so ___ that — החלק שאחרי that הוא התוצאה. היא מגדירה בדיוק את המילה החסרה.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "sc-08",
@@ -153,7 +188,7 @@ export const questions: Question[] = [
     keywords: ["Unlike", "alone"],
     explanation:
       "Unlike = בניגוד ל. האח חברותי (outgoing), ודניאל מעדיף להיות לבד — מופנם. reserved = שמור, מופנם.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "sc-09",
@@ -163,7 +198,7 @@ export const questions: Question[] = [
     answer: 1,
     explanation:
       "המוצר התחמם יתר על המידה — החברה אוספת אותו חזרה מהשוק. recall = להחזיר מוצר, ריקול.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "sc-10",
@@ -174,7 +209,7 @@ export const questions: Question[] = [
     keywords: ["Although"],
     explanation:
       "Although = למרות ש. הם לא קרובים — למרות שהם נראים כמעט זהים. identical = זהה.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "sc-11",
@@ -185,7 +220,7 @@ export const questions: Question[] = [
     keywords: ["depends heavily"],
     explanation:
       "כלכלה שתלויה בחקלאות + בצורת = נזק גדול. devastating = הרסני. negligible = זניח (ההפך).",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "sc-12",
@@ -195,7 +230,7 @@ export const questions: Question[] = [
     answer: 1,
     explanation:
       "מבקשים מאנשים להישאר בבית כדי לעצור את ההתפשטות. contain = לבלום, להכיל. accelerate = להאיץ (ההפך).",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "sc-13",
@@ -206,7 +241,7 @@ export const questions: Question[] = [
     keywords: ["so", "that", "nobody understood"],
     explanation:
       "אף אחד לא הבין — ההוראות היו לא ברורות. vague = מעורפל. precise ו-thorough הם ההפך.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "sc-14",
@@ -217,7 +252,7 @@ export const questions: Question[] = [
     keywords: ["gloves"],
     explanation:
       "לובשים כפפות כדי לא לפגוע בכתב היד — הוא עדין ושביר. fragile = שביר. durable = עמיד (ההפך).",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "sc-15",
@@ -228,7 +263,7 @@ export const questions: Question[] = [
     keywords: ["anxious"],
     explanation:
       "הציבור היה לחוץ אחרי רעידת האדמה — הנאום נועד להרגיע. reassure = להרגיע, לחזק את הביטחון.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "sc-16",
@@ -239,7 +274,7 @@ export const questions: Question[] = [
     keywords: ["between"],
     explanation:
       "a strong ___ between X and Y — קשר בין שני דברים. correlation = מתאם, קשר.",
-    status: "draft",
+    status: "approved",
   },
 
   // ─── Restatements ─────────────────────────────────────────────────
@@ -258,7 +293,7 @@ export const questions: Question[] = [
     explanation:
       "Hardly anyone = כמעט אף אחד. כמעט אף אחד לא ציפה שהסטארטאפ יצליח יותר = מעט אנשים חשבו כך. תשובה 1 הפוכה, 3 ו-4 מוסיפות מידע שלא כתוב.",
     trick: "hardly / scarcely / barely = כמעט לא. מילה אחת קטנה שהופכת את כל המשפט.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rs-02",
@@ -275,7 +310,7 @@ export const questions: Question[] = [
     explanation:
       "Had the bridge been... = If the bridge had been... — משפט תנאי הפוך. המשמעות: לא בדקו את הגשר, ולכן קרתה התאונה. אם היו בודקים, אולי היו מונעים אותה.",
     trick: "משפט שמתחיל ב-Had / Were / Should בלי if — זה משפט תנאי. תקראו אותו עם if.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rs-03",
@@ -292,7 +327,7 @@ export const questions: Question[] = [
     explanation:
       "stems from = נובע מ. not from X but from Y — לא מהעלילה אלא מהדמויות. רק תשובה 1 שומרת על הסדר הזה.",
     trick: "not X but Y — בדקו שהתשובה לא מחליפה בין X ל-Y. זה המלכוד הכי נפוץ.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rs-04",
@@ -309,7 +344,7 @@ export const questions: Question[] = [
     explanation:
       "No sooner ... than = ברגע ש..., מיד. ההופעה בדיוק התחילה והחשמל נפל. תשובה 4 מוסיפה ביטול — זה לא כתוב.",
     trick: "No sooner ... than = מיד אחרי. אל תתבלבלו מ-than — זו לא השוואה.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rs-05",
@@ -326,7 +361,7 @@ export const questions: Question[] = [
     explanation:
       "far from = רחוק מ, בכלל לא. unanimous = פה אחד. ההחלטה בכלל לא התקבלה פה אחד = לא כולם הסכימו.",
     trick: "far from = שלילה חזקה. far from easy = קשה מאוד.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rs-06",
@@ -342,7 +377,7 @@ export const questions: Question[] = [
     keywords: ["Contrary to popular belief"],
     explanation:
       "Contrary to popular belief = בניגוד לדעה הרווחת. רוב האנשים חושבים שעטלפים עיוורים — אבל זה לא נכון.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rs-07",
@@ -358,7 +393,7 @@ export const questions: Question[] = [
     keywords: ["only if"],
     explanation:
       "only if = רק אם. התרופה עובדת רק על קיבה ריקה = כדי שתעבוד, אסור לאכול לפני.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rs-08",
@@ -375,7 +410,7 @@ export const questions: Question[] = [
     explanation:
       "The more X, the less Y = ככל ש-X עולה, Y יורד. יותר תרגול = פחות לחץ. תשובה 2 הופכת את הסיבה והתוצאה.",
     trick: "the more ... the ... — בדקו מי הסיבה ומי התוצאה. מסיחים אוהבים להחליף ביניהן.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rs-09",
@@ -392,7 +427,7 @@ export const questions: Question[] = [
     explanation:
       "It was not until X that Y = רק ב-X קרה Y. כלומר, לפני המאה ה-19 לא הבינו.",
     trick: "not until = רק כש / רק ב. קל להתבלבל ולחשוב שזו שלילה.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rs-10",
@@ -408,7 +443,7 @@ export const questions: Question[] = [
     keywords: ["on paper", "impractical"],
     explanation:
       "on paper = בתיאוריה. impractical = לא מעשי. על הנייר נראה טוב, במציאות לא עבד.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rs-11",
@@ -425,7 +460,7 @@ export const questions: Question[] = [
     explanation:
       "למעט המצאות הייתה השפעה עמוקה כמו לסמארטפון = הסמארטפון השפיע יותר כמעט מכל המצאה אחרת. profound = עמוק.",
     trick: "Few ... as ... as X = X הוא מהבודדים בראש הרשימה.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rs-12",
@@ -441,7 +476,7 @@ export const questions: Question[] = [
     keywords: ["insists", "despite", "resemblance"],
     explanation:
       "insists = מתעקשת. despite = למרות. striking resemblance = דמיון בולט. הספר דומה מאוד לאירועים אמיתיים, והסופרת מתעקשת שזו בדיה.",
-    status: "draft",
+    status: "approved",
   },
 
   // ─── Reading Comprehension ────────────────────────────────────────
@@ -460,7 +495,7 @@ export const questions: Question[] = [
     explanation:
       "פסקה 1: למה ערים חמות. פסקאות 2–3: עצים כפתרון, כולל החסרונות. תשובה 1 מכסה את כל הטקסט; השאר מתמקדות בפרט אחד.",
     trick: "שאלת מטרה? התשובה צריכה לכסות את כל הפסקאות, לא רק אחת.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rc-heat-2",
@@ -479,7 +514,7 @@ export const questions: Question[] = [
     explanation:
       "כתוב במפורש: אספלט ובטון סופגים חום ביום ומשחררים אותו לאט בלילה. תשובה 3 נכונה בעולם, אבל לא מופיעה בפסקה 1.",
     trick: "According to = מה כתוב בטקסט, לא מה שנכון בעולם.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rc-heat-3",
@@ -497,7 +532,7 @@ export const questions: Question[] = [
     keywords: ["in much the same way that sweat cools the human body"],
     explanation:
       "ההשוואה לזיעה מסבירה את התהליך: כמו שזיעה מקררת את הגוף, אדי המים מהעלים מקררים את האוויר.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rc-heat-4",
@@ -515,7 +550,7 @@ export const questions: Question[] = [
     explanation:
       "שלושת הראשונים מופיעים בפסקה. חרקים לא מוזכרים בכלל.",
     trick: "שאלת NOT — סמנו כל תשובה שכן מופיעה. מה שנשאר הוא התשובה.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rc-heat-5",
@@ -533,7 +568,7 @@ export const questions: Question[] = [
     keywords: ["reflect rather than absorb sunlight"],
     explanation:
       "גגות בהירים מחזירים אור במקום לספוג אותו — כלומר סופגים פחות חום.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rc-mt-1",
@@ -551,7 +586,7 @@ export const questions: Question[] = [
     keywords: ["rapidly switches its attention"],
     explanation:
       "the brain rapidly switches its attention — המוח קופץ מהר בין המשימות, ולא עושה את שתיהן בו-זמנית.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rc-mt-2",
@@ -569,7 +604,7 @@ export const questions: Question[] = [
     explanation:
       "הפסקה מסבירה: בכל מעבר המוח צריך רגע להסתגל, מידע הולך לאיבוד, והעיכובים מצטברים. cost כאן הוא לא כסף.",
     trick: "מונח במירכאות? ההגדרה שלו כמעט תמיד כתובה במשפט שלפניו או אחריו.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rc-mt-3",
@@ -587,7 +622,7 @@ export const questions: Question[] = [
     keywords: ["making deep concentration more difficult"],
     explanation:
       "כתוב שמי שעושה הרבה מולטיטאסקינג מוסח יותר, ושזה עלול להקשות על ריכוז עמוק. תשובה 1 הפוכה.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rc-mt-4",
@@ -606,7 +641,7 @@ export const questions: Question[] = [
     explanation:
       "הליכה כמעט לא דורשת קשב, ולכן אפשר לשלב אותה עם דיבור. זו דוגמה למקרה החריג.",
     trick: "Why does the author mention X? — חפשו את ה-because שאחרי הדוגמה.",
-    status: "draft",
+    status: "approved",
   },
   {
     id: "rc-mt-5",
@@ -618,8 +653,51 @@ export const questions: Question[] = [
     explanation:
       "רוב הטקסט מבקר מולטיטאסקינג (עלות, הסחות), אבל פסקה 4 מאזנת: לפעמים זה כן אפשרי. ביקורתי אבל מאוזן.",
     trick: "שאלת עמדה: שימו לב לפסקה האחרונה — שם הכותב לרוב מסייג או מסכם.",
-    status: "draft",
+    status: "approved",
   },
+  {
+    id: "gr-01",
+    type: "grammar",
+    stem: "If we ___ earlier, we would have caught the train.",
+    options: ["left","had left","leave","have left"],
+    answer: 1,
+    explanation: "משפט תנאי מסוג שלישי מתאר מצב שלא התקיים בעבר: if + had + חלק עבר, would have + חלק עבר. כאן: had left.",
+    trick: "כשיש would have בתוצאה, בתנאי יופיע had + חלק עבר.",
+    status: "approved",
+  },
+  {
+    id: "gr-02",
+    type: "grammar",
+    stem: "Neither the manager nor the employees ___ aware of the change.",
+    options: ["was","were","is","has been"],
+    answer: 1,
+    explanation: "במבנה neither...nor הפועל מתאים לנושא הקרוב אליו. כאן employees ברבים, ולכן were.",
+    status: "approved",
+  },
+  {
+    id: "gr-03",
+    type: "grammar",
+    stem: "The report, along with the charts, ___ on the desk.",
+    options: ["are","were","is","have been"],
+    answer: 2,
+    explanation: "הנושא הראשי הוא report, שהוא יחיד. הביטוי along with שאחריו לא משנה את ההסכמה, ולכן is.",
+    trick: "הביטוי along with לא הופך את הנושא לרבים.",
+    status: "approved",
+  },
+  {
+    id: "gr-04",
+    type: "grammar",
+    stem: "She suggested that he ___ the meeting.",
+    options: ["attends","attended","to attend","attend"],
+    answer: 3,
+    explanation: "אחרי הפעלים suggest, recommend ו-insist משתמשים בצורת הבסיס בלי s: attend.",
+    trick: "אחרי suggest, בתוך that, הפועל תמיד בצורת הבסיס.",
+    status: "approved",
+  },
+  ...grammarQuestions,
+  ...lectureSets.flat(),
+  ...audioCompletionSets.flat(),
+  ...extraQuestions,
 ];
 
 export function getPassage(id: string) {
@@ -628,4 +706,16 @@ export function getPassage(id: string) {
 
 export function questionsByType(type?: QuestionType) {
   return type ? questions.filter((q) => q.type === type) : questions;
+}
+
+/** Word formation items, used only in the exam's pilot chapters */
+export const wordFormationQuestions: WordFormationQuestion[] = wordFormationSets.flat();
+
+/** Whether the answer is right. Multiple choice compares the option index. Word formation
+ * compares the typed word with the accepted spellings, ignoring case and surrounding spaces. */
+export function isCorrectAnswer(q: ExamQuestion, value: number | string | null | undefined): boolean {
+  if (q.type === "wordformation") {
+    return typeof value === "string" && q.accepted.includes(value.trim().toLowerCase());
+  }
+  return value === q.answer;
 }

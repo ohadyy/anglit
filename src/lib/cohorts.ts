@@ -1,0 +1,78 @@
+import { and, count, eq, gt } from "drizzle-orm";
+import { db } from "@/db";
+import { cohorts, enrollments } from "@/db/schema";
+
+// The sessions every cohort follows. Shown to the student in the confirmation message.
+export { COHORT_SESSIONS } from "@/content/cohortSchedule";
+
+const dateFormat = new Intl.DateTimeFormat("he-IL", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "Asia/Jerusalem",
+});
+
+export function formatCohortDate(date: Date) {
+  return dateFormat.format(date);
+}
+
+/** Open cohorts with the number of free seats, and the cohort this student already joined */
+export async function cohortOptionsFor(userId: string) {
+  const open = await db.select().from(cohorts).where(eq(cohorts.status, "upcoming")).orderBy(cohorts.startDate);
+
+  const taken = await db
+    .select({ cohortId: enrollments.cohortId, n: count() })
+    .from(enrollments)
+    .groupBy(enrollments.cohortId);
+  const takenById = new Map(taken.map((row) => [row.cohortId, Number(row.n)]));
+
+  const [mine] = await db
+    .select({ cohortId: enrollments.cohortId })
+    .from(enrollments)
+    .where(eq(enrollments.userId, userId))
+    .limit(1);
+
+  const joined = mine ? await db.select().from(cohorts).where(eq(cohorts.id, mine.cohortId)).limit(1) : [];
+
+  return {
+    options: open.map((c) => ({
+      id: c.id,
+      label: formatCohortDate(c.startDate),
+      seatsLeft: Math.max(0, c.capacity - (takenById.get(c.id) ?? 0)),
+    })),
+    joinedLabel: joined[0] ? formatCohortDate(joined[0].startDate) : null,
+  };
+}
+
+// Course prices. 347 is the regular price. 49 applies only to the next cohort that has
+// not started yet, while it still has seats, and it ends when that cohort starts.
+export const COURSE_PRICE_ILS = 347;
+export const UPCOMING_COHORT_PRICE_ILS = 49;
+
+export type CourseOffer = {
+  cohortId: string;
+  label: string;
+  seatsLeft: number;
+  priceIls: number;
+};
+
+export async function upcomingCourseOffer(): Promise<CourseOffer | null> {
+  const [next] = await db
+    .select()
+    .from(cohorts)
+    .where(and(eq(cohorts.status, "upcoming"), gt(cohorts.startDate, new Date())))
+    .orderBy(cohorts.startDate)
+    .limit(1);
+  if (!next) return null;
+
+  const [taken] = await db.select({ n: count() }).from(enrollments).where(eq(enrollments.cohortId, next.id));
+  const seatsLeft = Math.max(0, next.capacity - Number(taken?.n ?? 0));
+  if (seatsLeft === 0) return null;
+
+  return {
+    cohortId: next.id,
+    label: formatCohortDate(next.startDate),
+    seatsLeft,
+    priceIls: UPCOMING_COHORT_PRICE_ILS,
+  };
+}

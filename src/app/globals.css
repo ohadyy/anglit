@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+
 /* `ink:` variant — styles that apply under the blue theme */
 @custom-variant ink (&:where([data-theme="ink"], [data-theme="ink"] *));
 
@@ -20,7 +21,7 @@
   --line: rgb(25 16 127 / 0.14);
   --ok: #0f7a4f;
   --warn: #b3261e;
-  --mark: #ffe45c;
+  --mark: #ee478c;
 }
 
 [data-theme="ink"],
@@ -32,7 +33,7 @@
   --line: rgb(228 228 228 / 0.16);
   --ok: #5be3a8;
   --warn: #ff9d90;
-  --mark: rgb(255 228 92 / 0.55);
+  --mark: rgb(238 71 140 / 0.55);
 }
 
 [data-invert] {
@@ -59,20 +60,77 @@
   /* Answer feedback — same in both themes, always with ink-deep text */
   --color-mint: #5be3a8;
   --color-coral: #ff7d6e;
-  --color-marker: #ffe45c;
+  --color-marker: #ee478c;
+
+  /* Trial accent — PANTONE P 73-7 C */
+  --color-hot-pink: #ee478c;
 
   --font-sans: var(--font-google-sans), system-ui, sans-serif;
+  --font-gevora: var(--font-gevora-face), var(--font-sans);
+  --font-display: var(--font-rubik), var(--font-sans);
+  --font-hand: var(--font-gadi-almog), var(--font-sans);
 }
 
 html {
-  background: var(--bg);
   color: var(--fg);
+  background: var(--bg);
+  /* The theme is switched manually via data-theme, never by the OS. Pinning
+     color-scheme stops the phone's own dark/light mode from re-coloring
+     native bits (scrollbars, form controls) against our own palette. */
+  color-scheme: light;
+}
+
+[data-theme="ink"] {
+  color-scheme: dark;
 }
 
 body {
   font-family: var(--font-sans);
   font-optical-sizing: auto;
   -webkit-tap-highlight-color: transparent;
+}
+
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+  }
+}
+
+/* Flip card: the back face is pre-rotated, both faces share one grid cell so the card keeps the taller height */
+.flip-card {
+  perspective: 1400px;
+}
+
+.flip-inner {
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.flip-card[data-flipped="true"] .flip-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-face {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.flip-face-back {
+  transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flip-inner {
+    transition: none;
+  }
+}
+
+.font-hand {
+  font-family: var(--font-hand);
 }
 
 ::selection {
@@ -93,6 +151,50 @@ mark.kw {
   border-radius: 2px;
 }
 
+/* Trial: same marker stroke, in hot pink, for headline emphasis */
+mark.pink {
+  background: linear-gradient(to top, var(--color-hot-pink) 0, var(--color-hot-pink) 42%, transparent 42%);
+  color: inherit;
+  padding: 0 0.08em;
+  border-radius: 2px;
+}
+
+/* Soft mesh-gradient + grain backdrop for hero sections — brand ink tones only */
+.hero-mesh {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(to bottom, transparent 65%, var(--bg) 100%),
+    radial-gradient(circle at 12% 12%, color-mix(in srgb, var(--fg) 32%, transparent), transparent 55%),
+    radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--fg) 22%, transparent), transparent 50%),
+    radial-gradient(circle at 50% 108%, color-mix(in srgb, var(--fg) 26%, transparent), transparent 62%),
+    radial-gradient(circle at 92% 92%, color-mix(in srgb, var(--fg) 16%, transparent), transparent 45%),
+    var(--bg);
+}
+
+.hero-mesh::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  opacity: 0.22;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* Same grain, very faint, over the whole page — so the hero doesn't feel like a
+   different surface bolted onto a flat rest-of-page. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+}
+
 @keyframes rise {
   from {
     opacity: 0;
@@ -105,11 +207,350 @@ mark.kw {
 }
 
 .rise {
-  animation: rise 320ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* `enter` is `rise` without the forward fill, so hover transforms still work after it ends */
+.enter {
+  animation: rise 740ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes reveal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Scroll-linked reveals: content is visible by default and only animates where the browser can drive it from scroll */
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 55%;
+  }
+
+  .reveal-fade {
+    animation: reveal-fade linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 45%;
+  }
+}
+
+@keyframes mascot-land {
+  from {
+    opacity: 0;
+    transform: translateY(14px) rotate(-5deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes mascot-bob {
+  0%,
+  100% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(4deg);
+  }
+}
+
+.mascot-land {
+  animation: mascot-land 900ms cubic-bezier(0.22, 1, 0.36, 1) 480ms both;
+  transform-origin: 50% 100%;
+}
+
+.mascot-tilt {
+  transform-origin: 50% 100%;
+  transition: transform 560ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mascot-bob {
+  animation: mascot-bob 3.6s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .group:hover .mascot-tilt {
+    transform: rotate(-5deg);
+  }
+
+  .lift {
+    transition: transform 420ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 420ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .lift:hover {
+    transform: translateY(-3px);
+  }
+}
+
+@layer components {
+  button:not(:disabled),
+  a.rounded-full {
+    transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  button:not(:disabled):active,
+  a.rounded-full:active {
+    transform: scale(0.97);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rise {
+  .rise,
+  .enter {
+    animation: none;
+  }
+
+  .reveal,
+  .reveal-fade,
+  .mascot-bob {
+    animation: none;
+  }
+
+  .mascot-land {
+    animation: reveal-fade 300ms ease both;
+  }
+
+  .mascot-tilt,
+  .group:hover .mascot-tilt,
+  .lift,
+  .lift:hover {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* Account page: quick staggered entrance and press feedback (UI motion: under 300ms, custom ease-out) */
+.account-enter {
+  /* "backwards": hold the start state during the delay only, so :active press feedback still works afterwards */
+  animation: account-enter 280ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+  animation-delay: var(--delay, 0ms);
+}
+@keyframes account-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.account-tile {
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), border-color 200ms ease;
+}
+.account-tile:active {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .account-enter {
+    animation: none;
+  }
+  .account-tile:active {
+    transform: none;
+  }
+}
+
+/* Auth pages: the homepage gradient, lighter. Mostly mist, with a little ink in the corners */
+.auth-mesh {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 12%, color-mix(in srgb, var(--fg) 13%, transparent), transparent 55%),
+    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--fg) 9%, transparent), transparent 50%),
+    radial-gradient(circle at 50% 110%, color-mix(in srgb, var(--fg) 11%, transparent), transparent 60%),
+    radial-gradient(circle at 92% 92%, color-mix(in srgb, var(--fg) 7%, transparent), transparent 45%),
+    var(--bg);
+}
+
+.auth-mesh::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* Cards stay white in the blue theme, so their text has to stay dark on them.
+   Inside an inverted block the page is light already, so cards there keep plain white. */
+[data-theme="ink"] .bg-white {
+  background-color: var(--raise);
+}
+[data-theme="ink"] [data-invert] .bg-white {
+  background-color: #fff;
+}
+
+/* Accessibility panel (src/components/AccessibilityWidget.tsx) */
+.a11y-links a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.a11y-contrast .opacity-60,
+.a11y-contrast .opacity-70,
+.a11y-contrast .opacity-80 {
+  opacity: 1;
+}
+.a11y-contrast .border-line {
+  border-color: currentColor;
+}
+.a11y-still *,
+.a11y-still *::before,
+.a11y-still *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+/* Sheets, toasts and backdrops: short, interruptible entrances (UI feedback stays under 300ms) */
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.sheet-in {
+  animation: sheet-in 320ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.toast-in {
+  animation: toast-in 220ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.fade-in {
+  animation: fade-in 200ms ease-out both;
+}
+
+/* Challenge game: confetti burst, the streak counter's pop, and the fail flash/shake */
+@keyframes confetti-fly {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx), var(--ty)) rotate(var(--rot));
+    opacity: 0;
+  }
+}
+.confetti-piece {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 2px;
+  animation: confetti-fly 900ms cubic-bezier(0.15, 0.9, 0.35, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes streak-pop {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.streak-pop {
+  animation: streak-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes shake-fail {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-10px);
+  }
+  40% {
+    transform: translateX(8px);
+  }
+  60% {
+    transform: translateX(-6px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+.shake-fail {
+  animation: shake-fail 400ms ease-in-out;
+}
+
+@keyframes flash-fail {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.flash-fail {
+  animation: flash-fail 500ms ease-out forwards;
+}
+
+/* Reduced motion keeps the fades (they only change opacity) and removes the movement */
+@media (prefers-reduced-motion: reduce) {
+  .sheet-in,
+  .toast-in,
+  .fade-in {
+    animation: fade-in 150ms ease-out both;
+  }
+
+  .confetti-piece {
+    display: none;
+  }
+
+  .streak-pop {
+    animation: none;
+  }
+
+  .shake-fail {
     animation: none;
   }
 }
