@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { hasPaidAccess } from "@/lib/access";
 import { buildFreeSet, buildSet, isQuestionType } from "@/lib/practice";
@@ -18,6 +19,10 @@ export default async function PracticePage({ searchParams }: PageProps<"/practic
   const session = await auth.api.getSession({ headers: await headers() });
   const paid = session ? await hasPaidAccess(session.user.id) : false;
   const mode: PracticeMode | undefined = type === "free" ? "free" : isQuestionType(type) ? type : undefined;
+
+  // The full practice page is for paid members only. Everyone else is routed through the
+  // free-trial chooser at /start — except the explicit free-sample link, which stays open.
+  if (!paid && mode !== "free") redirect("/start");
 
   // Only what this visitor may see is read from the bank and sent to the browser
   const free = buildFreeSet();

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 const CARDS = [
-  { href: "/practice", title: "5 שאלות חינם", text: "דוגמה קצרה מהמאגר, עם הסבר מלא לכל תשובה." },
+  { href: "/practice?type=free", title: "5 שאלות חינם", text: "דוגמה קצרה מהמאגר, עם הסבר מלא לכל תשובה." },
   { href: "/exam", title: "סימולציית מבחן חינם", text: "מבחן תרגול שלם אחד, באותו מבנה ותזמון של האמירנט." },
   { href: "/practice/words", title: "שרשרת מילים חינם", text: "משחק קצר לזכירת מילים, עד 20 מילים." },
   { href: "/vocabulary", title: "אוצר מילים חינם", text: "כרטיסיות הפוכות ללמידת מילים, עד 20 מילים." },
