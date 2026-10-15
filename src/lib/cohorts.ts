@@ -44,12 +44,20 @@ export async function cohortOptionsFor(userId: string) {
   };
 }
 
-/** The id of the earliest open cohort, or null if none is open. Lets a registration flow
- * that skips the account-page cohort picker (there's only ever one open cohort to choose
- * from anyway) reserve a seat right away instead of leaving it for a later manual step. */
-export async function nextOpenCohortId(): Promise<string | null> {
-  const [next] = await db.select({ id: cohorts.id }).from(cohorts).where(eq(cohorts.status, "upcoming")).orderBy(cohorts.startDate).limit(1);
-  return next?.id ?? null;
+/** The first open cohort that still has a free seat, and whether it's the very next cohort
+ * overall (true) or a later one reached because earlier ones are already full (false).
+ * Null if every open cohort is full. Used by /diploactjoin to reserve a seat right away
+ * instead of leaving that for the account-page cohort picker. */
+export async function cohortWithRoom(): Promise<{ id: string; label: string; isPrimary: boolean } | null> {
+  const open = await db.select().from(cohorts).where(eq(cohorts.status, "upcoming")).orderBy(cohorts.startDate);
+  for (let i = 0; i < open.length; i++) {
+    const c = open[i];
+    const [taken] = await db.select({ n: count() }).from(enrollments).where(eq(enrollments.cohortId, c.id));
+    if (Number(taken?.n ?? 0) < c.capacity) {
+      return { id: c.id, label: formatCohortDate(c.startDate), isPrimary: i === 0 };
+    }
+  }
+  return null;
 }
 
 // Course prices. 347 is the regular price. 49 applies only to the next cohort that has

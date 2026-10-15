@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { signUp } from "@/lib/auth-client";
 import { phoneToSyntheticEmail } from "@/lib/phoneAuth";
@@ -10,11 +11,13 @@ import { diploactCopy } from "@/content/diploactCopy";
 const input =
   "w-full rounded-2xl border border-line bg-white px-4 py-3.5 text-base outline-none transition-colors focus:border-fg focus:ring-2 focus:ring-fg/15";
 
-// Relies on "DIPLOACT" staying in FREE_COUPONS (src/app/api/checkout/create/route.ts) —
-// that's what makes this registration free instead of charging a real card.
-const COUPON = "DIPLOACT";
+type JoinResult =
+  | { path: "free"; orderId: string }
+  | { path: "half"; cohortLabel: string; amountIls: number; payUrl: string }
+  | { path: "none" };
 
-export function DiploactJoinForm({ cohortId }: { cohortId: string | null }) {
+export function DiploactJoinForm() {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [birthDate, setBirthDate] = useState("");
@@ -23,6 +26,8 @@ export function DiploactJoinForm({ cohortId }: { cohortId: string | null }) {
   const [terms, setTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fullOffer, setFullOffer] = useState<{ cohortLabel: string; amountIls: number; payUrl: string } | null>(null);
+  const [payConsent, setPayConsent] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -52,29 +57,28 @@ export function DiploactJoinForm({ cohortId }: { cohortId: string | null }) {
       return;
     }
 
-    // Account created — now claim the free seat through the existing coupon checkout
-    const form = new FormData();
-    form.set("product", "course");
-    form.set("terms", "on");
-    form.set("coupon", COUPON);
-    const res = await fetch("/api/checkout/create", { method: "POST", body: form });
-    if (!res.redirected) {
+    // Account created — the server decides whether the nearest cohort still has a free
+    // seat (and reserves it right away), or offers half price for the next one instead
+    const res = await fetch("/api/diploact/join", { method: "POST" });
+    const data = (await res.json().catch(() => null)) as JoinResult | { error: string } | null;
+    if (!res.ok || !data || "error" in data) {
       setLoading(false);
       setError("נרשמתם, אבל שיבוץ המחזור לא הושלם. כתבו לנו בוואטסאפ ונסדר את זה ידנית.");
       return;
     }
 
-    // Reserve the seat too, not just the free order — a failure here isn't fatal, the
-    // owner finalizes the cohort by phone anyway (see checkoutCopy.nextSteps.course)
-    if (cohortId) {
-      await fetch("/api/cohorts/enroll", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cohortId }),
-      }).catch(() => {});
+    if (data.path === "free") {
+      router.push("/checkout/success?product=course");
+      return;
     }
-
-    window.location.href = res.url;
+    if (data.path === "half") {
+      setLoading(false);
+      setFullOffer(data);
+      return;
+    }
+    // "none" — every open cohort is already full, including the overflow one
+    setLoading(false);
+    setError("נרשמתם, אבל כרגע כל המחזורים הפתוחים מלאים. נחזור אליכם בוואטסאפ לקבוע מחזור.");
   }
 
   return (
@@ -169,6 +173,44 @@ export function DiploactJoinForm({ cohortId }: { cohortId: string | null }) {
           </Link>
         </p>
       </div>
+
+      {fullOffer && (
+        <div role="dialog" aria-modal="true" aria-labelledby="full-offer-title" className="fixed inset-0 z-50 grid place-items-center bg-fg/40 p-4">
+          <div className="fade-in w-full max-w-sm rounded-3xl border border-line bg-white p-7 shadow-2xl">
+            <h2 id="full-offer-title" className="font-display text-xl font-bold">
+              המחזור הקרוב כבר התמלא
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed opacity-70">
+              החשבון שלכם נוצר בהצלחה. המחזור הקרוב ביותר אזל, אבל יש מקום פנוי במחזור הבא,{" "}
+              <bdi dir="ltr">{fullOffer.cohortLabel}</bdi>, ב-50% הנחה: {fullOffer.amountIls} ₪ במקום 347 ₪. המקום נשמר לכם ברגע שהתשלום מתקבל.
+            </p>
+            <label className="mt-5 flex items-start gap-2.5 text-sm leading-relaxed">
+              <input
+                type="checkbox"
+                required
+                checked={payConsent}
+                onChange={(e) => setPayConsent(e.target.checked)}
+                className="mt-1 size-4 shrink-0 accent-fg"
+              />
+              <span>
+                קראתי ואני מסכים/ה ל<Link href="/legal/terms" className="inline-flex min-h-11 items-center underline">תקנון</Link> ול
+                <Link href="/legal/refunds" className="inline-flex min-h-11 items-center underline">מדיניות הביטול והחזרים</Link>
+              </span>
+            </label>
+            <button
+              type="button"
+              disabled={!payConsent}
+              onClick={() => (window.location.href = fullOffer.payUrl)}
+              className="mt-5 w-full rounded-full bg-fg px-6 py-3.5 font-semibold text-bg disabled:opacity-50"
+            >
+              לתשלום המוזל, {fullOffer.amountIls} ₪
+            </button>
+            <Link href="/account" className="mt-4 block text-center text-sm underline opacity-70">
+              לא עכשיו, לאזור האישי
+            </Link>
+          </div>
+        </div>
+      )}
     </AuthShell>
   );
 }

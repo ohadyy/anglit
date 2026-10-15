@@ -5,7 +5,7 @@ import { notify } from "@/lib/ntfy";
 import { getProduct } from "@/content/pricingCopy";
 import { getLpResult } from "@/lib/cardcom";
 import { db } from "@/db";
-import { orders, user } from "@/db/schema";
+import { enrollments, orders, user } from "@/db/schema";
 
 // Cardcom pings this URL after a payment attempt, but the exact ping payload
 // isn't reliably documented — so instead of trusting it, we only use it as a
@@ -38,6 +38,20 @@ async function sendPurchaseThanks(userId: string, productId: string | null) {
     await sendTemplate(account.phone, process.env.WHATSAPP_TEMPLATE_PURCHASE ?? "purchase_thanks", [account.name, product.name]);
   } catch (err) {
     console.error("[cardcom webhook] purchase WhatsApp failed:", err);
+  }
+}
+
+// The /diploactjoin overflow path (see src/app/api/diploact/join/route.ts) ties the order to
+// a specific cohort up front, before payment clears, so the seat can be reserved the moment
+// it does — without waiting for the student to pick it themselves in the account page.
+async function enrollInOrderCohort(userId: string, cohortId: string | null) {
+  if (!cohortId) return;
+  try {
+    const [existing] = await db.select({ id: enrollments.id }).from(enrollments).where(eq(enrollments.userId, userId)).limit(1);
+    if (existing) return;
+    await db.insert(enrollments).values({ userId, cohortId, status: "active" });
+  } catch (err) {
+    console.error("[cardcom webhook] auto-enroll failed:", err);
   }
 }
 
@@ -84,6 +98,7 @@ export async function POST(request: Request) {
       status: orders.status,
       userId: orders.userId,
       product: orders.product,
+      cohortId: orders.cohortId,
       amountAgorot: orders.amountAgorot,
       providerTransactionId: orders.providerTransactionId,
     })
@@ -103,6 +118,7 @@ export async function POST(request: Request) {
       await db.update(orders).set({ status: "paid", paidAt: new Date() }).where(eq(orders.id, orderId));
       await sendPurchaseThanks(order.userId, order.product);
       await notifyPurchase(order.userId, order.product, order.amountAgorot);
+      if (order.product === "course") await enrollInOrderCohort(order.userId, order.cohortId);
     }
   } else if (order.status === "pending") {
     // Only a pending order can become failed; a paid one is never downgraded by a later ping
