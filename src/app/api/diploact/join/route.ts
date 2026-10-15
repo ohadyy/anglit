@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { createLowProfile } from "@/lib/cardcom";
 import { cohortWithRoom, COURSE_PRICE_ILS } from "@/lib/cohorts";
+import { notify } from "@/lib/ntfy";
 import { db } from "@/db";
 import { enrollments, orders } from "@/db/schema";
 
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
       })
       .returning();
     await db.insert(enrollments).values({ userId: session.user.id, cohortId: target.id, status: "active" }).catch(() => {});
+    await notify("New Diploact signup", [`שם: ${session.user.name}`, `טלפון: ${session.user.phone}`, `מחזור: ${target.label}`, "חינם"]);
     return NextResponse.json({ path: "free" satisfies Path, orderId: order.id });
   }
 
@@ -66,6 +68,7 @@ export async function POST(request: Request) {
       webHookUrl: `${origin}/api/webhooks/cardcom`,
     });
     await db.update(orders).set({ providerTransactionId: result.LowProfileId }).where(eq(orders.id, order.id));
+    await notify("New Diploact signup", [`שם: ${session.user.name}`, `טלפון: ${session.user.phone}`, `מחזור: ${target.label}`, `חצי מחיר, ${amountIls} ש"ח — ממתין לתשלום`]);
     return NextResponse.json({ path: "half" satisfies Path, cohortLabel: target.label, amountIls, payUrl: result.Url });
   } catch (err) {
     await db.update(orders).set({ status: "failed" }).where(eq(orders.id, order.id));
