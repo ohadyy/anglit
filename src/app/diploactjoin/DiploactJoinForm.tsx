@@ -16,7 +16,7 @@ type JoinResult =
   | { path: "half"; cohortLabel: string; amountIls: number; payUrl: string }
   | { path: "none" };
 
-export function DiploactJoinForm() {
+export function DiploactJoinForm({ seatsLeft }: { seatsLeft: number | null }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -90,6 +90,12 @@ export function DiploactJoinForm() {
         </h1>
         <p className="mt-4 text-center text-sm leading-relaxed opacity-70">{diploactCopy.sub}</p>
 
+        {seatsLeft !== null && (
+          <p className="mx-auto mt-4 w-fit rounded-full border border-warn/40 bg-warn/10 px-4 py-2 text-center text-sm font-semibold text-warn">
+            {seatsLeft > 0 ? `נשארו רק ${seatsLeft} מקומות במחזור הקרוב` : "המחזור הקרוב מלא — נרשמים עכשיו למחזור הבא ב-50% הנחה"}
+          </p>
+        )}
+
         <form onSubmit={onSubmit} className="mt-7 flex flex-col gap-3">
           <input type="text" placeholder="שם מלא" value={name} onChange={(e) => setName(e.target.value)} required className={input} />
           <input
@@ -103,7 +109,14 @@ export function DiploactJoinForm() {
           />
           <label className="flex flex-col gap-1.5">
             <span className="text-sm opacity-70">תאריך לידה</span>
-            <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} required className={input} />
+            <input
+              type="date"
+              dir="ltr"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+              required
+              className={`${input} text-right`}
+            />
           </label>
 
           <div>

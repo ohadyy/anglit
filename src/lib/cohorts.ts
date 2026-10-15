@@ -60,6 +60,15 @@ export async function cohortWithRoom(): Promise<{ id: string; label: string; isP
   return null;
 }
 
+/** Seats left in the earliest open cohort — the one /diploactjoin's free path targets —
+ * for urgency messaging. Null if there's no open cohort at all. */
+export async function primarySeatsLeft(): Promise<number | null> {
+  const [primary] = await db.select().from(cohorts).where(eq(cohorts.status, "upcoming")).orderBy(cohorts.startDate).limit(1);
+  if (!primary) return null;
+  const [taken] = await db.select({ n: count() }).from(enrollments).where(eq(enrollments.cohortId, primary.id));
+  return Math.max(0, primary.capacity - Number(taken?.n ?? 0));
+}
+
 // Course prices. 347 is the regular price. 49 applies only to the next cohort that has
 // not started yet, while it still has seats, and it ends when that cohort starts.
 export const COURSE_PRICE_ILS = 347;
