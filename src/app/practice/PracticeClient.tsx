@@ -8,8 +8,11 @@ import { ALL_TYPES, TYPE_LABELS } from "@/content/questionLabels";
 import { PassageProvider } from "@/components/PassageContext";
 import { QuestionView, TypeLabel } from "@/components/QuestionView";
 import { LockIcon } from "@/components/LockIcon";
+import { TactileButton } from "@/components/TactileButton";
+import { readMistakes, recordAnswers, removeMistake, type Mistakes } from "@/lib/mistakes";
+import type { QuestionNote } from "@/content/questionNotes";
 
-export type PracticeMode = QuestionType | "free";
+export type PracticeMode = QuestionType | "free" | "mistakes";
 
 // The server decides what this visitor may see and passes only that: visitors without paid
 // access get the five free questions, and paid access unlocks every question type.
@@ -22,15 +25,18 @@ export type PracticeData = {
   /** How many questions each type has, for the chooser */
   counts: Record<QuestionType, number>;
   passages: Passage[];
+  /** Hebrew notes for the mistakes review, sent only to paid members on that page */
+  notes: Record<string, QuestionNote>;
 };
 
 export function PracticeClient({ mode, data }: { mode?: PracticeMode; data: PracticeData }) {
-  const { paid, free, set, counts, passages } = data;
+  const { paid, free, set, counts, passages, notes } = data;
   return (
     <PassageProvider passages={passages}>
       {!mode && <TypeChooser paid={paid} counts={counts} />}
-      {mode === "free" && <PracticeSession mode="free" set={free} />}
-      {mode && mode !== "free" && (!paid ? <LockedPractice type={mode} /> : <PracticeSession mode={mode} set={set} />)}
+      {mode === "free" && <PracticeSession mode="free" set={free} notes={notes} />}
+      {mode === "mistakes" && <MistakesReview paid={paid} bank={set} notes={notes} />}
+      {mode && mode !== "free" && mode !== "mistakes" && (!paid ? <LockedPractice type={mode} /> : <PracticeSession mode={mode} set={set} notes={notes} />)}
     </PassageProvider>
   );
 }
@@ -67,6 +73,8 @@ function TypeChooser({ paid, counts }: { paid: boolean; counts: Record<QuestionT
         </span>
         <span className="text-sm font-semibold">לשחק ←</span>
       </Link>
+
+      <MistakesCard />
 
       <ul className="mt-4 grid gap-3">
         {!paid && (
@@ -142,7 +150,15 @@ function LockedPractice({ type }: { type: QuestionType }) {
   );
 }
 
-function PracticeSession({ mode, set }: { mode: PracticeMode; set: Question[] }) {
+function PracticeSession({
+  mode,
+  set,
+  notes,
+}: {
+  mode: PracticeMode;
+  set: Question[];
+  notes: Record<string, QuestionNote>;
+}) {
   const [index, setIndex] = useState(0);
   const [picks, setPicks] = useState<(number | null)[]>(() => set.map(() => null));
   const done = index >= set.length;
@@ -154,9 +170,10 @@ function PracticeSession({ mode, set }: { mode: PracticeMode; set: Question[] })
   const pick = useCallback(
     (i: number) => {
       if (done || picks[index] !== null) return;
+      recordAnswers({ [set[index].id]: { correct: i === set[index].answer, chosen: i } });
       setPicks((p) => p.map((v, k) => (k === index ? i : v)));
     },
-    [done, index, picks],
+    [done, index, picks, set],
   );
 
   const next = useCallback(() => {
@@ -204,7 +221,7 @@ function PracticeSession({ mode, set }: { mode: PracticeMode; set: Question[] })
             <div className="mb-4">
               <TypeLabel q={q} />
             </div>
-            <QuestionView q={q} selected={selected} revealed={revealed} onSelect={pick} />
+            <QuestionView q={q} selected={selected} revealed={revealed} onSelect={pick} note={notes[q.id]} />
           </div>
         )}
       </main>
@@ -218,14 +235,15 @@ function PracticeSession({ mode, set }: { mode: PracticeMode; set: Question[] })
             <p className="hidden text-sm opacity-70 sm:block">
               {revealed ? "Enter לשאלה הבאה" : <>אפשר לענות גם במקשים <bdi dir="ltr">1–4</bdi></>}
             </p>
-            <button
+            <TactileButton
               type="button"
               onClick={next}
               disabled={!revealed}
-              className="w-full rounded-full bg-fg px-7 py-4 font-semibold text-bg transition-opacity disabled:opacity-30 sm:ms-auto sm:w-auto sm:py-3"
+              fullWidth
+              className="sm:ms-auto sm:w-max"
             >
               {!revealed ? "בחרו תשובה" : index === set.length - 1 ? "לתוצאות" : "לשאלה הבאה"}
-            </button>
+            </TactileButton>
           </div>
         </div>
       )}
@@ -273,5 +291,133 @@ function Summary({ correct, total, mode }: { correct: number; total: number; mod
         </div>
       </div>
     </div>
+  );
+}
+
+// Reads the device's saved mistakes after mount, so server and client render the same markup
+function useMistakes() {
+  const [mistakes, setMistakes] = useState<Mistakes | null>(null);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate from storage once
+    setMistakes(readMistakes());
+  }, []);
+  return [mistakes, setMistakes] as const;
+}
+
+function MistakesCard() {
+  const [mistakes] = useMistakes();
+  return (
+    <Link
+      href="/practice?type=mistakes"
+      className="group mt-3 flex items-center justify-between rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] transition-colors hover:border-fg/30 sm:p-6"
+    >
+      <span>
+        <span className="block text-xl font-bold">הטעויות שלי</span>
+        <span className="mt-1 block text-sm opacity-70">כל שאלה שטעיתם בה, עם הסבר ותרגום לעברית</span>
+      </span>
+      <span className="text-sm font-semibold tabular-nums opacity-70 group-hover:opacity-100">
+        {mistakes === null ? "" : `${Object.keys(mistakes).length} שאלות ←`}
+      </span>
+    </Link>
+  );
+}
+
+function MistakesReview({ paid, bank, notes }: { paid: boolean; bank: Question[]; notes: Record<string, QuestionNote> }) {
+  const [mistakes, setMistakes] = useMistakes();
+  if (mistakes === null) return null;
+  const count = Object.keys(mistakes).length;
+
+  if (!paid) {
+    return (
+      <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-4 py-16 text-center">
+        <div className="flex size-14 items-center justify-center rounded-full bg-white">
+          <LockIcon />
+        </div>
+        <p className="mt-5 font-hand text-2xl opacity-70">הטעויות שלי</p>
+        <h1 className="font-display mt-2 text-2xl font-bold">
+          {count === 0
+            ? "הסבר מלא לכל טעות"
+            : count === 1
+              ? "שאלה אחת מחכה להסבר"
+              : `${count} שאלות מחכות להסבר`}
+        </h1>
+        <p className="mt-3 leading-relaxed opacity-80">
+          כל שאלה שטעיתם בה נשמרת, עם תרגום לעברית, פירוש של כל תשובה, ולמה התשובה שבחרתם לא מתאימה. זה פתוח במסלול בתשלום.
+        </p>
+        <Link href="/pricing" className="mt-8 flex w-full items-center justify-center rounded-full bg-fg px-6 py-4 font-semibold text-bg">
+          לצפייה במסלולים
+        </Link>
+        <Link href="/practice?type=free" className="mt-4 inline-flex min-h-11 items-center text-sm underline opacity-70">
+          לחמש השאלות החינמיות
+        </Link>
+      </div>
+    );
+  }
+
+  const list = bank.filter((q) => q.id in mistakes);
+  function done(id: string) {
+    removeMistake(id);
+    setMistakes((m) => {
+      if (!m) return m;
+      const rest = { ...m };
+      delete rest[id];
+      return rest;
+    });
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-3xl px-4 pb-16 pt-4 sm:px-6">
+      <Link href="/practice" className="text-sm underline underline-offset-4 opacity-70">
+        כל הסוגים
+      </Link>
+      <p className="mt-6 font-hand text-2xl opacity-70">הטעויות שלי</p>
+      <h1 className="font-display mt-1 text-3xl font-bold">
+        {list.length === 0 ? "אין טעויות שמורות" : list.length === 1 ? "שאלה אחת לחזור עליה" : `${list.length} שאלות לחזור עליהן`}
+      </h1>
+      <p className="mt-3 max-w-xl leading-relaxed opacity-80">
+        {list.length === 0
+          ? "כל שאלה שתטעו בה בתרגול או במבחן תופיע כאן, עם הסבר מלא ותרגום לעברית."
+          : "לכל שאלה: מה בחרתם, מה התשובה הנכונה, ומה המשמעות של כל אחת מהתשובות. כשהבנתם, מסירים אותה מהרשימה."}
+      </p>
+      {list.length === 0 && (
+        <Link href="/practice" className="mt-8 inline-flex rounded-full bg-fg px-6 py-3.5 font-semibold text-bg">
+          לתרגול
+        </Link>
+      )}
+
+      <ol className="mt-8 grid gap-10">
+        {list.map((q) => (
+          <li key={q.id} className="border-t border-line pt-8">
+            <MistakeCard q={q} chosen={mistakes[q.id]} note={notes[q.id]} onDone={() => done(q.id)} />
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+function MistakeCard({
+  q,
+  chosen,
+  note,
+  onDone,
+}: {
+  q: Question;
+  chosen: number | null;
+  note?: QuestionNote;
+  onDone: () => void;
+}) {
+  return (
+    <article>
+      <div className="mb-4">
+        <TypeLabel q={q} />
+      </div>
+      {chosen === null && <p className="mb-4 text-sm font-semibold opacity-80">לא עניתם על השאלה הזאת בזמן.</p>}
+      <QuestionView q={q} selected={chosen} revealed note={note} />
+
+      <TactileButton type="button" onClick={onDone} className="mt-5">
+        הבנתי, להסיר מהרשימה
+      </TactileButton>
+    </article>
   );
 }

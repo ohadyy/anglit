@@ -1,7 +1,4 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
 import { questions, type Question } from "@/content/questions";
 import { ChallengeGame } from "./ChallengeGame";
 
@@ -32,8 +29,5 @@ const POOL = questions.filter(
 const GAME_QUESTIONS: Question[] = shuffle(POOL, 42).slice(0, 30);
 
 export default async function ChallengePage() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) redirect("/sign-in?next=/practice/challenge");
-
   return <ChallengeGame questions={GAME_QUESTIONS} />;
 }

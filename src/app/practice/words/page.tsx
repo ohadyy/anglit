@@ -1,7 +1,4 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
 import { vocabulary } from "@/content/vocabulary";
 import { FREE_WORD_LIMIT } from "@/lib/vocab";
 import { WordChain } from "./WordChain";
@@ -18,8 +15,5 @@ const GAME_WORDS = vocabulary
   .map(({ id, word, translation, example }) => ({ id, word, translation, example }));
 
 export default async function WordChainPage() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) redirect("/sign-in?next=/practice/words");
-
   return <WordChain words={GAME_WORDS} />;
 }

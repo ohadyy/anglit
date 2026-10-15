@@ -1,4 +1,4 @@
-import { and, count, eq, gt } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { cohorts, enrollments } from "@/db/schema";
 
@@ -44,6 +44,14 @@ export async function cohortOptionsFor(userId: string) {
   };
 }
 
+/** The id of the earliest open cohort, or null if none is open. Lets a registration flow
+ * that skips the account-page cohort picker (there's only ever one open cohort to choose
+ * from anyway) reserve a seat right away instead of leaving it for a later manual step. */
+export async function nextOpenCohortId(): Promise<string | null> {
+  const [next] = await db.select({ id: cohorts.id }).from(cohorts).where(eq(cohorts.status, "upcoming")).orderBy(cohorts.startDate).limit(1);
+  return next?.id ?? null;
+}
+
 // Course prices. 347 is the regular price. 49 applies only to the next cohort that has
 // not started yet, while it still has seats, and it ends when that cohort starts.
 export const COURSE_PRICE_ILS = 347;
@@ -56,23 +64,10 @@ export type CourseOffer = {
   priceIls: number;
 };
 
+// Disabled 2026-10-15: the open cohort is already committed (paid orders exist for it,
+// even though not everyone has finished picking their seat in `enrollments` yet), so the
+// site always shows the regular price now, regardless of what the enrollments count says.
+// To re-enable for a future cohort, restore the DB-driven check this used to do.
 export async function upcomingCourseOffer(): Promise<CourseOffer | null> {
-  const [next] = await db
-    .select()
-    .from(cohorts)
-    .where(and(eq(cohorts.status, "upcoming"), gt(cohorts.startDate, new Date())))
-    .orderBy(cohorts.startDate)
-    .limit(1);
-  if (!next) return null;
-
-  const [taken] = await db.select({ n: count() }).from(enrollments).where(eq(enrollments.cohortId, next.id));
-  const seatsLeft = Math.max(0, next.capacity - Number(taken?.n ?? 0));
-  if (seatsLeft === 0) return null;
-
-  return {
-    cohortId: next.id,
-    label: formatCohortDate(next.startDate),
-    seatsLeft,
-    priceIls: UPCOMING_COHORT_PRICE_ILS,
-  };
+  return null;
 }

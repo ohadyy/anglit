@@ -12,20 +12,7 @@ export function estimateScore(correct: number, total: number): number {
   return Math.round(50 + ratio * 100);
 }
 
-export type ScoreLevel = {
-  label: string;
-  note: string;
-};
-
-// Rough bands for display only. NITE's FAQ says the level and the number of courses
-// are set by the institution where the student studies, so the result screen says so.
-export function scoreLevel(score: number): ScoreLevel {
-  if (score >= 134) return { label: "פטור מאנגלית", note: "ציון 134 ומעלה פוטר מלימודי אנגלית." };
-  if (score >= 120) return { label: "מתקדמים ב׳", note: "קורס אנגלית אחד לפני הפטור." };
-  if (score >= 100) return { label: "מתקדמים א׳", note: "שני קורסי אנגלית לפני הפטור." };
-  if (score >= 85) return { label: "בסיסי", note: "שלושה קורסי אנגלית לפני הפטור." };
-  return { label: "טרום בסיסי", note: "ארבעה קורסי אנגלית לפני הפטור." };
-}
+export { SCORE_LEVELS, scoreLevel, type ScoreLevel } from "@/lib/scoreLevels";
 
 // A short, modest note under the score, by range. It encourages practice and makes no
 // promise about a level or a result.

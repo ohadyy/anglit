@@ -8,6 +8,7 @@ import { passages, type Passage, type Question, type QuestionType } from "@/cont
 import { ALL_TYPES } from "@/content/questionLabels";
 import { PracticeClient, type PracticeMode } from "./PracticeClient";
 import { ReadAloud } from "@/components/ReadAloud";
+import { questionNotes } from "@/content/questionNotes";
 
 export const metadata: Metadata = {
   title: "תרגול חינם",
@@ -18,15 +19,18 @@ export default async function PracticePage({ searchParams }: PageProps<"/practic
   const { type } = await searchParams;
   const session = await auth.api.getSession({ headers: await headers() });
   const paid = session ? await hasPaidAccess(session.user.id) : false;
-  const mode: PracticeMode | undefined = type === "free" ? "free" : isQuestionType(type) ? type : undefined;
+  const mode: PracticeMode | undefined =
+    type === "free" || type === "mistakes" ? type : isQuestionType(type) ? type : undefined;
 
   // The full practice page is for paid members only. Everyone else is routed through the
   // free-trial chooser at /start — except the explicit free-sample link, which stays open.
-  if (!paid && mode !== "free") redirect("/start");
+  // The mistakes page stays open too, so a free visitor sees how many mistakes wait for them.
+  if (!paid && mode !== "free" && mode !== "mistakes") redirect("/start");
 
   // Only what this visitor may see is read from the bank and sent to the browser
   const free = buildFreeSet();
-  const set: Question[] = mode && mode !== "free" && paid ? buildSet(mode) : [];
+  // Mistakes live on the device, so a paid member gets the whole bank and the browser picks them out
+  const set: Question[] = !paid || !mode || mode === "free" ? [] : mode === "mistakes" ? ALL_TYPES.flatMap(buildSet) : buildSet(mode);
   const shown = [...free, ...set];
   const usedPassages: Passage[] = passages.filter((p) => shown.some((q) => "passageId" in q && q.passageId === p.id));
   const counts = Object.fromEntries(ALL_TYPES.map((t) => [t, paid ? buildSet(t).length : 0])) as Record<QuestionType, number>;
@@ -34,7 +38,10 @@ export default async function PracticePage({ searchParams }: PageProps<"/practic
   return (
     <>
       <ReadAloud />
-      <PracticeClient mode={mode} data={{ paid, free, set, counts, passages: usedPassages }} />
+      <PracticeClient
+        mode={mode}
+        data={{ paid, free, set, counts, passages: usedPassages, notes: questionNotes }}
+      />
     </>
   );
 }

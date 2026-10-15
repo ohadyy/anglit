@@ -534,6 +534,33 @@ body::after {
   animation: flash-fail 500ms ease-out forwards;
 }
 
+/* Logo trace loader (src/components/LogoTraceLoader.tsx) */
+@keyframes logo-trace-loader-loop {
+  to {
+    stroke-dashoffset: -1;
+  }
+}
+
+@keyframes logo-trace-loader-close {
+  from {
+    stroke-dashoffset: -1;
+    stroke-dasharray: 0.16 0.84;
+  }
+  to {
+    stroke-dashoffset: 0;
+    stroke-dasharray: 1 0;
+  }
+}
+
+@keyframes logo-trace-loader-fill {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Reduced motion keeps the fades (they only change opacity) and removes the movement */
 @media (prefers-reduced-motion: reduce) {
   .sheet-in,

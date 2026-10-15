@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { Question } from "@/content/questions";
+import type { QuestionNote } from "@/content/questionNotes";
 import { QuestionView, TypeLabel } from "./QuestionView";
 import { site } from "@/lib/site";
 
 // A live question in the hero, inverted against the page theme. The page passes the question in,
 // so this client component does not carry the whole question bank.
-export function HeroDemo({ q: demo }: { q: Question }) {
+export function HeroDemo({ q: demo, note }: { q: Question; note?: QuestionNote }) {
   const [selected, setSelected] = useState<number | null>(null);
   const revealed = selected !== null;
 
@@ -21,7 +22,7 @@ export function HeroDemo({ q: demo }: { q: Question }) {
         <TypeLabel q={demo} />
         <span className="text-sm opacity-70">{revealed ? "ככה עובדים" : "נסו לענות"}</span>
       </div>
-      <QuestionView q={demo} selected={selected} revealed={revealed} onSelect={setSelected} />
+      <QuestionView q={demo} selected={selected} revealed={revealed} onSelect={setSelected} note={note} />
       {revealed && (
         <Link
           href="/practice"

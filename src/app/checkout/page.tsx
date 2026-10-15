@@ -147,6 +147,15 @@ export default async function CheckoutPage({
 
                 <form action="/api/checkout/create" method="POST" className="mt-5">
                   <input type="hidden" name="product" value={product.id} />
+                  <label className="mb-4 flex flex-col gap-1.5 text-start text-sm">
+                    <span className="opacity-70">קוד קופון (אופציונלי)</span>
+                    <input
+                      type="text"
+                      name="coupon"
+                      className="min-h-11 rounded-xl border border-line bg-bg px-4 py-2"
+                      dir="ltr"
+                    />
+                  </label>
                   <label className="mb-4 flex items-start gap-2.5 text-start text-sm leading-relaxed">
                     <input type="checkbox" name="terms" value="on" required className="mt-1 size-4 shrink-0" />
                     <span>

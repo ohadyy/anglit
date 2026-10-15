@@ -3,6 +3,7 @@
 import Image from "next/image";
 import type { Question, QuestionType, WordFormationQuestion } from "@/content/questions";
 import { TYPE_LABELS } from "@/content/questionLabels";
+import type { QuestionNote } from "@/content/questionNotes";
 import { usePassage } from "@/components/PassageContext";
 import { highlight, Stem } from "./Stem";
 
@@ -47,6 +48,7 @@ export function QuestionView({
   size = "app",
   showExplanation = true,
   showPassage = true,
+  note,
 }: {
   q: Question;
   selected: number | null;
@@ -55,6 +57,7 @@ export function QuestionView({
   size?: Size;
   showExplanation?: boolean;
   showPassage?: boolean;
+  note?: QuestionNote;
 }) {
   const s = S[size];
   const isSentence = q.type === "sentence";
@@ -120,6 +123,31 @@ export function QuestionView({
               <span className="me-1.5 rounded-md bg-marker px-1.5 py-0.5 text-ink-deep">הטריק</span>
               {q.trick}
             </p>
+          )}
+          {note && (
+            <div className="mt-5 border-t border-line pt-5">
+              <p className="text-sm font-semibold opacity-70">השאלה בעברית</p>
+              <p className="mt-1 leading-relaxed">{note.stemHe}</p>
+
+              <p className="mt-5 text-sm font-semibold opacity-70">פירוש התשובות</p>
+              <ul className="mt-2 grid gap-3">
+                {q.options.map((opt, i) => {
+                  const tone =
+                    i === q.answer ? "border-mint bg-mint/25" : i === selected ? "border-coral bg-coral/25" : "border-line";
+                  return (
+                    <li key={i} className={`rounded-2xl border p-3 ${tone}`}>
+                      <p dir="ltr" className="text-left font-semibold">
+                        {i + 1}. {opt}
+                      </p>
+                      <p className="mt-1 text-[15px] leading-relaxed">
+                        {i === selected && i !== q.answer && <strong>התשובה שבחרתם. </strong>}
+                        {note.options[i]}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           )}
         </div>
       )}

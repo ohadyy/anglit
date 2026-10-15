@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { hasPaidAccess } from "@/lib/access";
@@ -17,14 +16,14 @@ export const metadata: Metadata = {
 
 export default async function VocabularyPage() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) redirect("/sign-in?next=/vocabulary");
+  const paid = session ? await hasPaidAccess(session.user.id) : false;
 
-  const paid = await hasPaidAccess(session.user.id);
-
-  const rows = await db
-    .select({ wordId: vocabProgress.wordId, box: vocabProgress.box })
-    .from(vocabProgress)
-    .where(eq(vocabProgress.userId, session.user.id));
+  const rows = session
+    ? await db
+        .select({ wordId: vocabProgress.wordId, box: vocabProgress.box })
+        .from(vocabProgress)
+        .where(eq(vocabProgress.userId, session.user.id))
+    : [];
   const boxes = new Map(rows.map((r) => [r.wordId, r.box]));
 
   // Free visitors only draw their round from the first words of the bank; the rest stays behind payment

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
@@ -18,15 +17,15 @@ export const metadata: Metadata = {
 
 export default async function ExamListPage() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) redirect("/sign-in?next=/exam");
-
-  const paid = await hasPaidAccess(session.user.id);
+  const paid = session ? await hasPaidAccess(session.user.id) : false;
 
   // The best score so far for each test. A retake can only raise it.
-  const attempts = await db
-    .select({ testNumber: examAttempts.testNumber, estimatedScore: examAttempts.estimatedScore })
-    .from(examAttempts)
-    .where(eq(examAttempts.userId, session.user.id));
+  const attempts = session
+    ? await db
+        .select({ testNumber: examAttempts.testNumber, estimatedScore: examAttempts.estimatedScore })
+        .from(examAttempts)
+        .where(eq(examAttempts.userId, session.user.id))
+    : [];
   const bestByTest = new Map<string, number>();
   for (const a of attempts) {
     if (!a.testNumber) continue;

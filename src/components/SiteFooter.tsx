@@ -9,6 +9,8 @@ const study = [
   { href: "/practice", label: "תרגול חינמי" },
   { href: "/pricing", label: "מסלולים ומחירים" },
   { href: "/exam-dates", label: "מועדי הבחינה" },
+  { href: "/amirnet", label: "מה צריך לדעת על המבחן" },
+  { href: "/score", label: "מחשבון ציון" },
   { href: "/account", label: "האזור האישי" },
 ];
 
@@ -16,17 +18,17 @@ const study = [
 export function SiteFooter() {
   return (
     // Bottom padding on phones keeps the last lines clear of the tab bar
-    <footer data-invert className="mt-auto pb-24 sm:pb-0">
-      <div className="mx-auto max-w-6xl px-4 pb-6 pt-10 sm:px-6 sm:pb-10 sm:pt-20">
-        <p className="text-3xl font-bold leading-tight sm:text-6xl">
+    <footer data-invert className="mt-auto pb-20 sm:pb-0">
+      <div className="mx-auto max-w-6xl px-4 pb-5 pt-6 sm:px-6 sm:pb-10 sm:pt-20">
+        <p className="text-2xl font-bold leading-tight sm:text-6xl">
           <span className="relative inline-block">
             בואו נתחיל
             <span aria-hidden className="absolute inset-x-0 bottom-1 -z-10 h-[0.35em] bg-marker" />
           </span>
         </p>
-        <p className="font-hand mt-2 text-xl opacity-80 sm:mt-3 sm:text-3xl">את שבוע ההכנה שלכם לאמירנט.</p>
+        <p className="font-hand mt-1 text-lg opacity-80 sm:mt-3 sm:text-3xl">את שבוע ההכנה שלכם לאמירנט.</p>
 
-        <div className="mt-8 grid gap-6 border-t border-line pt-6 sm:mt-14 sm:grid-cols-3 sm:gap-10 sm:pt-10">
+        <div className="mt-5 grid gap-5 border-t border-line pt-5 sm:mt-14 sm:grid-cols-3 sm:gap-10 sm:pt-10">
           <section>
             <p className="font-hand text-2xl">(א) צרו קשר</p>
             <ul className="mt-4 flex flex-col gap-2 text-base">
@@ -72,25 +74,22 @@ export function SiteFooter() {
 
           <section>
             <p className="font-hand text-2xl">(ג) משפטי</p>
-            <ul className="mt-4 flex flex-col gap-2 text-base">
-              <li className="opacity-80">
-                {businessDetails.legalName} · {businessDetails.registrationLabel} {businessDetails.registrationNumber}
-              </li>
-              <li className="opacity-80">כתובת העסק: {businessDetails.address}</li>
+            {/* Required disclosure (consumer law): business name, registration, address — kept as plain text, no links to trim */}
+            <p className="mt-4 text-sm opacity-80">
+              {businessDetails.legalName} · {businessDetails.registrationLabel} {businessDetails.registrationNumber} · {businessDetails.address}
+            </p>
+            {/* Just links, no explanatory text — compact row that wraps instead of a tall stacked list */}
+            <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-sm">
               {legalDocs.map((doc) => (
-                <li key={doc.slug}>
-                  <Link href={`/legal/${doc.slug}`} className="inline-flex min-h-11 items-center underline underline-offset-4 opacity-80 hover:opacity-100">
-                    {doc.title}
-                  </Link>
-                </li>
+                <Link key={doc.slug} href={`/legal/${doc.slug}`} className="inline-flex min-h-8 items-center underline underline-offset-4 opacity-80 hover:opacity-100">
+                  {doc.title}
+                </Link>
               ))}
               {/* Cancelling a purchase has its own visible link, as the consumer law requires */}
-              <li>
-                <Link href="/legal/refunds" className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4 hover:opacity-100">
-                  ביטול עסקה
-                </Link>
-              </li>
-            </ul>
+              <Link href="/legal/refunds" className="inline-flex min-h-8 items-center font-semibold underline underline-offset-4 hover:opacity-100">
+                ביטול עסקה
+              </Link>
+            </div>
           </section>
         </div>
 

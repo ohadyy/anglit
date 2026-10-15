@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { hasPaidAccess } from "@/lib/access";
 import { findExamTest } from "@/content/examTests";
 import { buildExam } from "@/lib/examStructure";
+import { passages, type Passage } from "@/content/questions";
 import { ExamClient } from "../ExamClient";
 import { ReadAloud } from "@/components/ReadAloud";
 import { LockedExam } from "../LockedExam";
+import { PassageProvider } from "@/components/PassageContext";
 
 export const metadata: Metadata = {
   title: "מבחן תרגול",
@@ -20,17 +22,22 @@ export default async function ExamRunPage({ params }: PageProps<"/exam/[number]"
   if (!test) notFound();
 
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) redirect(`/sign-in?next=/exam/${number}`);
+  const paid = session ? await hasPaidAccess(session.user.id) : false;
 
-  if (!test.free && !(await hasPaidAccess(session.user.id))) {
+  if (!test.free && !paid) {
     return <LockedExam />;
   }
 
   const plan = buildExam(number);
+  const usedPassages: Passage[] = passages.filter((p) =>
+    plan.some((part) => part.questions.some((q) => "passageId" in q && q.passageId === p.id)),
+  );
   return (
     <>
       <ReadAloud />
-      <ExamClient plan={plan} kind="open" testNumber={number} />
+      <PassageProvider passages={usedPassages}>
+        <ExamClient plan={plan} kind="open" testNumber={number} />
+      </PassageProvider>
     </>
   );
 }

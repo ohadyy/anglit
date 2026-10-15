@@ -1,47 +1,14 @@
 import Image from "next/image";
-import Link from "next/link";
 import type { CourseOffer } from "@/lib/cohorts";
 import { HeroDecor } from "@/components/HeroDecor";
+import { COURSE_REGULAR_PRICE, CourseOfferCta, CourseOfferPrice } from "@/components/CourseOfferCard";
+import { StepsList } from "@/components/StepsList";
 import { copy } from "@/content/copy";
-import { getProduct } from "@/content/pricingCopy";
 import { sprintCopy } from "@/content/sprintCopy";
-
-// The regular price comes from the same product list as the pricing page
-const COURSE_REGULAR_PRICE = getProduct("course")?.price ?? "347";
 
 // The one action on this page. It goes to checkout, which asks for sign-in first if needed.
 function Cta({ className = "" }: { className?: string }) {
-  return (
-    <Link
-      href="/checkout?product=course"
-      className={`inline-flex items-center justify-center rounded-full bg-fg px-7 py-4 text-center font-semibold text-bg ${className}`}
-    >
-      {sprintCopy.cta}
-    </Link>
-  );
-}
-
-// The price block shows the live offer when there is one, and the regular price otherwise
-function PriceBlock({ offer, align = "center" }: { offer: CourseOffer | null; align?: "center" | "start" }) {
-  const text = align === "center" ? "text-center" : "text-start";
-  if (!offer) {
-    return (
-      <div className={text}>
-        <p className="text-4xl font-bold tracking-tight">{COURSE_REGULAR_PRICE} ₪</p>
-        <p className="mt-1 text-sm opacity-70">לכל הסמינר, תשלום חד פעמי</p>
-      </div>
-    );
-  }
-  return (
-    <div className={text}>
-      <p className="text-sm font-semibold opacity-70">מחיר למחזור {offer.label}</p>
-      <p className="mt-1 text-5xl font-bold tracking-tight text-ok">{offer.priceIls} ₪</p>
-      <p className="mt-2 text-sm opacity-80">
-        מחיר הסמינר הרגיל: <span className="line-through">{COURSE_REGULAR_PRICE} ₪</span>. המחיר נסגר כשהמחזור מתחיל.
-      </p>
-      <p className="mt-1 text-sm tabular-nums opacity-80">נשארו {offer.seatsLeft} מקומות במחזור הזה.</p>
-    </div>
-  );
+  return <CourseOfferCta className={className}>{sprintCopy.cta}</CourseOfferCta>;
 }
 
 export function SprintLanding({ offer }: { offer: CourseOffer | null }) {
@@ -59,7 +26,7 @@ export function SprintLanding({ offer }: { offer: CourseOffer | null }) {
           <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed opacity-80">{sprintCopy.sub}</p>
 
           <div className="mt-8 w-full max-w-sm rounded-3xl border border-line bg-white p-6 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
-            <PriceBlock offer={offer} />
+            <CourseOfferPrice offer={offer} />
             <Cta className="mt-6 w-full" />
           </div>
         </div>
@@ -109,17 +76,9 @@ export function SprintLanding({ offer }: { offer: CourseOffer | null }) {
         <section className="border-t border-line">
           <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
             <h2 className="text-center text-2xl font-bold sm:text-3xl">{sprintCopy.howTitle}</h2>
-            <ol className="mt-8 divide-y divide-line border-y border-line">
-              {sprintCopy.how.map((item, i) => (
-                <li key={item.step} className="flex gap-4 py-6">
-                  <span className="text-3xl font-bold tabular-nums opacity-30">{String(i + 1).padStart(2, "0")}</span>
-                  <div>
-                    <span className="font-bold leading-snug">{item.step}</span>
-                    <p className="mt-1 leading-relaxed opacity-80">{item.text}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
+            <div className="mt-8">
+              <StepsList steps={sprintCopy.how} />
+            </div>
           </div>
         </section>
 
@@ -138,7 +97,7 @@ export function SprintLanding({ offer }: { offer: CourseOffer | null }) {
               ))}
             </ul>
             <div className="mt-10 rounded-3xl border border-line bg-white p-6 text-center shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
-              <PriceBlock offer={offer} />
+              <CourseOfferPrice offer={offer} />
               <Cta className="mt-6 w-full sm:w-auto sm:px-10" />
             </div>
           </div>

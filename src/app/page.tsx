@@ -2,10 +2,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { HeroDecor } from "@/components/HeroDecor";
 import { HeroDemo } from "@/components/HeroDemo";
-import { copy, homeFaqGroups, homeFeatures } from "@/content/copy";
+import { HomeIntro } from "@/components/HomeIntro";
+import { TactileLink } from "@/components/TactileButton";
+import { CourseOfferCta, CourseOfferPrice } from "@/components/CourseOfferCard";
+import { StepsList } from "@/components/StepsList";
+import { copy, diffPoints, homeFaqGroups, homeHowSteps } from "@/content/copy";
 import { examDatesCopy } from "@/content/examDates";
+import { calculatorCopy, guideCopy } from "@/content/examGuide";
+import { ScoreCalculator } from "@/components/ScoreCalculator";
 import { questions, TYPE_LABELS } from "@/content/questions";
+import { questionNotes } from "@/content/questionNotes";
 import { TYPES } from "@/lib/practice";
+import { upcomingCourseOffer } from "@/lib/cohorts";
+
+// Shows the live cohort offer (price, seats left), so this page cannot be cached at build time
+export const dynamic = "force-dynamic";
 
 const EXAMPLES: Record<(typeof TYPES)[number], string> = {
   sentence: "The drought had a ____ effect on the region's economy…",
@@ -13,10 +24,14 @@ const EXAMPLES: Record<(typeof TYPES)[number], string> = {
   reading: "According to paragraph 1, why do cities stay hot at night?",
 };
 
-export default function Home() {
+export default async function Home() {
   // The hero shows this one question; the server sends it, not the whole bank
   const heroQuestion = questions.find((q) => q.id === "sc-05")!;
+  const offer = await upcomingCourseOffer();
+  const aboutParagraphs = copy.aboutText.split("\n\n");
+
   return (
+    <HomeIntro>
     <div className="flex min-h-dvh flex-col">
       {/* Header + hero share one continuous gradient, so the nav bar doesn't sit on a flat block above it */}
       <div className="hero-mesh relative flex min-h-dvh flex-col">
@@ -45,12 +60,9 @@ export default function Home() {
                   className="mascot-bob h-auto w-[40px] sm:w-[50px]"
                 />
               </div>
-              <Link
-                href="/sign-up"
-                className="rounded-full bg-fg px-7 py-4 text-center font-semibold text-bg sm:py-3.5"
-              >
+              <TactileLink href="/sign-up" size="lg">
                 {copy.heroCta2}
-              </Link>
+              </TactileLink>
             </div>
             <Link
               href="/start"
@@ -93,17 +105,17 @@ export default function Home() {
               </div>
             </div>
 
-            <HeroDemo q={heroQuestion} />
+            <HeroDemo q={heroQuestion} note={questionNotes[heroQuestion.id]} />
           </div>
         </section>
 
-        {/* What's included */}
+        {/* Why us: a real teacher, not another app */}
         <section className="border-t border-line">
           <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
-            <h2 className="reveal text-3xl font-bold sm:text-4xl">{copy.whatsIncludedTitle}</h2>
+            <h2 className="reveal text-3xl font-bold sm:text-4xl">{copy.diffTitle}</h2>
             <ul className="reveal-fade mt-8 flex flex-col gap-3">
-              {homeFeatures.map((f) => (
-                <li key={f} className="flex items-start gap-2.5 text-lg leading-relaxed">
+              {diffPoints.map((p) => (
+                <li key={p} className="flex items-start gap-2.5 text-lg leading-relaxed">
                   <svg viewBox="0 0 20 20" fill="none" className="mt-1 size-5 shrink-0 text-ok">
                     <path
                       d="M4 10.5l3.5 3.5L16 6"
@@ -113,67 +125,84 @@ export default function Home() {
                       strokeLinejoin="round"
                     />
                   </svg>
-                  <span className="opacity-90">{f}</span>
+                  <span className="opacity-90">{p}</span>
                 </li>
               ))}
             </ul>
-            <Link href="/pricing" className="mt-8 inline-flex rounded-full border border-fg/25 px-7 py-3.5 font-semibold hover:bg-fg/5">
-              {copy.whatsIncludedCta}
-            </Link>
           </div>
         </section>
 
-        {/* Exam structure */}
+        {/* Who teaches: right after "why us", so the reader meets the teacher while the point is fresh */}
         <section className="border-t border-line">
-          <div className="mx-auto grid max-w-6xl gap-6 px-4 py-16 sm:px-6 sm:py-20 md:grid-cols-[1fr_1fr] md:items-center">
-            <div>
-              <h2 className="reveal text-3xl font-bold sm:text-4xl">{copy.examStructureTitle}</h2>
-              <p className="mt-4 max-w-xl text-lg leading-relaxed opacity-80">{copy.examStructureText}</p>
-              <Link
-                href="/pricing"
-                className="mt-6 inline-flex rounded-full bg-fg px-7 py-3.5 font-semibold text-bg"
-              >
-                {copy.examStructureCta}
-              </Link>
-              <Link href="/exam-dates" className="mt-4 flex min-h-11 items-center text-sm underline underline-offset-4 opacity-70">
-                {examDatesCopy.homeLink}
-              </Link>
+          <div className="mx-auto grid max-w-5xl items-center gap-8 px-4 py-16 sm:px-6 sm:py-20 md:grid-cols-[0.8fr_1.2fr] md:gap-12">
+            <div className="mx-auto w-44 overflow-hidden rounded-3xl sm:w-56 md:mx-0 md:w-full">
+              <Image src="/about/ohad.jpg" alt="אהד, המורה לסמינר אמירנט של Anglit" width={1086} height={1448} className="h-auto w-full object-cover" />
             </div>
-            <ol className="grid grid-cols-4 gap-2 text-center">
-              {["4 דק׳", "4 דק׳", "15 דק׳", "6 דק׳", "6 דק׳", "4 דק׳", "7 דק׳", "4 דק׳"].map((t, i) => (
-                <li key={i} className="rounded-2xl border border-line bg-white p-3">
-                  <span className="block text-sm opacity-70">פרק {i + 1}</span>
-                  <span className="mt-1 block font-bold tabular-nums">{t}</span>
-                </li>
-              ))}
-            </ol>
+            <div>
+              <h2 className="reveal text-3xl font-bold sm:text-4xl">{copy.aboutTitle}</h2>
+              <div className="mt-4 flex max-w-xl flex-col gap-4 text-lg leading-relaxed opacity-80">
+                {aboutParagraphs.map((p) => (
+                  <p key={p}>{p}</p>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* About */}
+        {/* How the week is built, with the exam's real timing folded in */}
         <section className="border-t border-line">
-          <div className="mx-auto grid max-w-6xl gap-4 px-4 py-16 sm:px-6 sm:py-20 md:grid-cols-[1fr_2fr]">
-            <h2 className="reveal text-3xl font-bold sm:text-4xl">{copy.aboutTitle}</h2>
-            <p className="max-w-2xl text-lg leading-relaxed opacity-80">{copy.aboutText}</p>
+          <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
+            <h2 className="reveal text-3xl font-bold sm:text-4xl">{copy.howTitle}</h2>
+            <div className="mt-8">
+              <StepsList steps={homeHowSteps} />
+            </div>
+            <p className="mt-6 max-w-xl text-sm leading-relaxed opacity-70">{copy.howFacts}</p>
           </div>
         </section>
 
-        {/* Guarantee */}
-        <section data-invert="">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-            <p className="text-sm font-semibold opacity-70">{copy.guaranteeEyebrow}</p>
-            <h2 className="reveal mt-3 max-w-3xl text-[2rem] font-bold leading-tight text-balance sm:text-5xl">
-              {copy.guaranteeTitle}
-            </h2>
-            <p className="mt-5 max-w-xl opacity-70">{copy.guaranteeTerms}</p>
-            <Link
-              href="/sign-up"
-              className="mt-8 inline-flex rounded-full bg-fg px-7 py-4 font-semibold text-bg sm:py-3.5"
-            >
-              {copy.guaranteeCta}
+        {/* Price, right next to the guarantee that removes the risk of paying */}
+        <section className="border-t border-line">
+          <div className="mx-auto max-w-md px-4 py-16 text-center sm:px-6 sm:py-20">
+            <p className="font-hand text-2xl opacity-70">{copy.homePricingTitle}</p>
+            <div className="mt-6 rounded-3xl border border-line bg-white p-6 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
+              <CourseOfferPrice offer={offer} />
+              <CourseOfferCta className="mt-6 w-full">{copy.heroCta2}</CourseOfferCta>
+            </div>
+            <Link href="/pricing" className="mt-4 inline-flex min-h-11 items-center text-sm underline underline-offset-4 opacity-70">
+              {copy.homePricingCta}
             </Link>
+
+            <div data-invert="" className="mt-10 rounded-3xl p-6 text-start sm:p-8">
+              <p className="text-sm font-semibold opacity-70">{copy.guaranteeEyebrow}</p>
+              <h3 className="mt-3 text-2xl font-bold leading-tight text-balance">{copy.guaranteeTitle}</h3>
+              <p className="mt-3 opacity-70">{copy.guaranteeTerms}</p>
+            </div>
           </div>
         </section>
+
+        {/* Score calculator, with the other reference pages gathered in one quiet row instead of scattered */}
+        <section className="border-t border-line">
+          <div className="mx-auto grid max-w-6xl gap-8 px-4 py-16 sm:px-6 sm:py-20 md:grid-cols-2 md:items-center md:gap-12">
+            <div>
+              <p className="font-hand text-2xl opacity-70">{calculatorCopy.eyebrow}</p>
+              <h2 className="reveal mt-1 text-3xl font-bold sm:text-4xl">{calculatorCopy.title}</h2>
+              <p className="mt-4 max-w-xl text-lg leading-relaxed opacity-80">{calculatorCopy.intro}</p>
+              <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                <Link href="/score" className="inline-flex min-h-8 items-center underline underline-offset-4 opacity-70">
+                  {calculatorCopy.homeLink}
+                </Link>
+                <Link href="/amirnet" className="inline-flex min-h-8 items-center underline underline-offset-4 opacity-70">
+                  {guideCopy.homeLink}
+                </Link>
+                <Link href="/exam-dates" className="inline-flex min-h-8 items-center underline underline-offset-4 opacity-70">
+                  {examDatesCopy.homeLink}
+                </Link>
+              </div>
+            </div>
+            <ScoreCalculator />
+          </div>
+        </section>
+
         {/* FAQ */}
         <section className="border-t border-line">
           <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
@@ -199,8 +228,19 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* Final CTA, so the page doesn't end cold after the FAQ */}
+        <section className="border-t border-line">
+          <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
+            <h2 className="text-2xl font-bold sm:text-3xl">{copy.closingTitle}</h2>
+            <Link href="/sign-up" className="mt-6 inline-flex rounded-full bg-fg px-7 py-4 font-semibold text-bg sm:w-auto sm:px-10">
+              {copy.guaranteeCta}
+            </Link>
+          </div>
+        </section>
       </main>
 
     </div>
+    </HomeIntro>
   );
 }

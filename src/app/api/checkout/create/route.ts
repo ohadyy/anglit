@@ -8,6 +8,10 @@ import { orders } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getProduct } from "@/content/pricingCopy";
 
+// Coupon codes that make the course free, no Cardcom involved — for people the
+// owner is giving free access to directly (e.g. "DIPLOACT").
+const FREE_COUPONS = ["DIPLOACT"];
+
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
@@ -28,16 +32,24 @@ export async function POST(request: Request) {
   const amountIls = offer ? offer.priceIls : Number(product.price);
   const origin = new URL(request.url).origin;
 
+  const coupon = form.get("coupon")?.toString().trim().toUpperCase();
+  const isFreeCoupon = !!coupon && FREE_COUPONS.includes(coupon);
+
   const [order] = await db
     .insert(orders)
     .values({
       userId: session.user.id,
-      amountAgorot: Math.round(amountIls * 100),
+      amountAgorot: isFreeCoupon ? 0 : Math.round(amountIls * 100),
       product: product.id,
       cohortId: offer?.cohortId ?? null,
       termsAcceptedAt: new Date(),
+      ...(isFreeCoupon && { status: "paid" as const, provider: "coupon", paidAt: new Date() }),
     })
     .returning();
+
+  if (isFreeCoupon) {
+    return NextResponse.redirect(new URL(`/checkout/success?product=${product.id}`, request.url), { status: 303 });
+  }
 
   try {
     const result = await createLowProfile({

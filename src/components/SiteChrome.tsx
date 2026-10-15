@@ -13,7 +13,7 @@ const FULL_BLEED = ["/"];
 // Focused pages: practice and exam sessions have their own bottom bar or a timer, the campaign
 // landing pages have one call to action, and the sign-in / sign-up / checkout forms need full attention.
 // The homepage is its own full-bleed hero with its own CTAs — the tab bar has no room to sit well there.
-const NO_TAB_BAR = ["/practice", "/exam", "/ads", "/bio", "/sign-in", "/sign-up", "/checkout", "/start"];
+const NO_TAB_BAR = ["/practice", "/exam", "/ads", "/bio", "/sign-in", "/sign-up", "/checkout", "/start", "/diploactjoin"];
 
 function hasTabBar(path: string) {
   if (path === "/") return false;
