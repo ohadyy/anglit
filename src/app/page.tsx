@@ -76,16 +76,23 @@ export default async function Home() {
               {homeFeatures.map((f, i) =>
                 f.image ? (
                   <div key={f.title} className="grid items-center gap-8 sm:grid-cols-2 sm:gap-12">
-                    <div
-                      className={`mx-auto w-56 overflow-hidden rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:w-full sm:max-w-sm ${i % 2 ? "sm:order-2" : ""}`}
-                    >
-                      {f.image.endsWith(".svg") ? (
-                        // eslint-disable-next-line @next/next/no-img-element -- static vector art; next/image needs dangerouslyAllowSVG for this
-                        <img src={f.image} alt={f.alt ?? ""} width={f.imageWidth} height={f.imageHeight} className="h-auto w-full object-cover" />
-                      ) : (
+                    {f.image.endsWith(".svg") ? (
+                      // Transparent vector art: no card frame, it sits directly on the page
+                      // eslint-disable-next-line @next/next/no-img-element -- static vector art; next/image needs dangerouslyAllowSVG for this
+                      <img
+                        src={f.image}
+                        alt={f.alt ?? ""}
+                        width={f.imageWidth}
+                        height={f.imageHeight}
+                        className={`mx-auto w-64 sm:w-full sm:max-w-sm ${i % 2 ? "sm:order-2" : ""}`}
+                      />
+                    ) : (
+                      <div
+                        className={`mx-auto w-56 overflow-hidden rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:w-full sm:max-w-sm ${i % 2 ? "sm:order-2" : ""}`}
+                      >
                         <Image src={f.image} alt={f.alt ?? ""} width={f.imageWidth} height={f.imageHeight} className="h-auto w-full object-cover" />
-                      )}
-                    </div>
+                      </div>
+                    )}
                     <div className={i % 2 ? "sm:order-1" : ""}>
                       <h3 className="text-3xl font-bold text-balance sm:text-5xl">{f.title}</h3>
                       <p className="mt-4 max-w-md text-lg leading-relaxed opacity-80 sm:text-xl">{f.text}</p>
