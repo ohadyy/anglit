@@ -73,29 +73,27 @@ export default async function Home() {
           <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
             <h2 className="reveal text-center text-3xl font-bold sm:text-4xl">{copy.featuresTitle}</h2>
             <div className="mt-16 flex flex-col gap-20 sm:gap-28">
-              {homeFeatures.map((f, i) => {
-                // The last row is a real screenshot (portrait); the first two are square brand illustrations
-                const isScreenshot = i === homeFeatures.length - 1;
-                return (
+              {homeFeatures.map((f, i) =>
+                f.image ? (
                   <div key={f.title} className="grid items-center gap-8 sm:grid-cols-2 sm:gap-12">
                     <div
                       className={`mx-auto w-56 overflow-hidden rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:w-full sm:max-w-sm ${i % 2 ? "sm:order-2" : ""}`}
                     >
-                      <Image
-                        src={f.image}
-                        alt={f.alt ?? ""}
-                        width={isScreenshot ? 375 : 1024}
-                        height={isScreenshot ? 812 : 1024}
-                        className="h-auto w-full object-cover"
-                      />
+                      <Image src={f.image} alt={f.alt ?? ""} width={375} height={812} className="h-auto w-full object-cover" />
                     </div>
                     <div className={i % 2 ? "sm:order-1" : ""}>
                       <h3 className="text-3xl font-bold text-balance sm:text-5xl">{f.title}</h3>
                       <p className="mt-4 max-w-md text-lg leading-relaxed opacity-80 sm:text-xl">{f.text}</p>
                     </div>
                   </div>
-                );
-              })}
+                ) : (
+                  // No photo yet for this one; placeholder text block until a real photo replaces it
+                  <div key={f.title} className="mx-auto max-w-xl text-center">
+                    <h3 className="text-3xl font-bold text-balance sm:text-5xl">{f.title}</h3>
+                    <p className="mt-4 text-lg leading-relaxed opacity-80 sm:text-xl">{f.text}</p>
+                  </div>
+                )
+              )}
             </div>
           </div>
         </section>
