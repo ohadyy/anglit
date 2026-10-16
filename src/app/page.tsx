@@ -6,6 +6,7 @@ import { HomeIntro } from "@/components/HomeIntro";
 import { TactileLink } from "@/components/TactileButton";
 import { CourseOfferCta, CourseOfferPrice } from "@/components/CourseOfferCard";
 import { StepsList } from "@/components/StepsList";
+import { TextReveal } from "@/components/TextReveal";
 import { copy, homeFaqGroups, homeFeatures, homeHowSteps } from "@/content/copy";
 import { examDatesCopy } from "@/content/examDates";
 import { calculatorCopy, guideCopy } from "@/content/examGuide";
@@ -150,7 +151,7 @@ export default async function Home() {
               <h2 className="reveal text-3xl font-bold sm:text-4xl">{copy.aboutTitle}</h2>
               <div className="mt-4 flex max-w-xl flex-col gap-4 text-lg leading-relaxed opacity-80">
                 {aboutParagraphs.map((p) => (
-                  <p key={p}>{p}</p>
+                  <TextReveal key={p} text={p} />
                 ))}
               </div>
             </div>
