@@ -73,9 +73,9 @@ export const homeFeatures = [
   {
     title: "ליווי קבוצתי אישי",
     text: "קבוצה של 5–6 תלמידים, לא כיתה של שלושים. כל שאלה שלכם נענית באותו מפגש, לא מחכה בתור.",
-    image: "/home/feature-group.png",
-    imageWidth: 1616,
-    imageHeight: 1078,
+    image: "/home/feature-group.svg",
+    imageWidth: 3415,
+    imageHeight: 2500,
     alt: "",
   },
   {
