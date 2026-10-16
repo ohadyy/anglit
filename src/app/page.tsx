@@ -114,9 +114,9 @@ export default async function Home() {
                         <Image src={f.image} alt={f.alt ?? ""} width={f.imageWidth} height={f.imageHeight} className="h-auto w-full object-cover" />
                       </div>
                     )}
-                    <div className={i % 2 ? "lg:order-1" : ""}>
+                    <div className={`text-center lg:text-start ${i % 2 ? "lg:order-1" : ""}`}>
                       <h3 className="text-4xl font-bold text-balance sm:text-6xl">{f.title}</h3>
-                      <p className="mt-4 max-w-md text-lg leading-relaxed opacity-80 sm:text-xl">
+                      <p className="mx-auto mt-4 max-w-md text-lg leading-relaxed opacity-80 sm:text-xl lg:mx-0">
                         {i === 1 ? (
                           <>
                             אהד עבר את האמירנט וקיבל <CircleHand>150</CircleHand>, הציון המקסימלי. מכיר כל סוג שאלה,
