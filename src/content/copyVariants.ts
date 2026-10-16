@@ -79,17 +79,6 @@ export const variantSections: VariantSection[] = [
     ],
   },
   {
-    title: "סוגי שאלות",
-    rows: [
-      {
-        key: "typesTitle",
-        label: "כותרת",
-        a: "מה יש במבחן",
-        b: "שלושה סוגי שאלות, שלוש שיטות",
-      },
-    ],
-  },
-  {
     title: "ההתחייבות",
     rows: [
       { key: "guaranteeEyebrow", label: "שורה קטנה", a: "בלי סיכון", b: "הבטחה" },

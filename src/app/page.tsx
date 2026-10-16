@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { HeroDecor } from "@/components/HeroDecor";
-import { HeroDemo } from "@/components/HeroDemo";
 import { HomeIntro } from "@/components/HomeIntro";
 import { TactileLink } from "@/components/TactileButton";
 import { CourseOfferCta, CourseOfferPrice } from "@/components/CourseOfferCard";
@@ -10,20 +9,11 @@ import { copy, homeFaqGroups, homeFeatures, homeHowSteps } from "@/content/copy"
 import { examDatesCopy } from "@/content/examDates";
 import { calculatorCopy, guideCopy } from "@/content/examGuide";
 import { ScoreCalculator } from "@/components/ScoreCalculator";
-import { questions, TYPE_LABELS } from "@/content/questions";
-import { questionNotes } from "@/content/questionNotes";
-import { TYPES } from "@/lib/practice";
 import { upcomingCourseOffer } from "@/lib/cohorts";
 import { organizationJsonLd } from "@/lib/organizationJsonLd";
 
 // Shows the live cohort offer (price, seats left), so this page cannot be cached at build time
 export const dynamic = "force-dynamic";
-
-const EXAMPLES: Record<(typeof TYPES)[number], string> = {
-  sentence: "The drought had a ____ effect on the region's economy…",
-  restatement: "Had the bridge been inspected regularly, the accident…",
-  reading: "According to paragraph 1, why do cities stay hot at night?",
-};
 
 // Two line icons (group, available-for-questions) for the first two feature cards;
 // the third card shows a real screenshot instead, so it has no icon here.
@@ -42,8 +32,6 @@ const FEATURE_ICONS = [
 ];
 
 export default async function Home() {
-  // The hero shows this one question; the server sends it, not the whole bank
-  const heroQuestion = questions.find((q) => q.id === "sc-05")!;
   const offer = await upcomingCourseOffer();
   const aboutParagraphs = copy.aboutText.split("\n\n");
 
@@ -96,37 +84,6 @@ export default async function Home() {
       </div>
 
       <main className="flex-1">
-        {/* Question types + try a question, side by side */}
-        <section className="border-t border-line">
-          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16">
-            <div>
-              <h2 className="reveal text-3xl font-bold sm:text-4xl">{copy.typesTitle}</h2>
-              <div className="mt-8 grid gap-3">
-                {TYPES.map((t) => (
-                  <Link
-                    key={t}
-                    href={`/practice?type=${t}`}
-                    className="group flex flex-col rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-6 transition-colors hover:border-fg/30"
-                  >
-                    <span className="text-xl font-bold">{TYPE_LABELS[t].he}</span>
-                    <span dir="ltr" className="text-left text-sm opacity-70">
-                      {TYPE_LABELS[t].en}
-                    </span>
-                    <p dir="ltr" className="mt-5 flex-1 text-left leading-relaxed opacity-80">
-                      {EXAMPLES[t]}
-                    </p>
-                    <span className="mt-6 text-sm font-semibold opacity-70 group-hover:opacity-100">
-                      {questions.filter((q) => q.type === t).length} שאלות לתרגול ←
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <HeroDemo q={heroQuestion} note={questionNotes[heroQuestion.id]} />
-          </div>
-        </section>
-
         {/* What you get: three concrete things, not a vague sales pitch */}
         <section className="border-t border-line">
           <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
