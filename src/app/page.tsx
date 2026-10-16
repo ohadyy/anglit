@@ -15,22 +15,6 @@ import { organizationJsonLd } from "@/lib/organizationJsonLd";
 // Shows the live cohort offer (price, seats left), so this page cannot be cached at build time
 export const dynamic = "force-dynamic";
 
-// Two line icons (group, available-for-questions) for the first two feature cards;
-// the third card shows a real screenshot instead, so it has no icon here.
-const FEATURE_ICONS = [
-  <svg key="group" viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-    <circle cx="9" cy="7" r="4" />
-    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-  </svg>,
-  <svg key="help" viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-    <line x1="12" y1="17" x2="12.01" y2="17" />
-  </svg>,
-];
-
 export default async function Home() {
   const offer = await upcomingCourseOffer();
   const aboutParagraphs = copy.aboutText.split("\n\n");
@@ -84,29 +68,34 @@ export default async function Home() {
       </div>
 
       <main className="flex-1">
-        {/* What you get: three concrete things, not a vague sales pitch */}
+        {/* What you get: three rows, each one point with room to breathe */}
         <section className="border-t border-line">
           <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
             <h2 className="reveal text-center text-3xl font-bold sm:text-4xl">{copy.featuresTitle}</h2>
-            <div className="mt-12 grid gap-6 sm:grid-cols-3">
-              {homeFeatures.map((f, i) => (
-                <div
-                  key={f.title}
-                  className="flex flex-col rounded-3xl border border-line bg-white p-6 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]"
-                >
-                  {f.image ? (
-                    <div className="mb-5 w-24 overflow-hidden rounded-xl border border-line">
-                      <Image src={f.image} alt={f.alt ?? ""} width={375} height={812} className="h-auto w-full object-cover" />
+            <div className="mt-16 flex flex-col gap-20 sm:gap-28">
+              {homeFeatures.map((f, i) => {
+                // The last row is a real screenshot (portrait); the first two are square brand illustrations
+                const isScreenshot = i === homeFeatures.length - 1;
+                return (
+                  <div key={f.title} className="grid items-center gap-8 sm:grid-cols-2 sm:gap-12">
+                    <div
+                      className={`mx-auto w-56 overflow-hidden rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:w-full sm:max-w-sm ${i % 2 ? "sm:order-2" : ""}`}
+                    >
+                      <Image
+                        src={f.image}
+                        alt={f.alt ?? ""}
+                        width={isScreenshot ? 375 : 1024}
+                        height={isScreenshot ? 812 : 1024}
+                        className="h-auto w-full object-cover"
+                      />
                     </div>
-                  ) : (
-                    <div className="mb-5 flex size-12 items-center justify-center rounded-full bg-sunk text-fg">
-                      {FEATURE_ICONS[i]}
+                    <div className={i % 2 ? "sm:order-1" : ""}>
+                      <h3 className="text-3xl font-bold text-balance sm:text-5xl">{f.title}</h3>
+                      <p className="mt-4 max-w-md text-lg leading-relaxed opacity-80 sm:text-xl">{f.text}</p>
                     </div>
-                  )}
-                  <h3 className="text-xl font-bold">{f.title}</h3>
-                  <p className="mt-2 leading-relaxed opacity-80">{f.text}</p>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
