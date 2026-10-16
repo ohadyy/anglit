@@ -249,13 +249,12 @@ body::after {
     animation-range: entry 0% entry 45%;
   }
 
-  /* Word-by-word reveal: each word is its own inline-block with a staggered
-     delay (set inline per word), sharing the same view-linked timeline */
+  /* Word-by-word reveal: each word is its own inline-block; animation-range
+     is set per word inline (see TextReveal.tsx) to stagger them */
   .reveal-word {
     display: inline-block;
     animation: reveal linear both;
     animation-timeline: view();
-    animation-range: entry 0% entry 55%;
   }
 }
 
