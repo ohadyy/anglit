@@ -81,6 +81,10 @@ export const homeFeatures = [
   {
     title: "מורה אמיתי שמכיר את המבחן",
     text: "אהד עבר את האמירנט וקיבל 150, הציון המקסימלי. מכיר כל סוג שאלה, וזמין אליכם לאורך השבוע — לא בוט ולא מענה אוטומטי.",
+    image: "/home/feature-teacher.svg",
+    imageWidth: 3415,
+    imageHeight: 2500,
+    alt: "",
   },
   {
     title: "אתר מלא, לא רק מפגשים",

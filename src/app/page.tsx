@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { HeroDecor } from "@/components/HeroDecor";
@@ -14,6 +15,24 @@ import { organizationJsonLd } from "@/lib/organizationJsonLd";
 
 // Shows the live cohort offer (price, seats left), so this page cannot be cached at build time
 export const dynamic = "force-dynamic";
+
+// A hand-drawn circle around a word/number, from brand/graphics/circle-hand.svg
+function CircleHand({ children }: { children: ReactNode }) {
+  return (
+    <span className="relative inline-block px-1.5">
+      {children}
+      <svg viewBox="0 0 120 80" aria-hidden className="pointer-events-none absolute -inset-x-2 -inset-y-3 h-[calc(100%+1.5rem)] w-[calc(100%+1rem)] text-marker">
+        <path
+          d="M60 6c30 0 54 14 54 34s-22 36-54 36S6 60 6 40 26 6 58 8"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+      </svg>
+    </span>
+  );
+}
 
 export default async function Home() {
   const offer = await upcomingCourseOffer();
@@ -71,7 +90,9 @@ export default async function Home() {
         {/* What you get: three rows, each one point with room to breathe */}
         <section className="border-t border-line">
           <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
-            <h2 className="reveal text-center text-3xl font-bold sm:text-4xl">{copy.featuresTitle}</h2>
+            <h2 className="reveal text-center text-4xl font-bold text-balance sm:text-6xl">
+              מה <mark className="pink">מקבלים</mark> בסמינר
+            </h2>
             <div className="mt-16 flex flex-col gap-20 sm:gap-28">
               {homeFeatures.map((f, i) =>
                 f.image ? (
@@ -95,7 +116,16 @@ export default async function Home() {
                     )}
                     <div className={i % 2 ? "sm:order-1" : ""}>
                       <h3 className="text-4xl font-bold text-balance sm:text-6xl">{f.title}</h3>
-                      <p className="mt-4 max-w-md text-lg leading-relaxed opacity-80 sm:text-xl">{f.text}</p>
+                      <p className="mt-4 max-w-md text-lg leading-relaxed opacity-80 sm:text-xl">
+                        {i === 1 ? (
+                          <>
+                            אהד עבר את האמירנט וקיבל <CircleHand>150</CircleHand>, הציון המקסימלי. מכיר כל סוג שאלה,
+                            וזמין אליכם לאורך השבוע — לא בוט ולא מענה אוטומטי.
+                          </>
+                        ) : (
+                          f.text
+                        )}
+                      </p>
                     </div>
                   </div>
                 ) : (
