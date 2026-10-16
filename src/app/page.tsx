@@ -6,7 +6,7 @@ import { HomeIntro } from "@/components/HomeIntro";
 import { TactileLink } from "@/components/TactileButton";
 import { CourseOfferCta, CourseOfferPrice } from "@/components/CourseOfferCard";
 import { StepsList } from "@/components/StepsList";
-import { copy, diffPoints, homeFaqGroups, homeHowSteps } from "@/content/copy";
+import { copy, diffPoints, homeFaqGroups, homeFeatures, homeHowSteps } from "@/content/copy";
 import { examDatesCopy } from "@/content/examDates";
 import { calculatorCopy, guideCopy } from "@/content/examGuide";
 import { ScoreCalculator } from "@/components/ScoreCalculator";
@@ -14,6 +14,7 @@ import { questions, TYPE_LABELS } from "@/content/questions";
 import { questionNotes } from "@/content/questionNotes";
 import { TYPES } from "@/lib/practice";
 import { upcomingCourseOffer } from "@/lib/cohorts";
+import { organizationJsonLd } from "@/lib/organizationJsonLd";
 
 // Shows the live cohort offer (price, seats left), so this page cannot be cached at build time
 export const dynamic = "force-dynamic";
@@ -33,6 +34,7 @@ export default async function Home() {
   return (
     <HomeIntro>
     <div className="flex min-h-dvh flex-col">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
       {/* Header + hero share one continuous gradient, so the nav bar doesn't sit on a flat block above it */}
       <div className="hero-mesh relative flex min-h-dvh flex-col">
         <HeroDecor mark="a" font="gevora" />
@@ -106,6 +108,29 @@ export default async function Home() {
             </div>
 
             <HeroDemo q={heroQuestion} note={questionNotes[heroQuestion.id]} />
+          </div>
+        </section>
+
+        {/* What you get: the two most concrete features, each shown in a real screenshot */}
+        <section className="border-t border-line">
+          <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
+            <h2 className="reveal text-center text-3xl font-bold sm:text-4xl">{copy.featuresTitle}</h2>
+            <div className="mt-12 flex flex-col gap-16">
+              {homeFeatures.map((f, i) => (
+                <div
+                  key={f.title}
+                  className="grid items-center gap-8 md:grid-cols-2 md:gap-12"
+                >
+                  <div className={`mx-auto w-48 overflow-hidden rounded-3xl border border-line shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:w-56 ${i % 2 ? "md:order-2" : ""}`}>
+                    <Image src={f.image} alt={f.alt} width={375} height={812} className="h-auto w-full object-cover" />
+                  </div>
+                  <div className={i % 2 ? "md:order-1" : ""}>
+                    <h3 className="text-2xl font-bold sm:text-3xl">{f.title}</h3>
+                    <p className="mt-3 max-w-md text-lg leading-relaxed opacity-80">{f.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 

@@ -141,6 +141,17 @@ export const variantSections: VariantSection[] = [
     ],
   },
   {
+    title: "מה תקבלו בסמינר",
+    rows: [
+      {
+        key: "featuresTitle",
+        label: "כותרת",
+        a: "מה תקבלו בסמינר",
+        b: "זה מה שבאמת תקבלו",
+      },
+    ],
+  },
+  {
     title: "למה איתנו",
     rows: [
       {
