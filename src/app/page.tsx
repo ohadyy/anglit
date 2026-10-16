@@ -94,14 +94,14 @@ export default async function Home() {
                       </div>
                     )}
                     <div className={i % 2 ? "sm:order-1" : ""}>
-                      <h3 className="text-3xl font-bold text-balance sm:text-5xl">{f.title}</h3>
+                      <h3 className="text-4xl font-bold text-balance sm:text-6xl">{f.title}</h3>
                       <p className="mt-4 max-w-md text-lg leading-relaxed opacity-80 sm:text-xl">{f.text}</p>
                     </div>
                   </div>
                 ) : (
                   // No photo yet for this one; placeholder text block until a real photo replaces it
                   <div key={f.title} className="mx-auto max-w-xl text-center">
-                    <h3 className="text-3xl font-bold text-balance sm:text-5xl">{f.title}</h3>
+                    <h3 className="text-4xl font-bold text-balance sm:text-6xl">{f.title}</h3>
                     <p className="mt-4 text-lg leading-relaxed opacity-80 sm:text-xl">{f.text}</p>
                   </div>
                 )
