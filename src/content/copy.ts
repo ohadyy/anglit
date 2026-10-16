@@ -73,6 +73,10 @@ export const homeFeatures = [
   {
     title: "ליווי קבוצתי אישי",
     text: "קבוצה של 5–6 תלמידים, לא כיתה של שלושים. כל שאלה שלכם נענית באותו מפגש, לא מחכה בתור.",
+    image: "/home/feature-group.png",
+    imageWidth: 1616,
+    imageHeight: 1078,
+    alt: "",
   },
   {
     title: "מורה אמיתי שמכיר את המבחן",
@@ -82,6 +86,8 @@ export const homeFeatures = [
     title: "אתר מלא, לא רק מפגשים",
     text: "כל סוגי השאלות, מבחני תרגול מלאים עם הסבר לכל תשובה, וגם משחקי מילים לתרגול קליל בדרך.",
     image: "/home/feature-practice.jpg",
+    imageWidth: 375,
+    imageHeight: 812,
     alt: "שאלת הבנת הנקרא בתרגול, עם התשובה הנכונה מסומנת",
   },
 ];

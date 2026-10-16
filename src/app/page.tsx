@@ -79,7 +79,7 @@ export default async function Home() {
                     <div
                       className={`mx-auto w-56 overflow-hidden rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:w-full sm:max-w-sm ${i % 2 ? "sm:order-2" : ""}`}
                     >
-                      <Image src={f.image} alt={f.alt ?? ""} width={375} height={812} className="h-auto w-full object-cover" />
+                      <Image src={f.image} alt={f.alt ?? ""} width={f.imageWidth} height={f.imageHeight} className="h-auto w-full object-cover" />
                     </div>
                     <div className={i % 2 ? "sm:order-1" : ""}>
                       <h3 className="text-3xl font-bold text-balance sm:text-5xl">{f.title}</h3>
