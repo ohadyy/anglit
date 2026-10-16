@@ -89,14 +89,14 @@ export default async function Home() {
       <main className="flex-1">
         {/* What you get: three rows, each one point with room to breathe */}
         <section className="border-t border-line">
-          <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
             <h2 className="reveal text-center text-4xl font-bold text-balance sm:text-6xl">
               מה <mark className="pink">מקבלים</mark> בסמינר
             </h2>
             <div className="mt-16 flex flex-col gap-20 sm:gap-28">
               {homeFeatures.map((f, i) =>
                 f.image ? (
-                  <div key={f.title} className="grid items-center gap-8 sm:grid-cols-2 sm:gap-12">
+                  <div key={f.title} className="flex flex-col items-center gap-8 lg:flex-row lg:gap-12">
                     {f.image.endsWith(".svg") ? (
                       // Transparent vector art: no card frame, it sits directly on the page
                       // eslint-disable-next-line @next/next/no-img-element -- static vector art; next/image needs dangerouslyAllowSVG for this
@@ -105,16 +105,16 @@ export default async function Home() {
                         alt={f.alt ?? ""}
                         width={f.imageWidth}
                         height={f.imageHeight}
-                        className={`mx-auto w-64 sm:w-full sm:max-w-sm ${i % 2 ? "sm:order-2" : ""}`}
+                        className={`mx-auto w-[28rem] max-w-full lg:w-[42rem] lg:shrink-0 ${i % 2 ? "lg:order-2" : ""}`}
                       />
                     ) : (
                       <div
-                        className={`mx-auto w-56 overflow-hidden rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:w-full sm:max-w-sm ${i % 2 ? "sm:order-2" : ""}`}
+                        className={`mx-auto w-[24.5rem] max-w-full overflow-hidden rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] lg:w-[42rem] lg:shrink-0 ${i % 2 ? "lg:order-2" : ""}`}
                       >
                         <Image src={f.image} alt={f.alt ?? ""} width={f.imageWidth} height={f.imageHeight} className="h-auto w-full object-cover" />
                       </div>
                     )}
-                    <div className={i % 2 ? "sm:order-1" : ""}>
+                    <div className={i % 2 ? "lg:order-1" : ""}>
                       <h3 className="text-4xl font-bold text-balance sm:text-6xl">{f.title}</h3>
                       <p className="mt-4 max-w-md text-lg leading-relaxed opacity-80 sm:text-xl">
                         {i === 1 ? (
