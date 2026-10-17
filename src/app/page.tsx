@@ -138,6 +138,11 @@ export default async function Home() {
                 )
               )}
             </div>
+            <div className="mt-16 flex justify-center sm:mt-20">
+              <TactileLink href="/sign-up" size="lg">
+                {copy.heroCta2}
+              </TactileLink>
+            </div>
           </div>
         </section>
 
