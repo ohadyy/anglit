@@ -3,10 +3,12 @@ import { db } from "@/db";
 import { leads } from "@/db/schema";
 import { sendTemplate } from "@/lib/whatsapp";
 import { notify } from "@/lib/ntfy";
+import { sendCapi } from "@/lib/meta";
 
-const SOURCE_LABEL: Record<"pricing" | "sign-up", string> = {
+const SOURCE_LABEL: Record<"pricing" | "sign-up" | "ads", string> = {
   pricing: "דף המחירים",
   "sign-up": "דף ההרשמה",
+  ads: "דף הקמפיין",
 };
 
 function notifyNewLead(lead: { name: string; contact: string; message: string | null; source: string }) {
@@ -52,12 +54,12 @@ export async function POST(request: Request) {
     !validContact ||
     (typeof message === "string" && message.length > MAX_MESSAGE) ||
     consent !== true ||
-    (source !== "pricing" && source !== "sign-up")
+    (source !== "pricing" && source !== "sign-up" && source !== "ads")
   ) {
     return NextResponse.json({ error: "invalid request" }, { status: 400 });
   }
 
-  await db.insert(leads).values({ name, contact, message: message || null, source, consent: true });
+  const [lead] = await db.insert(leads).values({ name, contact, message: message || null, source, consent: true }).returning({ id: leads.id });
   await notifyNewLead({ name, contact, message: message || null, source: SOURCE_LABEL[source] });
   if (process.env.WHATSAPP_OWNER_PHONE) {
     try {
@@ -67,5 +69,8 @@ export async function POST(request: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true });
+  // Same id as the browser pixel event, so Meta counts one Lead
+  await sendCapi({ name: "Lead", eventId: lead.id, phone: contactDigits.length >= 9 && contactDigits.length <= 12 ? contact : undefined, request });
+
+  return NextResponse.json({ ok: true, id: lead.id });
 }

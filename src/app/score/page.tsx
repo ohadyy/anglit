@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 import Link from "next/link";
 import { ScoreCalculator } from "@/components/ScoreCalculator";
 import { calculatorCopy as c } from "@/content/examGuide";
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 export default function ScorePage() {
   return (
     <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-16 pt-4 sm:px-6">
+      <BreadcrumbJsonLd trail={[{ name: "מחשבון ציון", path: "/score" }]} />
       <p className="font-hand text-2xl opacity-70">{c.eyebrow}</p>
       <h1 className="font-display mt-1 text-3xl font-bold tracking-tight sm:text-4xl">{c.title}</h1>
       <p className="mt-3 leading-relaxed opacity-80">{c.intro}</p>

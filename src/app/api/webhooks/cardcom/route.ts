@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { sendTemplate } from "@/lib/whatsapp";
 import { notify } from "@/lib/ntfy";
+import { sendCapi } from "@/lib/meta";
 import { getProduct } from "@/content/pricingCopy";
 import { getLpResult } from "@/lib/cardcom";
 import { db } from "@/db";
@@ -118,6 +119,9 @@ export async function POST(request: Request) {
       await db.update(orders).set({ status: "paid", paidAt: new Date() }).where(eq(orders.id, orderId));
       await sendPurchaseThanks(order.userId, order.product);
       await notifyPurchase(order.userId, order.product, order.amountAgorot);
+      // Only here, after the payment is confirmed. The order id is the dedupe key shared with the thank-you page.
+      const [buyer] = await db.select({ phone: user.phone }).from(user).where(eq(user.id, order.userId));
+      await sendCapi({ name: "Purchase", eventId: orderId, phone: buyer?.phone, value: order.amountAgorot / 100 });
       if (order.product === "course") await enrollInOrderCohort(order.userId, order.cohortId);
     }
   } else if (order.status === "pending") {

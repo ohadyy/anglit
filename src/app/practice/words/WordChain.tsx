@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { FreeNextCard } from "@/components/FreeNextCard";
 import { useMemo, useState } from "react";
 import { useStored } from "@/lib/useStored";
+import { randomOrder } from "@/lib/shuffle";
 
 type GameWord = { id: string; word: string; translation: string; example: string };
 
@@ -41,7 +43,7 @@ function Example({ sentence, word }: { sentence: string; word: string }) {
   );
 }
 
-export function WordChain({ words }: { words: GameWord[] }) {
+export function WordChain({ words, paid }: { words: GameWord[]; paid: boolean }) {
   const [started, setStarted] = useState(false);
   const [queue, setQueue] = useState<GameWord[]>(words);
   const [requeued, setRequeued] = useState<Record<string, number>>({});
@@ -66,7 +68,16 @@ export function WordChain({ words }: { words: GameWord[] }) {
   function choose(option: GameWord) {
     if (picked || !current) return;
     setPicked(option.id);
-    if (option.id === current.id) {
+    const knew = option.id === current.id;
+    // Same endpoint /vocabulary uses, so a word missed here also comes back there. Best-effort:
+    // signed-out guests get 401 and nothing is lost, since this is only a backup to the in-round chain.
+    fetch("/api/vocab/answer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wordId: current.id, knew }),
+      keepalive: true,
+    }).catch(() => {});
+    if (knew) {
       setCorrect((c) => c + 1);
       const next = streak + 1;
       setStreak(next);
@@ -93,7 +104,7 @@ export function WordChain({ words }: { words: GameWord[] }) {
   }
 
   function restart() {
-    setQueue(words);
+    setQueue(randomOrder(words));
     setRequeued({});
     setIndex(0);
     setPicked(null);
@@ -104,15 +115,17 @@ export function WordChain({ words }: { words: GameWord[] }) {
 
   if (!started) {
     return (
-      <div className="mx-auto flex min-h-dvh max-w-xl flex-col items-center justify-center px-4 py-16 text-center">
-        <Image src="/brand/mascot/dog-book.png" alt="" width={300} height={300} className="h-auto w-44" />
-        <h1 className="font-display mt-6 text-4xl font-bold leading-tight">שרשרת מילים</h1>
+      <div className="mx-auto flex flex-1 max-w-xl flex-col items-center justify-center px-4 py-16 text-center">
+        <h1 className="font-display text-4xl font-bold leading-tight">שרשרת מילים</h1>
         <p className="mt-4 max-w-sm text-lg leading-relaxed opacity-80">
           תקבלו מילה בעברית ותבחרו את המילה באנגלית. כל תשובה נכונה מוסיפה חוליה לשרשרת. מילה שטעיתם בה תחזור אליכם מוקדם יותר.
         </p>
         <button
           type="button"
-          onClick={() => setStarted(true)}
+          onClick={() => {
+            setQueue(randomOrder(words));
+            setStarted(true);
+          }}
           className="mt-8 w-full max-w-xs rounded-full bg-fg px-7 py-4 font-semibold text-bg transition-transform active:scale-[0.97]"
         >
           להתחיל
@@ -126,9 +139,9 @@ export function WordChain({ words }: { words: GameWord[] }) {
 
   if (done) {
     return (
-      <div className="mx-auto flex min-h-dvh max-w-xl flex-col items-center justify-center px-4 py-16 text-center">
-        <Image src="/brand/mascot/dog-celebrate.png" alt="" width={300} height={300} className="h-auto w-44" />
-        <h1 className="font-display mt-6 text-4xl font-bold">סיימתם את השרשרת</h1>
+      <div className="mx-auto flex flex-1 max-w-xl flex-col items-center justify-center px-4 py-16 text-center">
+        <Image src="/winning.svg" alt="" width={2825} height={1910} className="mb-6 h-auto w-64 sm:w-80" />
+        <h1 className="font-display text-4xl font-bold">סיימתם את השרשרת</h1>
         <p className="mt-4 text-6xl font-bold tabular-nums">
           {correct}
           <span className="opacity-40">/{words.length}</span>
@@ -161,6 +174,7 @@ export function WordChain({ words }: { words: GameWord[] }) {
             חזרה לתרגול
           </Link>
         </div>
+        {!paid && <FreeNextCard current="words" />}
       </div>
     );
   }

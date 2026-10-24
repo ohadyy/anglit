@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">עיגול עם סימן איקס</title>
+  <rect id="background" width="1200" height="675" fill="#19107F"/>
+  <g id="subject" transform="translate(600,337)" fill="none" stroke="#E4E4E4" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+    <circle r="135"/>
+    <path d="M-52,-52 L52,52 M52,-52 L-52,52"/>
+  </g>
+  <g id="accent">
+    <circle r="162" cx="600" cy="337" fill="none" stroke="#EE478C" stroke-width="3" opacity="0.35"/>
+    <path transform="translate(930,590) rotate(5)" d="M-220,0c25,-25 50,-25 75,0s50,25 75,0 50,-25,75,0 50,25,65,5" fill="none" stroke="#EE478C" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+  </g>
+</svg>

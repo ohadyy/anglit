@@ -2,15 +2,11 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { createLowProfile } from "@/lib/cardcom";
-import { upcomingCourseOffer } from "@/lib/cohorts";
-import { db } from "@/db";
+import { upcomingCourseOffer } from "@/lib/cohorts";import { db } from "@/db";
 import { orders } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { notify } from "@/lib/ntfy";
 import { getProduct } from "@/content/pricingCopy";
-
-// Coupon codes that make the course free, no Cardcom involved — for people the
-// owner is giving free access to directly (e.g. "DIPLOACT").
-const FREE_COUPONS = ["DIPLOACT"];
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -32,31 +28,26 @@ export async function POST(request: Request) {
   const amountIls = offer ? offer.priceIls : Number(product.price);
   const origin = new URL(request.url).origin;
 
-  const coupon = form.get("coupon")?.toString().trim().toUpperCase();
-  const isFreeCoupon = !!coupon && FREE_COUPONS.includes(coupon);
-
   const [order] = await db
     .insert(orders)
     .values({
       userId: session.user.id,
-      amountAgorot: isFreeCoupon ? 0 : Math.round(amountIls * 100),
+      amountAgorot: Math.round(amountIls * 100),
       product: product.id,
       cohortId: offer?.cohortId ?? null,
       termsAcceptedAt: new Date(),
-      ...(isFreeCoupon && { status: "paid" as const, provider: "coupon", paidAt: new Date() }),
     })
     .returning();
 
-  if (isFreeCoupon) {
-    return NextResponse.redirect(new URL(`/checkout/success?product=${product.id}`, request.url), { status: 303 });
-  }
+  // The buyer is about to enter a card: if they drop there, this is the number to call
+  await notify("Checkout started - Anglit", [`שם: ${session.user.name}`, `טלפון: ${(session.user as { phone?: string }).phone ?? "לא ידוע"}`, `סכום: ${amountIls} ₪`], "shopping_cart");
 
   try {
     const result = await createLowProfile({
       returnValue: order.id,
       amountIls,
-      successRedirectUrl: `${origin}/checkout/success?product=${product.id}`,
-      failedRedirectUrl: `${origin}/checkout/failed`,
+      successRedirectUrl: `${origin}/checkout/success?product=${product.id}&order=${order.id}`,
+      failedRedirectUrl: `${origin}/checkout/failed?order=${order.id}`,
       webHookUrl: `${origin}/api/webhooks/cardcom`,
     });
 
@@ -69,6 +60,6 @@ export async function POST(request: Request) {
   } catch (err) {
     await db.update(orders).set({ status: "failed" }).where(eq(orders.id, order.id));
     console.error("[checkout/create] Cardcom error:", err);
-    return NextResponse.redirect(new URL("/checkout/failed", request.url));
+    return NextResponse.redirect(new URL(`/checkout/failed?order=${order.id}`, request.url));
   }
 }

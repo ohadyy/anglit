@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">מדרגות עולות עם דגל בפסגה</title>
+  <rect id="background" width="1200" height="675" fill="#19107F"/>
+  <g id="subject" transform="translate(600,420)" fill="none" stroke="#E4E4E4" stroke-width="22" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="-190" y="-40" width="80" height="40"/>
+    <rect x="-90" y="-100" width="80" height="100"/>
+    <rect x="10" y="-180" width="80" height="180"/>
+    <rect x="110" y="-260" width="80" height="260"/>
+  </g>
+  <g id="accent">
+    <path transform="translate(750,160)" d="M0,0 V-70 M0,-70 L60,-52 L0,-34" fill="none" stroke="#EE478C" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+    <path transform="translate(970,610) rotate(10)" d="M-220,0c25,-25 50,-25 75,0s50,25 75,0 50,-25,75,0 50,25,65,5" fill="none" stroke="#EE478C" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+  </g>
+</svg>

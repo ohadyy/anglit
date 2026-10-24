@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">גל רגוע וקבוע</title>
+  <rect id="background" width="1200" height="675" fill="#19107F"/>
+  <g id="subject" transform="translate(600,337)" fill="none" stroke="#E4E4E4" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M-195,0 C-152,-68 -68,-68 -25,0 C18,68 102,68 145,0 C165,-33 185,-18 195,0"/>
+  </g>
+  <g id="accent">
+    <circle cx="575" cy="337" r="12" fill="#EE478C"/>
+    <path transform="translate(600,605) rotate(-8)" d="M-220,0c25,-25 50,-25 75,0s50,25 75,0 50,-25,75,0 50,25,65,5" fill="none" stroke="#EE478C" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+  </g>
+</svg>

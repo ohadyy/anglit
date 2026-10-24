@@ -36,7 +36,7 @@ export default async function ExamRunPage({ params }: PageProps<"/exam/[number]"
     <>
       <ReadAloud />
       <PassageProvider passages={usedPassages}>
-        <ExamClient plan={plan} kind="open" testNumber={number} />
+        <ExamClient plan={plan} kind="open" testNumber={number} freeUpsell={!paid} />
       </PassageProvider>
     </>
   );

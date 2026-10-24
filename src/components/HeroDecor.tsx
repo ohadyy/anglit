@@ -15,7 +15,7 @@ export function HeroDecor({ mark, font = "sans" }: { mark: string; font?: "sans"
       <svg
         viewBox="0 0 120 24"
         fill="none"
-        className="absolute bottom-[20%] start-[6%] h-7 w-24 text-fg opacity-25 sm:h-9 sm:w-32"
+        className="absolute bottom-[20%] start-[6%] hidden h-9 w-32 text-fg opacity-25 sm:block"
       >
         <path
           d="M2 16c10-10 20-10 30 0s20 10 30 0 20-10 30 0 20 10 26 2"

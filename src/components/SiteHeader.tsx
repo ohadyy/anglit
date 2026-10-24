@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Wordmark } from "@/components/Logo";
 import { ScrambleLink } from "@/components/ScrambleLink";
@@ -11,11 +12,14 @@ const links = [
   { href: "/practice", label: "תרגול" },
   { href: "/pricing", label: "מחיר" },
   { href: "/exam-dates", label: "מועדים" },
+  { href: "/blog", label: "בלוג" },
   { href: "/account", label: "אזור אישי" },
 ];
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  // Paid-traffic landing page: nothing in the header may lead away from it
+  const focused = usePathname() === "/ads";
 
   // Escape closes the mobile menu
   useEffect(() => {
@@ -30,21 +34,26 @@ export function SiteHeader() {
   return (
     <header className="enter fixed inset-x-0 top-4 z-30 mx-auto w-[calc(100%-2rem)] max-w-3xl rounded-2xl border border-line bg-bg/80 backdrop-blur-md">
       <div className="flex items-center justify-between gap-3 px-4 py-2.5 sm:px-5">
-        <Link href="/" aria-label="לעמוד הבית" className="flex min-h-11 items-center">
+        {focused ? (
           <Wordmark className="h-6 w-auto" />
-        </Link>
+        ) : (
+          <Link href="/" aria-label="לעמוד הבית" className="flex min-h-11 items-center">
+            <Wordmark className="h-6 w-auto" />
+          </Link>
+        )}
 
-        <nav className="hidden items-center gap-1 text-sm font-medium sm:flex">
+        {!focused && <nav className="hidden items-center gap-1 text-sm font-medium sm:flex">
           <ScrambleLink href="/practice" label="תרגול" />
           <ScrambleLink href="/pricing" label="מחיר" />
           <ScrambleLink href="/exam-dates" label="מועדים" />
+          <ScrambleLink href="/blog" label="בלוג" />
           <ScrambleLink href="/account" label="אזור אישי" />
           <ScrambleLink href={site.instagramUrl} label="אינסטגרם" external />
-        </nav>
+        </nav>}
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Link href="/start" className="flex min-h-11 items-center rounded-full bg-fg px-4 text-sm font-medium text-bg sm:hidden">
+          {!focused && <><Link href="/start" className="flex min-h-11 items-center rounded-full bg-fg px-4 text-sm font-medium text-bg sm:hidden">
             תרגול חינם
           </Link>
           <button
@@ -62,11 +71,11 @@ export function SiteHeader() {
                 <path d="M4 7h16M4 12h16M4 17h16" />
               )}
             </svg>
-          </button>
+          </button></>}
         </div>
       </div>
 
-      {open && (
+      {open && !focused && (
         <nav id="mobile-menu" aria-label="תפריט" className="flex flex-col gap-1 border-t border-line bg-bg px-3 py-3 sm:hidden">
           {links.map((l) => (
             <Link

@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 import Link from "next/link";
 import { guideAsOf, guideCopy as g, NITE_ACCOMMODATIONS_URL, NITE_AMIRNET_URL } from "@/content/examGuide";
 import { NITE_REGISTRATION_URL } from "@/content/examDates";
 import { TYPE_LABELS } from "@/content/questionLabels";
 import { CORE_SECTIONS, PILOT_CHAPTER, PILOT_CHAPTER_TYPES } from "@/lib/examStructure";
 import { SCORE_LEVELS } from "@/lib/scoreLevels";
+import { institutions } from "@/content/institutions";
+import { ScrollIndex } from "@/components/ScrollIndex";
 
 export const metadata: Metadata = {
   title: "מה צריך לדעת על אמירנט",
@@ -16,24 +19,21 @@ const CARD = "rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-2
 export default function AmirnetGuidePage() {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-16 pt-4 sm:px-6">
+      <BreadcrumbJsonLd trail={[{ name: "מה צריך לדעת על אמירנט", path: "/amirnet" }]} />
       <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
         <mark className="pink">{g.title}</mark>
       </h1>
       <p className="mt-3 max-w-xl leading-relaxed opacity-80">{g.intro}</p>
 
-      <nav aria-label="בעמוד הזה" className="mt-6 flex flex-wrap gap-2">
-        {[
-          ["#structure", g.structureTitle],
-          ["#score", g.scoreTitle],
-          ["#register", g.registerTitle],
-          ["#accommodations", g.accommodationsTitle],
-          ["#day", g.dayTitle],
-        ].map(([href, label]) => (
-          <a key={href} href={href} className="flex min-h-11 items-center rounded-full border border-line px-4 text-sm hover:bg-fg/5">
-            {label}
-          </a>
-        ))}
-      </nav>
+      <ScrollIndex
+        items={[
+          { id: "structure", label: g.structureTitle },
+          { id: "score", label: g.scoreTitle },
+          { id: "register", label: g.registerTitle },
+          { id: "accommodations", label: g.accommodationsTitle },
+          { id: "day", label: g.dayTitle },
+        ]}
+      />
 
       <section className="mt-12">
         <h2 className="text-2xl font-bold">{g.aboutTitle}</h2>
@@ -87,6 +87,16 @@ export default function AmirnetGuidePage() {
           ))}
         </ul>
         <p className="mt-3 text-sm leading-relaxed opacity-70">{g.scoreDisclaimer}</p>
+        <h3 className="mt-8 text-lg font-bold">הציון הנדרש לפי מוסד</h3>
+        <ul className="mt-3 flex flex-wrap gap-2">
+          {institutions.map((i) => (
+            <li key={i.slug}>
+              <Link href={`/amirnet/${i.slug}`} className="inline-flex min-h-11 items-center rounded-full border border-fg/25 px-4 text-sm hover:bg-fg/5">
+                {i.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
         <Link href="/score" className="mt-4 inline-flex min-h-11 items-center rounded-full border border-fg/25 px-6 font-semibold hover:bg-fg/5">
           {g.scoreCta}
         </Link>

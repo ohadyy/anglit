@@ -1,12 +1,21 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Wordmark } from "@/components/Logo";
 import { checkoutSuccessStepsByProduct } from "@/content/copy";
 import { upcomingCourseOffer } from "@/lib/cohorts";
+import { MetaEvent } from "@/components/MetaPixel";
+import ReceiptPrinter from "@/components/ReceiptPrinter";
+import { getProduct } from "@/content/pricingCopy";
+import { auth } from "@/lib/auth";
+import { db } from "@/db";
+import { orders } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "התשלום התקבל",
+  robots: { index: false },
 };
 
 // Cardcom redirects the browser here right after payment. The webhook
@@ -15,31 +24,41 @@ export const metadata: Metadata = {
 export default async function CheckoutSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ product?: string }>;
+  searchParams: Promise<{ product?: string; order?: string }>;
 }) {
-  const { product } = await searchParams;
+  const { order: orderId } = await searchParams;
+  // Only the buyer of an order sees this page. Anyone else (no order in the link, someone else's order,
+  // signed out) gets the normal 404, so the address cannot be opened by just typing it.
+  const session = orderId ? await auth.api.getSession({ headers: await headers() }) : null;
+  const [order] = orderId && session ? await db.select({ userId: orders.userId, status: orders.status, amountAgorot: orders.amountAgorot, product: orders.product, paidAt: orders.paidAt, createdAt: orders.createdAt }).from(orders).where(eq(orders.id, orderId)) : [];
+  // "pending" is allowed because the browser can arrive a moment before the payment webhook marks the order paid
+  if (!order || order.userId !== session?.user.id || (order.status !== "paid" && order.status !== "pending")) notFound();
+  const product = order.product;
+  // The browser Purchase fires only once the order is confirmed paid. If the confirmation is slower than this
+  // page, the server-side event from the webhook still covers it.
+  const paid = order;
+  const fireBrowserPurchase = paid.status === "paid";
   // Access-only buyers see the open cohort offer once, as an invitation, at the real price
   const offer = product === "access" ? await upcomingCourseOffer() : null;
   const steps = product === "access" || product === "private" ? checkoutSuccessStepsByProduct[product] : checkoutSuccessStepsByProduct.course;
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-4 py-12 sm:px-6">
+      {fireBrowserPurchase && <MetaEvent name="Purchase" eventId={orderId!} params={{ value: paid.amountAgorot / 100, currency: "ILS" }} />}
       <header>
-        <Wordmark className="h-8 w-auto" />
-        {/* The dog sits beside the heading. Its head faces the text (the image is already mirrored). */}
-        <div className="mt-6 flex flex-col-reverse items-center gap-6 sm:flex-row">
-          <h1 className="font-display min-w-0 flex-1 text-center text-4xl font-bold leading-tight sm:text-start sm:text-5xl">
-            התשלום התקבל, <mark className="pink">ברוכים הבאים!</mark>
-          </h1>
-          <Image
-            src="/brand/mascot-lounging-dog.png"
-            alt=""
-            width={1168}
-            height={880}
-            className="h-auto w-40 shrink-0 sm:w-52"
-          />
-        </div>
+        <Image src="/celebration.svg" alt="" width={2774} height={1860} priority className="mx-auto h-auto w-full max-w-[16rem] sm:max-w-xs" />
+        <h1 className="font-display mt-4 text-center text-5xl font-bold leading-tight sm:text-6xl">
+          התשלום התקבל, <mark className="pink">ברוכים הבאים!</mark>
+        </h1>
         <p className="mt-5 text-lg leading-relaxed opacity-80">שמחים שהצטרפתם. הנה מה שקורה עכשיו, צעד אחרי צעד.</p>
       </header>
+
+      <div className="mt-10 flex justify-center">
+        <ReceiptPrinter
+          order={orderId!.slice(-6).toUpperCase()}
+          date={(paid.paidAt ?? paid.createdAt).toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" })}
+          items={[{ name: getProduct(product)?.name ?? "", quantity: 1, price: paid.amountAgorot / 100 }]}
+        />
+      </div>
 
       <ol className="mt-10 flex flex-col gap-3">
         {steps.map((step, i) => (

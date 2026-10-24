@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">עיגול בודד מול קבוצת עיגולים</title>
+  <rect id="background" width="1200" height="675" fill="#19107F"/>
+  <g id="subject" transform="translate(600,337)" fill="#E4E4E4">
+    <circle cx="-170" cy="0" r="58"/>
+    <circle cx="110" cy="-58" r="40"/>
+    <circle cx="58" cy="26" r="40"/>
+    <circle cx="178" cy="26" r="40"/>
+    <circle cx="118" cy="104" r="40"/>
+  </g>
+  <g id="accent">
+    <circle cx="430" cy="337" r="78" fill="none" stroke="#EE478C" stroke-width="3" opacity="0.4"/>
+    <path transform="translate(260,615) rotate(-3)" d="M-220,0c25,-25 50,-25 75,0s50,25 75,0 50,-25,75,0 50,25,65,5" fill="none" stroke="#EE478C" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+  </g>
+</svg>

@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import Script from "next/script";
+import { MetaPixel } from "@/components/MetaPixel";
 import { SiteChrome } from "@/components/SiteChrome";
 import { PageTransition } from "@/components/PageTransition";
 import { copy } from "@/content/copy";
 import { themeScript } from "@/lib/themeScript";
+import { site } from "@/lib/site";
 import "./globals.css";
 
 // Google Sans variable font, subset to Latin + Hebrew (see fonts/OFL.txt)
@@ -41,13 +43,13 @@ const gevora = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(site.url),
   title: {
     default: copy.seoTitle,
     template: "%s · Anglit",
   },
   description: copy.seoDescription,
-  // Pre-launch: keep the draft out of search results. Remove at launch.
-  robots: { index: false, follow: false },
+  alternates: { canonical: "/" },
   // Opening from the iPhone home screen hides the browser bar — cleaner recordings
   appleWebApp: { capable: true, title: "Anglit", statusBarStyle: "default" },
   // Meta business domain verification (Business Manager → Brand safety → Domains)
@@ -73,6 +75,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Script id="theme" strategy="beforeInteractive">
           {themeScript}
         </Script>
+        <MetaPixel />
         <PageTransition>
           <SiteChrome>{children}</SiteChrome>
         </PageTransition>

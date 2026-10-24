@@ -4,7 +4,7 @@ import { LockIcon } from "@/components/LockIcon";
 
 export function LockedExam() {
   return (
-    <div className="mx-auto flex min-h-dvh max-w-sm flex-col items-center justify-center px-4 py-16 text-center">
+    <div className="mx-auto flex flex-1 max-w-sm flex-col items-center justify-center px-4 py-16 text-center">
       <div className="flex size-14 items-center justify-center rounded-full bg-white">
         <LockIcon />
       </div>

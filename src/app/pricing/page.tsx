@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 import Link from "next/link";
 import { featureRows, pricingCopy, products, type Product } from "@/content/pricingCopy";
 import { LeadForm } from "@/components/LeadForm";
@@ -28,6 +29,7 @@ export default async function PricingPage() {
   return (
     <div className="flex min-h-dvh flex-col">
       <main className="flex-1">
+      <BreadcrumbJsonLd trail={[{ name: "מחיר", path: "/pricing" }]} />
         <section className="mx-auto max-w-3xl px-4 pb-10 pt-6 text-center sm:px-6">
           <p className="text-sm font-semibold tracking-[0.08em] opacity-70">{pricingCopy.eyebrow}</p>
           <h1 className="font-display mt-3 text-4xl font-bold leading-[1.1] tracking-[-0.02em] text-balance sm:text-5xl">
@@ -136,7 +138,13 @@ function ProductCard({
         </>
       ) : (
         <>
-          <p className="mt-3 text-6xl font-bold tracking-tight">{product.price}</p>
+          {product.listPrice && (
+            <p className="mt-3 text-2xl">
+              <span className="text-warn line-through">{product.listPrice} ₪</span>{" "}
+              <span className="opacity-70">30% הנחה</span>
+            </p>
+          )}
+          <p className={`${product.listPrice ? "mt-1 text-ok" : "mt-3"} text-6xl font-bold tracking-tight`}>{product.price}</p>
           <p className="mt-1 text-sm opacity-70">₪ {product.priceUnit}</p>
         </>
       )}

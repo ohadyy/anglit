@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">שתי בועות שיחה</title>
+  <rect id="background" width="1200" height="675" fill="#19107F"/>
+  <g id="subject" transform="translate(600,337)" fill="none" stroke="#E4E4E4" stroke-width="24" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="-210" y="-120" width="230" height="150" rx="38"/>
+    <path d="M-115,30 L-93,74 L-62,30"/>
+    <rect x="25" y="-5" width="195" height="125" rx="34"/>
+    <path d="M88,120 L72,158 L45,120"/>
+  </g>
+  <g id="accent">
+    <circle cx="-95" cy="-45" r="9" fill="#EE478C"/>
+    <path transform="translate(950,600) rotate(-6)" d="M-220,0c25,-25 50,-25 75,0s50,25 75,0 50,-25,75,0 50,25,65,5" fill="none" stroke="#EE478C" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+  </g>
+</svg>

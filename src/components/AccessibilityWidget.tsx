@@ -28,7 +28,7 @@ function applyPrefs(p: Prefs) {
   root.classList.toggle("a11y-still", p.still);
 }
 
-export function AccessibilityWidget() {
+export function AccessibilityWidget({ aboveTabBar = false }: { aboveTabBar?: boolean }) {
   const [open, setOpen] = useState(false);
   // The panel starts closed, so reading the saved choice on first render does not change the server markup
   const [prefs, setPrefs] = useState<Prefs>(readSaved);
@@ -48,16 +48,16 @@ export function AccessibilityWidget() {
 
   return (
     // On phones it sits above the tab bar; on wider screens it returns to the corner
-    <div className="fixed bottom-24 start-4 z-30 sm:bottom-4">
+    <div className={`fixed end-4 z-30 sm:bottom-4 ${aboveTabBar ? "bottom-[5.25rem]" : "bottom-4"}`}>
       <button
         type="button"
         aria-expanded={open}
         aria-controls="a11y-panel"
         onClick={() => setOpen((o) => !o)}
-        className="size-12 rounded-full bg-fg text-bg shadow-lg"
+        className="size-10 rounded-full bg-fg text-bg shadow-lg"
         aria-label="תפריט נגישות"
       >
-        <svg aria-hidden viewBox="0 0 24 24" className="mx-auto size-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <svg aria-hidden viewBox="0 0 24 24" className="mx-auto size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <circle cx="12" cy="4.5" r="1.8" fill="currentColor" stroke="none" />
           <path d="M5 8.5h14M12 8.5v5M9 21l3-7.5 3 7.5M8.5 13.5l-2 3" />
         </svg>
@@ -67,7 +67,7 @@ export function AccessibilityWidget() {
         <section
           id="a11y-panel"
           aria-label="הגדרות נגישות"
-          className="absolute bottom-16 start-0 flex w-64 flex-col gap-3 rounded-2xl border border-line bg-bg p-4 shadow-xl"
+          className="absolute bottom-14 end-0 flex w-64 flex-col gap-3 rounded-2xl border border-line bg-bg p-4 shadow-xl"
         >
           <p className="font-semibold">נגישות</p>
           <div className="flex flex-wrap gap-2">

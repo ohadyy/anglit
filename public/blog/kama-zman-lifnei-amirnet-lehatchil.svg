@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">שעון עם מחוגים</title>
+  <rect id="background" width="1200" height="675" fill="#19107F"/>
+  <g id="subject" transform="translate(600,337)" fill="none" stroke="#E4E4E4" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+    <circle r="140"/>
+    <line x1="0" y1="0" x2="0" y2="-78"/>
+    <line x1="0" y1="0" x2="66" y2="-22"/>
+    <line x1="0" y1="-140" x2="0" y2="-116"/>
+    <line x1="140" y1="0" x2="116" y2="0"/>
+    <line x1="0" y1="140" x2="0" y2="116"/>
+    <line x1="-140" y1="0" x2="-116" y2="0"/>
+  </g>
+  <g id="accent">
+    <circle cx="600" cy="337" r="10" fill="#EE478C"/>
+    <path transform="translate(960,95) rotate(8)" d="M-220,0c25,-25 50,-25 75,0s50,25 75,0 50,-25,75,0 50,25,65,5" fill="none" stroke="#EE478C" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+  </g>
+</svg>

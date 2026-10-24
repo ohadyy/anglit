@@ -7,10 +7,12 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { checkoutCopy, getProduct } from "@/content/pricingCopy";
 import { OfferToast } from "./OfferToast";
+import { CheckoutSummaryBar } from "@/components/CheckoutSummaryBar";
 
 export const metadata: Metadata = {
   title: "תשלום",
   description: "השלמת הרכישה של Anglit.",
+  robots: { index: false },
 };
 
 export default async function CheckoutPage({
@@ -31,7 +33,7 @@ export default async function CheckoutPage({
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 pb-16 pt-4 sm:px-6">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 pb-32 pt-4 sm:px-6 lg:pb-16">
         <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">{checkoutCopy.title}</h1>
         {joiningCohort && (
           <p className="mt-3 text-lg leading-relaxed opacity-80">
@@ -40,7 +42,7 @@ export default async function CheckoutPage({
         )}
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
-          <aside className="rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-6 sm:p-8">
+          <aside className="hidden rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-6 sm:p-8 lg:block">
             <p className="text-sm font-semibold opacity-70">{checkoutCopy.summaryTitle}</p>
             <p className="mt-2 text-xl font-bold">{product.name}</p>
 
@@ -147,15 +149,6 @@ export default async function CheckoutPage({
 
                 <form action="/api/checkout/create" method="POST" className="mt-5">
                   <input type="hidden" name="product" value={product.id} />
-                  <label className="mb-4 flex flex-col gap-1.5 text-start text-sm">
-                    <span className="opacity-70">קוד קופון (אופציונלי)</span>
-                    <input
-                      type="text"
-                      name="coupon"
-                      className="min-h-11 rounded-xl border border-line bg-bg px-4 py-2"
-                      dir="ltr"
-                    />
-                  </label>
                   <label className="mb-4 flex items-start gap-2.5 text-start text-sm leading-relaxed">
                     <input type="checkbox" name="terms" value="on" required className="mt-1 size-4 shrink-0" />
                     <span>
@@ -184,6 +177,14 @@ export default async function CheckoutPage({
           </div>
         </div>
       </main>
+
+      <CheckoutSummaryBar
+        name={product.name}
+        price={offer ? String(offer.priceIls) : product.price}
+        note={offer ? `למחזור ${offer.label} בלבד · חוזר למחיר מלא למחזור הבא` : product.priceUnit}
+        included={product.included}
+        excluded={product.excluded}
+      />
 
       {offer && <OfferToast priceIls={offer.priceIls} regularPrice={product.price} />}
 

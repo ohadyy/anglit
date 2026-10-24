@@ -11,10 +11,13 @@ export function FeedbackBar({
   status,
   summary,
   onReset,
+  to,
 }: {
   status: string;
   summary: () => string;
   onReset: () => void;
+  /** Israeli local number (05x-xxxxxxx) to address the WhatsApp message to. Omit to let the student pick a contact. */
+  to?: string;
 }) {
   const [text, setText] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -23,7 +26,9 @@ export function FeedbackBar({
   const send = () => {
     const s = summary();
     setText(s);
-    window.open(`https://wa.me/?text=${encodeURIComponent(s)}`, "_blank", "noopener");
+    const digits = to?.replace(/\D/g, "");
+    const target = digits ? (digits.startsWith("0") ? `972${digits.slice(1)}` : digits) : "";
+    window.open(`https://wa.me/${target}?text=${encodeURIComponent(s)}`, "_blank", "noopener");
   };
 
   const copy = async () => {
@@ -47,7 +52,7 @@ export function FeedbackBar({
   return (
     <>
       {text !== null && (
-        <div className="mx-auto mt-10 w-full max-w-3xl px-4 sm:px-6">
+        <div className="mx-auto mt-10 w-full max-w-3xl px-4 sm:px-6 print:hidden">
           <p className="mb-2 text-sm opacity-70">זה מה שנשלח:</p>
           <textarea
             ref={boxRef}
@@ -58,7 +63,7 @@ export function FeedbackBar({
         </div>
       )}
       <div
-        className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-bg/95 backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-bg/95 backdrop-blur print:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-2 px-4 py-3 sm:px-6">

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { FreeNextCard } from "@/components/FreeNextCard";
 import { useEffect, useRef, useState } from "react";
 import { QuestionView, TypeLabel, WordFormationView } from "@/components/QuestionView";
 import { isCorrectAnswer, type ExamQuestion, type QuestionType } from "@/content/questions";
@@ -10,6 +11,8 @@ import { planTotals, type ExamPlanItem } from "@/lib/examStructure";
 import { PILOT_MAX_BONUS, scoreExam, scoreLevel, scoreMessage, type ExamScore } from "@/lib/examScore";
 import { AudioCheck } from "@/components/ReadAloud";
 import { TactileButton } from "@/components/TactileButton";
+import { HoldButton } from "@/components/HoldButton";
+import { LiquidGauge } from "@/components/LiquidGauge";
 
 type Phase = "intro" | "running" | "submitting" | "done";
 // Multiple choice stores the option index, word formation stores the typed word
@@ -28,10 +31,13 @@ export function ExamClient({
   plan,
   kind,
   testNumber,
+  freeUpsell = false,
 }: {
   plan: ExamPlanItem[];
   kind: "open" | "close";
   testNumber: string;
+  /** The visitor has no paid access: show what to do next after the result */
+  freeUpsell?: boolean;
 }) {
   const [phase, setPhase] = useState<Phase>("intro");
   const [includePilot, setIncludePilot] = useState(true);
@@ -104,7 +110,7 @@ export function ExamClient({
 
   if (phase === "intro") {
     return (
-      <div className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-4 py-16 text-center">
+      <div className="mx-auto flex flex-1 max-w-sm flex-col justify-center px-4 py-16 text-center">
         <h1 className="font-display text-2xl font-bold">מבחן תרגול</h1>
         <p className="mt-2 text-sm font-semibold tabular-nums opacity-70">מספר מבחן: {testNumber}</p>
         <p className="mt-3 leading-relaxed opacity-80">
@@ -149,7 +155,7 @@ export function ExamClient({
 
   if (phase === "submitting") {
     return (
-      <div className="mx-auto flex min-h-dvh max-w-sm flex-col items-center justify-center px-4 text-center opacity-70">
+      <div className="mx-auto flex flex-1 max-w-sm flex-col items-center justify-center px-4 text-center opacity-70">
         שומר תוצאות...
       </div>
     );
@@ -158,12 +164,10 @@ export function ExamClient({
   if (phase === "done" && result) {
     const level = scoreLevel(result.estimatedScore);
     return (
-      <div className="mx-auto flex min-h-dvh max-w-sm flex-col items-center justify-center px-4 py-16 text-center">
+      <div className="mx-auto flex flex-1 max-w-sm flex-col items-center justify-center px-4 py-16 text-center">
         <p className="text-sm font-semibold opacity-70">סיימתם!</p>
-        <p className="mt-2 text-8xl font-bold tracking-tight tabular-nums">
-          {result.estimatedScore}
-          <span className="ms-3 text-2xl font-semibold opacity-70">מתוך 150</span>
-        </p>
+        <LiquidGauge score={result.estimatedScore} className="mt-4 w-56" />
+        <p className="mt-2 text-sm font-semibold opacity-70">מתוך 150</p>
         <p className="mt-1 text-sm opacity-70">הערכה משוערת, לא הציון הרשמי</p>
         <p className="mt-6 max-w-sm leading-relaxed">{scoreMessage(result.estimatedScore)}</p>
         <div className="mt-6 rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-5">
@@ -181,9 +185,13 @@ export function ExamClient({
           )}
         </div>
         <Diagnosis tally={tally} />
-        <Link href="/account" className="mt-8 rounded-full bg-fg px-6 py-3 font-semibold text-bg">
-          לאזור האישי
-        </Link>
+        {freeUpsell ? (
+          <FreeNextCard current="exam" />
+        ) : (
+          <Link href="/account" className="mt-8 rounded-full bg-fg px-6 py-3 font-semibold text-bg">
+            לאזור האישי
+          </Link>
+        )}
       </div>
     );
   }
@@ -353,6 +361,8 @@ function SectionRunner({
   const firstUnanswered = questions.findIndex((qq) => !isAnswered(qq));
   const onLastQuestion = qIndex === questions.length - 1;
   const returnTo = onLastQuestion && firstUnanswered !== -1 ? firstUnanswered : null;
+  // The press that sends the whole exam in: hold-to-confirm so a stray tap can't end it
+  const finalSubmit = onLastQuestion && returnTo === null && sectionIndex + 1 === totalSections;
 
   function nextQuestion() {
     if (qIndex + 1 < questions.length) {
@@ -396,13 +406,19 @@ function SectionRunner({
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="mx-auto max-w-2xl px-4 py-3 sm:px-6">
-          <TactileButton onClick={nextQuestion} fullWidth>
-            {qIndex + 1 < questions.length
-              ? "השאלה הבאה"
-              : returnTo !== null
-                ? `חזרה לשאלה ${returnTo + 1}`
-                : "הפרק הבא"}
-          </TactileButton>
+          {finalSubmit ? (
+            <HoldButton onComplete={nextQuestion} fullWidth>
+              החזיקו להגשת המבחן
+            </HoldButton>
+          ) : (
+            <TactileButton onClick={nextQuestion} fullWidth>
+              {qIndex + 1 < questions.length
+                ? "השאלה הבאה"
+                : returnTo !== null
+                  ? `חזרה לשאלה ${returnTo + 1}`
+                  : "הפרק הבא"}
+            </TactileButton>
+          )}
         </div>
       </div>
     </div>

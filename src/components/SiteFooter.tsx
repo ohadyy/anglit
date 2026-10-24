@@ -8,6 +8,8 @@ import { InstagramIcon } from "@/components/InstagramIcon";
 const study = [
   { href: "/practice", label: "תרגול חינמי" },
   { href: "/pricing", label: "מסלולים ומחירים" },
+  { href: "/private-tutor", label: "מורה פרטי לאמירנט" },
+  { href: "/blog", label: "בלוג" },
   { href: "/exam-dates", label: "מועדי הבחינה" },
   { href: "/amirnet", label: "מה צריך לדעת על המבחן" },
   { href: "/score", label: "מחשבון ציון" },
@@ -56,6 +58,11 @@ export function SiteFooter() {
                   <bdi dir="ltr">{businessDetails.instagram}</bdi>
                 </a>
               </li>
+              <li>
+                <a href={site.googleBusinessUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center underline underline-offset-4">
+                  הפרופיל שלנו בגוגל
+                </a>
+              </li>
             </ul>
           </section>
 
@@ -88,6 +95,9 @@ export function SiteFooter() {
               {/* Cancelling a purchase has its own visible link, as the consumer law requires */}
               <Link href="/legal/refunds" className="inline-flex min-h-8 items-center font-semibold underline underline-offset-4 hover:opacity-100">
                 ביטול עסקה
+              </Link>
+              <Link href="/llm-information" className="inline-flex min-h-8 items-center underline underline-offset-4 opacity-80 hover:opacity-100">
+                מידע ל-AI
               </Link>
             </div>
           </section>

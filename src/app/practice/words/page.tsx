@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
+import { hasPaidAccess } from "@/lib/access";
 import { vocabulary } from "@/content/vocabulary";
 import { FREE_WORD_LIMIT } from "@/lib/vocab";
 import { WordChain } from "./WordChain";
@@ -15,5 +18,7 @@ const GAME_WORDS = vocabulary
   .map(({ id, word, translation, example }) => ({ id, word, translation, example }));
 
 export default async function WordChainPage() {
-  return <WordChain words={GAME_WORDS} />;
+  const session = await auth.api.getSession({ headers: await headers() });
+  const paid = session ? await hasPaidAccess(session.user.id) : false;
+  return <WordChain words={GAME_WORDS} paid={paid} />;
 }

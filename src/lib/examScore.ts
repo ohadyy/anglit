@@ -39,6 +39,10 @@ export function isPilotQuestion(id: string): boolean {
   return type !== undefined && (PILOT_CHAPTER_TYPES as readonly QuestionType[]).includes(type);
 }
 
+export function questionType(id: string): QuestionType | undefined {
+  return typeById.get(id);
+}
+
 export type ExamScore = {
   estimatedScore: number;
   rawCorrect: number;

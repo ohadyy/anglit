@@ -1,18 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { copy } from "@/content/copy";
+import { FREE_ACTIVITIES as CARDS } from "@/content/freePractice";
 
 export const metadata: Metadata = {
   title: "תרגול חינם",
   description: "ארבעה תרגולים חינמיים לאמירנט: שאלות, מבחן תרגול שלם, ושני משחקי מילים.",
 };
 
-const CARDS = [
-  { href: "/practice?type=free", title: "5 שאלות חינם", text: "דוגמה קצרה מהמאגר, עם הסבר מלא לכל תשובה." },
-  { href: "/exam", title: "סימולציית מבחן חינם", text: "מבחן תרגול שלם אחד, באותו מבנה ותזמון של האמירנט." },
-  { href: "/practice/words", title: "שרשרת מילים חינם", text: "משחק קצר לזכירת מילים, עד 20 מילים." },
-  { href: "/vocabulary", title: "אוצר מילים חינם", text: "כרטיסיות הפוכות ללמידת מילים, עד 20 מילים." },
-];
 
 export default function StartPage() {
   return (

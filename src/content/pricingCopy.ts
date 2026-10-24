@@ -10,6 +10,8 @@ export type Product = {
   originalPrice?: string;
   priceUnit: string;
   badge?: string;
+  /** Crossed-out "before" price shown next to the real one */
+  listPrice?: string;
   note?: string;
   scarcity?: string;
   included: string[];
@@ -24,9 +26,9 @@ export type FeatureCell = string | { missing: string };
 
 export const featureRows: Record<ProductId, FeatureCell>[] = [
   {
-    access: "גישה מלאה לאתר, כולל התרגולים והסימולציות",
-    course: "גישה מלאה לאתר, כולל התרגולים והסימולציות",
-    private: "גישה מלאה לאתר, כולל התרגולים והסימולציות",
+    access: "גישה מלאה לאתר, כולל התרגולים והסימולציות, ללא הגבלת זמן",
+    course: "גישה מלאה לאתר, כולל התרגולים והסימולציות, ללא הגבלת זמן",
+    private: "גישה מלאה לאתר, כולל התרגולים והסימולציות, ללא הגבלת זמן",
   },
   {
     access: "הסבר מלא לכל תשובה",
@@ -70,7 +72,7 @@ export const products: Product[] = [
     id: "access",
     name: "גישה לאתר",
     price: "97",
-    priceUnit: "גישה מלאה לאתר, תשלום חד פעמי",
+    priceUnit: "גישה מלאה לאתר ללא הגבלת זמן, תשלום חד פעמי",
     note: "מתאים למי שרוצה להתאמן בעצמו, בקצב שלו, בלי לקבוע שיעורים.",
     included: includedFor("access"),
     excluded: [],
@@ -79,6 +81,7 @@ export const products: Product[] = [
     id: "course",
     name: "7 ימים לאמירנט",
     price: "347",
+    listPrice: "500",
     priceUnit: "לכל הסמינר, תשלום חד פעמי",
     badge: "הבחירה המומלצת",
     note: "מתאים לאנשים שרוצים לשפר את הרמה שלהם בצורה כמעט מיידית, עם תרגול יומי וחברים ללמידה.",

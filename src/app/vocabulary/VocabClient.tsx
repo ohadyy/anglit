@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { FreeNextCard } from "@/components/FreeNextCard";
 import { vocabCopy, type VocabWord } from "@/content/vocabulary";
 
 export function VocabClient({
@@ -89,6 +90,7 @@ export function VocabClient({
               לפתיחת כל אוצר המילים
             </Link>
           )}
+          {!paid && <FreeNextCard current="vocab" />}
         </div>
       ) : (
         <div className="mt-10 flex flex-col gap-5">

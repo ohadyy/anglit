@@ -2,8 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { HeroDecor } from "@/components/HeroDecor";
 import { HomeIntro } from "@/components/HomeIntro";
+import { TestimonialBubble } from "@/components/TestimonialBubble";
+import { TypingHeadline } from "@/components/TypingHeadline";
 import { TactileLink } from "@/components/TactileButton";
 import { CourseOfferCta, CourseOfferPrice } from "@/components/CourseOfferCard";
+import { ResultsCards } from "@/components/ResultsCards";
 import { StepsList } from "@/components/StepsList";
 import { TextReveal } from "@/components/TextReveal";
 import { copy, homeFaqGroups, homeFeatures, homeHowSteps } from "@/content/copy";
@@ -28,41 +31,31 @@ export default async function Home() {
       <div className="hero-mesh relative flex min-h-dvh flex-col">
         <HeroDecor mark="a" font="gevora" />
 
-        <div className="relative z-10 mx-auto flex max-w-3xl flex-1 flex-col items-center justify-center px-4 pb-16 pt-24 text-center sm:px-6">
-          <h1
+        <div className="relative z-10 mx-auto flex max-w-3xl flex-1 flex-col items-center justify-center px-4 pb-28 pt-32 text-center sm:px-6">
+          <TypingHeadline
             className="rise text-[2.75rem] font-bold leading-[1.05] tracking-[-0.03em] text-balance sm:text-7xl"
-          >
-            <mark className="pink">שבוע אחד</mark>, ואתם מוכנים לאמירנט.
-          </h1>
-          <p className="rise font-hand mt-4 text-2xl opacity-70" style={{ animationDelay: "120ms" }}>
+            marked="שבוע אחד"
+            rest=", ואתם מוכנים לאמירנט."
+          />
+          <p className="rise font-hand mt-6 text-2xl opacity-70" style={{ animationDelay: "120ms" }}>
             {copy.heroEyebrow}
           </p>
-          <p className="rise mx-auto mt-4 max-w-xl text-lg leading-relaxed opacity-80" style={{ animationDelay: "220ms" }}>
+          <TestimonialBubble />
+          <p className="rise mx-auto mt-6 max-w-xl text-lg leading-relaxed opacity-80" style={{ animationDelay: "220ms" }}>
             {copy.heroSub}
           </p>
-          <div className="rise mt-8 grid gap-3 sm:flex sm:flex-wrap sm:items-end sm:justify-center" style={{ animationDelay: "320ms" }}>
-            <div className="group mascot-land flex w-fit flex-col items-end justify-self-center">
-              <div className="mascot-tilt relative z-10 -mb-2 ml-3">
-                <Image
-                  src="/brand/mascot-hero.webp"
-                  alt=""
-                  width={50}
-                  height={50}
-                  className="mascot-bob h-auto w-[40px] sm:w-[50px]"
-                />
-              </div>
-              <TactileLink href="/sign-up" size="lg">
-                {copy.heroCta2}
-              </TactileLink>
-            </div>
+          <div className="rise mt-10 grid gap-3 sm:flex sm:flex-wrap sm:items-end sm:justify-center" style={{ animationDelay: "320ms" }}>
+            <TactileLink href="/sign-up" size="lg">
+              {copy.heroCta2}
+            </TactileLink>
             <Link
               href="/start"
-              className="rounded-full border border-fg/25 px-7 py-4 text-center font-semibold hover:bg-fg/5 sm:py-3.5"
+              className="touch-manipulation rounded-full border border-fg/25 px-7 py-4 text-center font-semibold transition-colors hover:bg-fg/5 active:bg-fg/10 sm:py-3.5"
             >
               {copy.heroCta1}
             </Link>
           </div>
-          <p className="rise mt-5 text-sm opacity-70" style={{ animationDelay: "420ms" }}>
+          <p className="rise mt-6 text-sm opacity-70" style={{ animationDelay: "420ms" }}>
             {copy.heroNote}
           </p>
         </div>
@@ -118,6 +111,8 @@ export default async function Home() {
           </div>
         </section>
 
+        <ResultsCards />
+
         {/* Who teaches: right after "what you get", so the reader meets the teacher while the point is fresh */}
         <section className="border-t border-line">
           <div className="mx-auto grid max-w-5xl items-center gap-8 px-4 py-16 sm:px-6 sm:py-20 md:grid-cols-[0.8fr_1.2fr] md:gap-12">
@@ -154,13 +149,13 @@ export default async function Home() {
               <CourseOfferPrice offer={offer} />
               <CourseOfferCta className="mt-6 w-full">{copy.heroCta2}</CourseOfferCta>
             </div>
-            <Link href="/pricing" className="mt-4 inline-flex min-h-11 items-center text-sm underline underline-offset-4 opacity-70">
+            <Link href="/pricing" className="mt-4 inline-flex min-h-11 items-center text-sm underline underline-offset-4 opacity-70 transition-opacity hover:opacity-100">
               {copy.homePricingCta}
             </Link>
 
             <div data-invert="" className="mt-10 rounded-3xl p-6 text-start sm:p-8">
               <p className="text-sm font-semibold opacity-70">{copy.guaranteeEyebrow}</p>
-              <h3 className="mt-3 text-2xl font-bold leading-tight text-balance">{copy.guaranteeTitle}</h3>
+              <h2 className="mt-3 text-2xl font-bold leading-tight text-balance">{copy.guaranteeTitle}</h2>
               <p className="mt-3 opacity-70">{copy.guaranteeTerms}</p>
             </div>
           </div>
@@ -174,13 +169,13 @@ export default async function Home() {
               <h2 className="reveal mt-1 text-3xl font-bold sm:text-4xl text-balance">{copy.savingsTitle}</h2>
               <p className="mt-4 max-w-xl text-lg leading-relaxed opacity-80">{copy.savingsText}</p>
               <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-                <Link href="/score" className="inline-flex min-h-8 items-center underline underline-offset-4 opacity-70">
+                <Link href="/score" className="inline-flex min-h-8 items-center underline underline-offset-4 opacity-70 transition-opacity hover:opacity-100">
                   {calculatorCopy.homeLink}
                 </Link>
-                <Link href="/amirnet" className="inline-flex min-h-8 items-center underline underline-offset-4 opacity-70">
+                <Link href="/amirnet" className="inline-flex min-h-8 items-center underline underline-offset-4 opacity-70 transition-opacity hover:opacity-100">
                   {guideCopy.homeLink}
                 </Link>
-                <Link href="/exam-dates" className="inline-flex min-h-8 items-center underline underline-offset-4 opacity-70">
+                <Link href="/exam-dates" className="inline-flex min-h-8 items-center underline underline-offset-4 opacity-70 transition-opacity hover:opacity-100">
                   {examDatesCopy.homeLink}
                 </Link>
               </div>
@@ -202,8 +197,8 @@ export default async function Home() {
                       <details key={item.q} className="group py-5">
                         <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 py-2 font-semibold">
                           {item.q}
-                          <span className="shrink-0 text-xl opacity-70 group-open:hidden">+</span>
-                          <span className="hidden shrink-0 text-xl opacity-70 group-open:inline">−</span>
+                          <span aria-hidden="true" className="shrink-0 text-xl opacity-70 group-open:hidden">+</span>
+                          <span aria-hidden="true" className="hidden shrink-0 text-xl opacity-70 group-open:inline">−</span>
                         </summary>
                         <p className="mt-3 leading-relaxed opacity-80">{item.a}</p>
                       </details>
@@ -219,7 +214,7 @@ export default async function Home() {
         <section className="border-t border-line">
           <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
             <h2 className="text-2xl font-bold sm:text-3xl">{copy.closingTitle}</h2>
-            <Link href="/sign-up" className="mt-6 inline-flex rounded-full bg-fg px-7 py-4 font-semibold text-bg sm:w-auto sm:px-10">
+            <Link href="/sign-up" className="mt-6 inline-flex touch-manipulation rounded-full bg-fg px-7 py-4 font-semibold text-bg transition-opacity hover:opacity-85 active:opacity-75 sm:w-auto sm:px-10">
               {copy.guaranteeCta}
             </Link>
           </div>

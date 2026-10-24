@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">מעגל ניסיון חוזר</title>
+  <rect id="background" width="1200" height="675" fill="#19107F"/>
+  <g id="subject" transform="translate(600,337)" fill="none" stroke="#E4E4E4" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M84,-100 A130,130 0 1 1 -84,-100"/>
+    <path d="M-128,-90 L-84,-100 L-101,-58"/>
+  </g>
+  <g id="accent">
+    <circle cx="600" cy="337" r="130" fill="none" stroke="#EE478C" stroke-width="3" opacity="0.35"/>
+    <path transform="translate(290,600) rotate(0)" d="M-220,0c25,-25 50,-25 75,0s50,25 75,0 50,-25,75,0 50,25,65,5" fill="none" stroke="#EE478C" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+  </g>
+</svg>

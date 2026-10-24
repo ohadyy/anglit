@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { desc, eq } from "drizzle-orm";
@@ -11,6 +12,7 @@ import { hasCourse, hasPaidAccess } from "@/lib/access";
 import { cohortOptionsFor } from "@/lib/cohorts";
 import { LockIcon } from "@/components/LockIcon";
 import { copy } from "@/content/copy";
+import { UserAvatar } from "./UserAvatar";
 import { SignOutButton } from "./SignOutButton";
 import { CohortPicker } from "./CohortPicker";
 import { StartChecklist } from "./StartChecklist";
@@ -36,9 +38,13 @@ export default async function AccountPage() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-4 py-12 sm:px-6">
       <header className="account-enter" style={delayStyle(0)}>
-        <h1 className="font-display text-4xl font-bold leading-tight sm:text-5xl">
-          שלום, <span>{session.user.name}</span>
-        </h1>
+        <div className="flex items-center gap-4">
+          <h1 className="font-display text-4xl font-bold leading-tight sm:text-5xl">
+            שלום, <span>{session.user.name}</span>
+          </h1>
+          {/* Seeded by user id: same user always gets the same avatar, and no personal data leaves the page */}
+          <UserAvatar seed={session.user.id} />
+        </div>
         <p className="mt-3 text-lg opacity-70">איזה תרגול נעשה היום?</p>
       </header>
 
@@ -124,6 +130,7 @@ export default async function AccountPage() {
         <section className="account-enter mt-10" style={delayStyle(420)}>
           <h2 className="font-display text-xl font-bold">התוצאות שלכם</h2>
           <div className="mt-4 rounded-3xl border border-dashed border-line p-6 text-center">
+            <Image src="/studying-with-clock.svg" alt="" width={2775} height={1860} className="mx-auto mb-4 h-auto w-48 sm:w-56" />
             <p className="font-semibold">עוד אין תוצאות מבחן</p>
             <p className="mt-1 text-sm leading-relaxed opacity-70">כשתסיימו מבחן, התוצאה והרמה שלכם יופיעו כאן.</p>
             <Link href="/exam" className="mt-5 inline-flex rounded-full border border-fg/25 px-5 py-2.5 text-sm font-semibold hover:bg-fg/5">

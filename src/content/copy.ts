@@ -58,9 +58,16 @@ export const copy = {
   onboardingTitle: "קודם מנסים, אחר כך מחליטים",
   onboardingSub:
     "בלי כרטיס אשראי ובלי התחייבות. כל כרטיס פותח תרגול אחר.",
-  onboardingPersuadeTitle: "לצערנו, נגמר התרגול החינמי שלכם. תרצו להמשיך לתרגל? הרשמה לוקחת כ10 שניות.",
+  onboardingPersuadeTitle: "רוצים להמשיך לתרגל? הרשמה לוקחת כ-10 שניות.",
   onboardingPersuadeText:
-    "מה שניסיתם כאן הוא טעימה קטנה מהמאגר. בסמינר המלא מחכים לכם כל השאלות, כל המבחנים, אוצר המילים כולו, וקבוצת זום קטנה לאורך שבוע שלם.",
+    "התרגולים החינמיים הם טעימה קטנה מהמאגר. בסמינר המלא מחכים לכם כל השאלות, כל המבחנים, אוצר המילים כולו, וקבוצת זום קטנה לאורך שבוע שלם.",
+
+  freeNextTitle: "יש עוד תרגולים חינם",
+  freeNextSub: "בחרו תרגול אחר, בלי הרשמה ובלי כרטיס אשראי.",
+  freePitchTitle: "תרגול לבד מראה לכם מה שגוי. מורה מסביר למה.",
+  freePitchText:
+    "בסמינר אתם בקבוצת זום קטנה עם מורה אמיתי, מתרגלים באתר בין המפגשים, ועושים מבחן פתיחה ומבחן סיום שמראים בדיוק איפה השתפרתם.",
+  freePitchCta: "לראות איך זה עובד ומה המחיר",
 
   homeFaqTitle: "אתם אולי שואלים את עצמיכם..",
 
@@ -167,6 +174,21 @@ export const homeFaqGroups = [
     ],
   },
 ];
+
+// The paper order confirmation on /checkout/success. "אישור הזמנה" and not "קבלה": the tax document comes from the payment provider
+export const receiptCopy = {
+  title: "אישור הזמנה",
+  orderLabel: "הזמנה",
+  totalLabel: "שולם",
+  statusReady: "מוכן",
+  statusPrinting: "מדפיס...",
+  statusHanging: "משכו למטה כדי לקרוע",
+  tearOff: "קריעת האישור",
+  print: "להדפיס אישור",
+  printAgain: "להדפיס שוב",
+  thanks: "תודה שבחרתם להתכונן איתי. אשמח ללוות אתכם עד היום שבו תשבו מול המבחן, רגועים ומוכנים.",
+  signoff: "אהד",
+};
 
 // What happens after a paid order, shown on /checkout/success in this order
 export const checkoutSuccessSteps = [

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { trackMeta } from "@/components/MetaPixel";
 import { signUp } from "@/lib/auth-client";
 import { phoneToSyntheticEmail } from "@/lib/phoneAuth";
 import { AuthShell } from "@/components/AuthShell";
@@ -62,11 +63,13 @@ function SignUpForm() {
       );
       return;
     }
+    // Name and phone are real now, so this is a genuine lead (not an empty click)
+    trackMeta("Lead", crypto.randomUUID());
     router.push(next);
   }
 
   return (
-    <AuthShell leftPose="/brand/mascot/dog-coffee.png">
+    <AuthShell>
       <div
         className="account-enter rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-7 shadow-[0_24px_48px_-20px_rgb(14_8_82/0.35)] sm:p-9"
         style={{ "--delay": "0ms" } as React.CSSProperties}

@@ -101,7 +101,7 @@ export function ExamDatesCalendar() {
             aria-label={examDatesCopy.prevMonth}
             className="grid size-11 place-items-center text-2xl opacity-70 hover:opacity-100"
           >
-            ›
+            ‹
           </button>
           <p className="font-bold">
             {MONTH_NAMES[cursor.month]} {cursor.year}
@@ -112,7 +112,7 @@ export function ExamDatesCalendar() {
             aria-label={examDatesCopy.nextMonth}
             className="grid size-11 place-items-center text-2xl opacity-70 hover:opacity-100"
           >
-            ‹
+            ›
           </button>
         </div>
 

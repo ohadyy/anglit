@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { copy } from "@/content/copy";
 import type { Passage, Question, QuestionType } from "@/content/questions";
@@ -9,8 +10,10 @@ import { PassageProvider } from "@/components/PassageContext";
 import { QuestionView, TypeLabel } from "@/components/QuestionView";
 import { LockIcon } from "@/components/LockIcon";
 import { TactileButton } from "@/components/TactileButton";
-import { readMistakes, recordAnswers, removeMistake, type Mistakes } from "@/lib/mistakes";
+import { fetchServerMistakes, readMistakes, recordAnswers, removeMistake, saveMistakesLocally, type Mistakes } from "@/lib/mistakes";
+import { randomOrder } from "@/lib/shuffle";
 import type { QuestionNote } from "@/content/questionNotes";
+import { FreeNextCard } from "@/components/FreeNextCard";
 
 export type PracticeMode = QuestionType | "free" | "mistakes";
 
@@ -34,9 +37,9 @@ export function PracticeClient({ mode, data }: { mode?: PracticeMode; data: Prac
   return (
     <PassageProvider passages={passages}>
       {!mode && <TypeChooser paid={paid} counts={counts} />}
-      {mode === "free" && <PracticeSession mode="free" set={free} notes={notes} />}
+      {mode === "free" && <PracticeSession mode="free" set={free} notes={notes} paid={paid} />}
       {mode === "mistakes" && <MistakesReview paid={paid} bank={set} notes={notes} />}
-      {mode && mode !== "free" && mode !== "mistakes" && (!paid ? <LockedPractice type={mode} /> : <PracticeSession mode={mode} set={set} notes={notes} />)}
+      {mode && mode !== "free" && mode !== "mistakes" && (!paid ? <LockedPractice type={mode} /> : <PracticeSession mode={mode} set={set} notes={notes} paid={paid} />)}
     </PassageProvider>
   );
 }
@@ -131,7 +134,7 @@ function TypeChooser({ paid, counts }: { paid: boolean; counts: Record<QuestionT
 
 function LockedPractice({ type }: { type: QuestionType }) {
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-4 py-16 text-center">
+    <div className="mx-auto flex flex-1 max-w-md flex-col items-center justify-center px-4 py-16 text-center">
       <div className="flex size-14 items-center justify-center rounded-full bg-white">
         <LockIcon />
       </div>
@@ -154,26 +157,38 @@ function PracticeSession({
   mode,
   set,
   notes,
+  paid,
 }: {
   mode: PracticeMode;
   set: Question[];
   notes: Record<string, QuestionNote>;
+  paid: boolean;
 }) {
+  // Shuffled once per mount (and again whenever the question bank changes), so
+  // the order differs from session to session instead of always starting with
+  // the same question — matching the bank's length, so index state stays valid.
+  const [order, setOrder] = useState(set);
   const [index, setIndex] = useState(0);
   const [picks, setPicks] = useState<(number | null)[]>(() => set.map(() => null));
-  const done = index >= set.length;
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- shuffle after mount so server and client agree on first paint, then randomize
+    setOrder(randomOrder(set));
+    setIndex(0);
+    setPicks(set.map(() => null));
+  }, [set]);
+  const done = index >= order.length;
 
-  const q = set[index];
+  const q = order[index];
   const selected = done ? null : picks[index];
   const revealed = selected !== null;
 
   const pick = useCallback(
     (i: number) => {
       if (done || picks[index] !== null) return;
-      recordAnswers({ [set[index].id]: { correct: i === set[index].answer, chosen: i } });
+      recordAnswers({ [order[index].id]: { correct: i === order[index].answer, chosen: i } });
       setPicks((p) => p.map((v, k) => (k === index ? i : v)));
     },
-    [done, index, picks, set],
+    [done, index, picks, order],
   );
 
   const next = useCallback(() => {
@@ -193,7 +208,7 @@ function PracticeSession({
     return () => window.removeEventListener("keydown", onKey);
   }, [pick, next]);
 
-  const correct = picks.filter((p, i) => p === set[i].answer).length;
+  const correct = picks.filter((p, i) => p === order[i].answer).length;
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -201,21 +216,21 @@ function PracticeSession({
         <Link href="/practice" className="opacity-70 underline underline-offset-4">
           כל הסוגים
         </Link>
-        {!done && <span className="tabular-nums opacity-70">{index + 1} מתוך {set.length}</span>}
+        {!done && <span className="tabular-nums opacity-70">{index + 1} מתוך {order.length}</span>}
       </div>
 
       <div className="mx-auto mt-3 w-full max-w-3xl px-4 sm:px-6" aria-hidden>
         <div className="h-1.5 overflow-hidden rounded-full bg-fg/12">
           <div
             className="h-full rounded-full bg-fg transition-[width] duration-300"
-            style={{ width: `${(Math.min(index, set.length) / set.length) * 100}%` }}
+            style={{ width: `${(Math.min(index, order.length) / order.length) * 100}%` }}
           />
         </div>
       </div>
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-32 pt-6 sm:px-6 sm:pt-8">
         {done ? (
-          <Summary correct={correct} total={set.length} mode={mode} />
+          <Summary correct={correct} total={order.length} mode={mode} paid={paid} />
         ) : (
           <div key={q.id} className="rise">
             <div className="mb-4">
@@ -242,7 +257,7 @@ function PracticeSession({
               fullWidth
               className="sm:ms-auto sm:w-max"
             >
-              {!revealed ? "בחרו תשובה" : index === set.length - 1 ? "לתוצאות" : "לשאלה הבאה"}
+              {!revealed ? "בחרו תשובה" : index === order.length - 1 ? "לתוצאות" : "לשאלה הבאה"}
             </TactileButton>
           </div>
         </div>
@@ -251,7 +266,7 @@ function PracticeSession({
   );
 }
 
-function Summary({ correct, total, mode }: { correct: number; total: number; mode: PracticeMode }) {
+function Summary({ correct, total, mode, paid }: { correct: number; total: number; mode: PracticeMode; paid: boolean }) {
   const others = ALL_TYPES.filter((t) => t !== mode);
   return (
     <div className="rise">
@@ -268,38 +283,64 @@ function Summary({ correct, total, mode }: { correct: number; total: number; mod
             : "אם אתם רוצים לענות נכון על כל השאלות בזמן אמת, אנחנו מזמינים אתכם להצטרף למחזור הקרוב של \"7 ימים לאמירנט\"."}
       </p>
 
-      <div data-invert="" className="mt-10 rounded-3xl p-6 sm:p-8">
-        <h2 className="text-2xl font-bold">{copy.practiceEndTitle}</h2>
-        <p className="mt-2 opacity-80">{copy.practiceEndText}</p>
-        <Link href="/sign-up" className="mt-5 inline-flex rounded-full bg-fg px-6 py-3.5 font-semibold text-bg">
-          {copy.practiceEndCta}
-        </Link>
-      </div>
-
-      <div className="mt-8">
-        <p className="text-sm opacity-70">תרגול נוסף לפי סוג שאלה</p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {others.map((t) => (
-            <a
-              key={t}
-              href={`/practice?type=${t}`}
-              className="rounded-full border border-line px-4 py-2.5 text-sm hover:bg-fg/5"
-            >
-              {TYPE_LABELS[t].he}
-            </a>
-          ))}
+      {mode === "free" && !paid ? (
+        <FreeNextCard current="questions" />
+      ) : (
+        <div data-invert="" className="mt-10 rounded-3xl p-6 sm:p-8">
+          <h2 className="text-2xl font-bold">{copy.practiceEndTitle}</h2>
+          <p className="mt-2 opacity-80">{copy.practiceEndText}</p>
+          <Link href="/sign-up" className="mt-5 inline-flex rounded-full bg-fg px-6 py-3.5 font-semibold text-bg">
+            {copy.practiceEndCta}
+          </Link>
         </div>
-      </div>
+      )}
+
+      {!(mode === "free" && !paid) && (
+        <div className="mt-8">
+          <p className="text-sm opacity-70">תרגול נוסף לפי סוג שאלה</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {others.map((t) => (
+              <a
+                key={t}
+                href={`/practice?type=${t}`}
+                className="rounded-full border border-line px-4 py-2.5 text-sm hover:bg-fg/5"
+              >
+                {TYPE_LABELS[t].he}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-// Reads the device's saved mistakes after mount, so server and client render the same markup
+// Reads the device's saved mistakes after mount, so server and client render the same markup.
+// Then, if the student is signed in, merges in the server's copy — catching anything saved on
+// another device, or lost when this one's storage was cleared — and uploads any mistake that
+// was only local (e.g. saved while signed out) so it survives from now on.
 function useMistakes() {
   const [mistakes, setMistakes] = useState<Mistakes | null>(null);
   useEffect(() => {
+    let cancelled = false;
+    const local = readMistakes();
     // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate from storage once
-    setMistakes(readMistakes());
+    setMistakes(local);
+    fetchServerMistakes().then((server) => {
+      if (cancelled || !server) return;
+      const localOnly = Object.fromEntries(
+        Object.entries(local)
+          .filter(([id]) => !(id in server))
+          .map(([id, chosen]) => [id, { correct: false, chosen }]),
+      );
+      if (Object.keys(localOnly).length > 0) recordAnswers(localOnly);
+      const merged = { ...local, ...server };
+      saveMistakesLocally(merged);
+      setMistakes(merged);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
   return [mistakes, setMistakes] as const;
 }
@@ -329,7 +370,7 @@ function MistakesReview({ paid, bank, notes }: { paid: boolean; bank: Question[]
 
   if (!paid) {
     return (
-      <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-4 py-16 text-center">
+      <div className="mx-auto flex flex-1 max-w-md flex-col items-center justify-center px-4 py-16 text-center">
         <div className="flex size-14 items-center justify-center rounded-full bg-white">
           <LockIcon />
         </div>
@@ -366,21 +407,24 @@ function MistakesReview({ paid, bank, notes }: { paid: boolean; bank: Question[]
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 pb-16 pt-4 sm:px-6">
+    <div className={`mx-auto w-full max-w-3xl px-4 pb-16 pt-4 sm:px-6 ${list.length === 0 ? "flex flex-1 flex-col items-center text-center" : ""}`}>
       <Link href="/practice" className="text-sm underline underline-offset-4 opacity-70">
         כל הסוגים
       </Link>
+      {list.length === 0 && (
+        <Image src="/celebration-couple.svg" alt="" width={1855} height={1870} className="mx-auto mt-auto h-auto w-56 sm:w-64" />
+      )}
       <p className="mt-6 font-hand text-2xl opacity-70">הטעויות שלי</p>
       <h1 className="font-display mt-1 text-3xl font-bold">
         {list.length === 0 ? "אין טעויות שמורות" : list.length === 1 ? "שאלה אחת לחזור עליה" : `${list.length} שאלות לחזור עליהן`}
       </h1>
-      <p className="mt-3 max-w-xl leading-relaxed opacity-80">
+      <p className="mx-auto mt-3 max-w-xl leading-relaxed opacity-80">
         {list.length === 0
           ? "כל שאלה שתטעו בה בתרגול או במבחן תופיע כאן, עם הסבר מלא ותרגום לעברית."
           : "לכל שאלה: מה בחרתם, מה התשובה הנכונה, ומה המשמעות של כל אחת מהתשובות. כשהבנתם, מסירים אותה מהרשימה."}
       </p>
       {list.length === 0 && (
-        <Link href="/practice" className="mt-8 inline-flex rounded-full bg-fg px-6 py-3.5 font-semibold text-bg">
+        <Link href="/practice" className="mb-auto mt-8 inline-flex rounded-full bg-fg px-6 py-3.5 font-semibold text-bg">
           לתרגול
         </Link>
       )}

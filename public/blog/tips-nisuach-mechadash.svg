@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">חץ ספירלי של ניסוח מחדש</title>
+  <rect id="background" width="1200" height="675" fill="#19107F"/>
+  <g id="subject" transform="translate(600,337)" fill="none" stroke="#E4E4E4" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M-150,95 C-215,0 -125,-110 -15,-98 C95,-86 120,15 20,42 C-45,60 -58,-15 5,-18"/>
+    <path d="M-22,-40 L5,-18 L-14,14"/>
+  </g>
+  <g id="accent">
+    <circle cx="605" cy="319" r="9" fill="#EE478C"/>
+    <path transform="translate(600,78) rotate(-5)" d="M-220,0c25,-25 50,-25 75,0s50,25 75,0 50,-25,75,0 50,25,65,5" fill="none" stroke="#EE478C" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+  </g>
+</svg>

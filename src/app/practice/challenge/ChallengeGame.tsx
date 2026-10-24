@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { Question } from "@/content/questions";
+import { randomOrder } from "@/lib/shuffle";
 import { useStored } from "@/lib/useStored";
 
 const QUESTION_MS = 12000;
@@ -31,6 +32,7 @@ function makeBurst(streak: number): ConfettiPiece[] {
 
 export function ChallengeGame({ questions }: { questions: Question[] }) {
   const [phase, setPhase] = useState<"start" | "playing" | "gameover" | "victory">("start");
+  const [order, setOrder] = useState<Question[]>(questions);
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
@@ -43,7 +45,7 @@ export function ChallengeGame({ questions }: { questions: Question[] }) {
   const [missed, setMissed] = useState<Question | null>(null);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const current = questions[index];
+  const current = order[index];
 
   function fail(q: Question, timedOut: boolean) {
     setMissed(q);
@@ -78,6 +80,7 @@ export function ChallengeGame({ questions }: { questions: Question[] }) {
   }, []);
 
   function start() {
+    setOrder(randomOrder(questions));
     setPhase("playing");
     setIndex(0);
     setStreak(0);
@@ -114,9 +117,9 @@ export function ChallengeGame({ questions }: { questions: Question[] }) {
 
   if (phase === "start") {
     return (
-      <div className="mx-auto flex min-h-dvh max-w-xl flex-col items-center justify-center px-4 py-16 text-center">
-        <Image src="/brand/mascot/dog-book.png" alt="" width={300} height={300} className="h-auto w-44" />
-        <h1 className="font-display mt-6 text-4xl font-bold leading-tight">אתגר נגד השעון</h1>
+      <div className="mx-auto flex flex-1 max-w-xl flex-col items-center justify-center px-4 py-16 text-center">
+        <Image src="/track.svg" alt="" width={2825} height={1910} priority className="mb-6 h-auto w-72 sm:w-96" />
+        <h1 className="font-display text-4xl font-bold leading-tight">אתגר נגד השעון</h1>
         <p className="mt-4 max-w-sm text-lg leading-relaxed opacity-80">
           שאלה אחת, 12 שניות, בלי טעויות. כל תשובה נכונה מאריכה את הרצף שלכם — טעות אחת, או שהזמן נגמר, ומסיימים.
         </p>
@@ -138,15 +141,15 @@ export function ChallengeGame({ questions }: { questions: Question[] }) {
   if (phase === "gameover" || phase === "victory") {
     const won = phase === "victory";
     return (
-      <div className="mx-auto flex min-h-dvh max-w-xl flex-col items-center justify-center px-4 py-16 text-center">
+      <div className="mx-auto flex flex-1 max-w-xl flex-col items-center justify-center px-4 py-16 text-center">
         <Image
-          src={won ? "/brand/mascot/dog-celebrate.png" : "/brand/mascot/dog-coffee.png"}
+          src={won ? "/winning.svg" : "/frustrated.svg"}
           alt=""
-          width={300}
-          height={300}
-          className="h-auto w-44"
+          width={2825}
+          height={1910}
+          className="mb-6 h-auto w-64 sm:w-80"
         />
-        <h1 className={`font-display mt-6 text-4xl font-bold ${won ? "" : "text-coral"}`}>
+        <h1 className={`font-display text-4xl font-bold ${won ? "" : "text-coral"}`}>
           {won ? "עברתם את כל הסבב!" : "נגמר הרצף"}
         </h1>
         <p className="mt-4 text-6xl font-bold tabular-nums">

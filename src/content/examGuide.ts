@@ -1,9 +1,10 @@
 // Copy for the score calculator (/score) and the exam info page (/amirnet).
-// Facts checked against nite.org.il on 12.10.2026: fees, the 35-day wait, test-day rules
-// and score timing. Update `asOf` when they change. Facts about the exam only, no teaching
-// method: that stays in the course.
+// Facts checked against nite.org.il and news coverage of the psychometric reform on 16.10.2026:
+// fees, the 35-day wait, test-day rules, score timing, and the English-section move from the
+// psychometric exam to Amirnet. Update `asOf` when they change. Facts about the exam only, no
+// teaching method: that stays in the course.
 
-export const guideAsOf = "12.10.2026";
+export const guideAsOf = "16.10.2026";
 export const NITE_AMIRNET_URL = "https://www.nite.org.il/other-tests/amirnet/";
 export const NITE_ACCOMMODATIONS_URL = "https://www.nite.org.il/other-tests/amirnet/special-test-accommodations";
 
@@ -36,7 +37,7 @@ export const guideCopy = {
 
   aboutTitle: "מה זה אמירנט",
   about:
-    "אמירנט הוא מבחן אנגלית ממוחשב של המרכז הארצי לבחינות ולהערכה (מאל״ו). הוא בודק קריאה ואוצר מילים, ומוסדות להשכלה גבוהה משתמשים בציון כדי לקבוע אם תצטרכו קורסי אנגלית, ובאיזו רמה. הציון ניתן בסולם של 50 עד 150.",
+    "אמירנט הוא מבחן אנגלית ממוחשב של המרכז הארצי לבחינות ולהערכה (מאל״ו). הוא בודק קריאה ואוצר מילים, והציון קובע קודם כל אם תצטרכו קורסי אנגלית לפני התואר, ובאיזו רמה. בחלק מהמוסדות ובחלק מהמסלולים האמירנט הוא גם תנאי קבלה בפני עצמו, ולא רק קביעת רמה — שווה לבדוק את זה מול המוסד הספציפי. החל ממועד החורף (דצמבר) 2026 הפסיכומטרי כבר לא כולל פרק אנגלית, ורמת האנגלית נבדקת רק באמירנט; השינוי צפוי להשפיע על הקבלה החל משנת הלימודים תשפ״ח. הציון ניתן בסולם של 50 עד 150.",
 
   structureTitle: "איך המבחן בנוי",
   structure:

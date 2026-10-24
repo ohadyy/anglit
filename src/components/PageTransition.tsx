@@ -106,6 +106,11 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
       const topSegment = (p: string) => p.split("/")[1] ?? "";
       if (topSegment(url.pathname) === topSegment(window.location.pathname)) return;
 
+      // Entering Anglit Platinum paints the same transition in black and gold
+      const toPlatinum = url.pathname === "/platinum" || url.pathname.startsWith("/platinum/");
+      if (overlayRef.current) overlayRef.current.style.backgroundColor = toPlatinum ? "#0a0a0a" : "";
+      pathRef.current?.setAttribute("stroke", toPlatinum ? "#c9a24b" : "#E4E4E4");
+
       stageRef.current = "covering";
       pendingRevealRef.current = false;
       gsap.killTweensOf([overlayRef.current, pathRef.current]);

@@ -69,6 +69,16 @@ export async function primarySeatsLeft(): Promise<number | null> {
   return Math.max(0, primary.capacity - Number(taken?.n ?? 0));
 }
 
+/** The earliest upcoming cohort that is still open for registration, as a date label ("25 באוקטובר") plus its size */
+export async function nextCohortInfo(): Promise<{ label: string; capacity: number } | null> {
+  const open = await db.select().from(cohorts).where(eq(cohorts.status, "upcoming")).orderBy(cohorts.startDate);
+  // Registration for a cohort is closed the day before it starts
+  const next = open.find((c) => c.startDate.getTime() > Date.now() + 24 * 60 * 60 * 1000);
+  if (!next) return null;
+  const label = new Intl.DateTimeFormat("he-IL", { day: "numeric", month: "long", timeZone: "Asia/Jerusalem" }).format(next.startDate);
+  return { label, capacity: next.capacity };
+}
+
 // Course prices. 347 is the regular price. 49 applies only to the next cohort that has
 // not started yet, while it still has seats, and it ends when that cohort starts.
 export const COURSE_PRICE_ILS = 347;

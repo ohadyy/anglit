@@ -28,6 +28,23 @@ export const grammarSetIds: string[][] = [
   ...[2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => [1, 2, 3, 4].map((k) => `g${n}-${k}`)),
 ];
 
+/** Anglit Platinum: five hand-written, harder tests (see content/platinum/ and lib/platinumExam.ts).
+ * Kept apart from examTests so the normal list and the seeded builder never see them. */
+export type PlatinumTone = "gold" | "platinum" | "emerald" | "diamond" | "ruby";
+export type PlatinumTestDef = { number: string; name: string; tone: PlatinumTone; free?: boolean };
+
+export const platinumTests: PlatinumTestDef[] = [
+  { number: "P1", name: "Gold", tone: "gold", free: true },
+  { number: "P2", name: "Platinum", tone: "platinum" },
+  { number: "P3", name: "Emerald", tone: "emerald" },
+  { number: "P4", name: "Diamond", tone: "diamond" },
+  { number: "P5", name: "Ruby", tone: "ruby" },
+];
+
+export function findPlatinumTest(number: string): PlatinumTestDef | undefined {
+  return platinumTests.find((t) => t.number === number);
+}
+
 export function findExamTest(number: string): ExamTestDef | undefined {
   return examTests.find((t) => t.number === number);
 }

@@ -113,12 +113,28 @@ export const vocabProgress = pgTable(
   (t) => [primaryKey({ columns: [t.userId, t.wordId] })],
 );
 
+// A question the student currently has wrong, in /practice or in an exam's core chapters —
+// mirrors the old localStorage-only version (src/lib/mistakes.ts). A correct answer, or
+// "done" on the review page, deletes the row. No row means no outstanding mistake.
+export const mistakes = pgTable(
+  "mistakes",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    questionId: text("question_id").notNull(),
+    chosenOption: integer("chosen_option"),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.questionId] })],
+);
+
 export const leads = pgTable("leads", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
   contact: text("contact").notNull(),
   message: text("message"),
-  source: text("source", { enum: ["pricing", "sign-up"] }).notNull(),
+  source: text("source", { enum: ["pricing", "sign-up", "ads"] }).notNull(),
   consent: boolean("consent").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

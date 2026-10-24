@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { Fragment } from "react";
 import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
@@ -8,6 +9,7 @@ import { db } from "@/db";
 import { examAttempts } from "@/db/schema";
 import { examTests } from "@/content/examTests";
 import { EXAM_CORE_QUESTIONS, EXAM_PILOT_QUESTIONS_RANGE } from "@/lib/examStructure";
+import { PlatinumEntry } from "./PlatinumEntry";
 import { LockIcon } from "@/components/LockIcon";
 
 export const metadata: Metadata = {
@@ -45,13 +47,13 @@ export default async function ExamListPage() {
         </p>
       )}
 
-      <ol className="mt-8 flex flex-col gap-3">
+      <ol className="mt-6 flex flex-col gap-3">
         {examTests.map((test, i) => {
           const best = bestByTest.get(test.number);
           const locked = !paid && !test.free;
           return (
+            <Fragment key={test.number}>
             <li
-              key={test.number}
               className="flex items-center justify-between gap-3 rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]"
             >
               <div className="min-w-0">
@@ -74,6 +76,13 @@ export default async function ExamListPage() {
                 {locked ? <LockIcon className="size-4" /> : best !== undefined ? "שפר" : "להתחיל"}
               </Link>
             </li>
+            {/* Between tests 5 and 6: not first, but not buried at the bottom either */}
+            {i === 4 && (
+              <li>
+                <PlatinumEntry />
+              </li>
+            )}
+            </Fragment>
           );
         })}
       </ol>

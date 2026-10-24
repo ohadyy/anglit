@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db";
+import { notify } from "@/lib/ntfy";
 
 // Login is phone number + birth date instead of email + a real password —
 // the owner wants zero-friction sign-up and to capture both for birthday
@@ -22,6 +23,9 @@ export const auth = betterAuth({
     storage: "database",
     customRules: {
       "/sign-in/email": { window: 15 * 60, max: 5 },
+      // Same window as sign-in, looser cap — stops phone-number enumeration
+      // and spam account creation without blocking a real signup burst.
+      "/sign-up/email": { window: 15 * 60, max: 10 },
     },
   },
   baseURL: process.env.BETTER_AUTH_URL,
@@ -41,6 +45,12 @@ export const auth = betterAuth({
   },
   databaseHooks: {
     user: {
+      // Speed to lead: whoever signs up and then stalls at checkout can be called within minutes
+      create: {
+        after: async (u) => {
+          await notify("New signup - Anglit", [`שם: ${u.name}`, `טלפון: ${(u as { phone?: string }).phone ?? "לא ידוע"}`], "bust_in_silhouette");
+        },
+      },
       update: {
         // The phone number decides the login and the staff role, and the birth date is the password.
         // A signed-in user must not be able to change either one through the update endpoint.

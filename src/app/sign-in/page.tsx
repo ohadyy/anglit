@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -37,7 +38,8 @@ function SignInForm() {
   }
 
   return (
-    <AuthShell leftPose="/brand/mascot/dog-book.png">
+    <AuthShell>
+      {error && <Image src="/login-fail.svg" alt="" width={2825} height={1910} className="mx-auto mb-4 h-auto w-56 sm:w-64" />}
       <div
         className="account-enter rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-7 shadow-[0_24px_48px_-20px_rgb(14_8_82/0.35)] sm:p-9"
         style={{ "--delay": "0ms" } as React.CSSProperties}

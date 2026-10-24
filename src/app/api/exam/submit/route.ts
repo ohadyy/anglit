@@ -4,8 +4,9 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { examAttempts } from "@/db/schema";
 import { scoreExam } from "@/lib/examScore";
-import { findExamTest } from "@/content/examTests";
+import { findExamTest, findPlatinumTest } from "@/content/examTests";
 import { buildExam } from "@/lib/examStructure";
+import { buildPlatinumExam } from "@/lib/platinumExam";
 import { isCorrectAnswer } from "@/content/questions";
 import { hasPaidAccess } from "@/lib/access";
 
@@ -31,13 +32,14 @@ export async function POST(request: Request) {
   }
 
   // Tests are fixed in the catalog, so the number only has to match one of them
-  if (!findExamTest(body.testNumber)) {
+  const platinum = findPlatinumTest(body.testNumber);
+  if (!platinum && !findExamTest(body.testNumber)) {
     return NextResponse.json({ error: "invalid test number" }, { status: 400 });
   }
 
   // The score is worked out here from the real answer key, never from what the browser says
   const answers = body.answers && typeof body.answers === "object" ? body.answers : {};
-  const asked = buildExam(body.testNumber)
+  const asked = (platinum ? buildPlatinumExam(body.testNumber) : buildExam(body.testNumber))
     .filter((part) => body.includePilot || !part.section.pilot)
     .flatMap((part) => part.questions);
   const correctness: Record<string, boolean> = {};

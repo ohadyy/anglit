@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">שני מעגלים נפרדים</title>
+  <rect id="background" width="1200" height="675" fill="#19107F"/>
+  <g id="accent">
+    <path transform="translate(600,337)" d="M0,-112.25 A135,135 0 0,1 0,112.25 A135,135 0 0,1 0,-112.25 Z" fill="#EE478C" opacity="0.28"/>
+  </g>
+  <g id="subject" transform="translate(600,337)" fill="none" stroke="#E4E4E4" stroke-width="24" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="-75" cy="0" r="135"/>
+    <circle cx="75" cy="0" r="135"/>
+  </g>
+  <g id="accent2">
+    <path transform="translate(280,90) rotate(-10)" d="M-220,0c25,-25 50,-25 75,0s50,25 75,0 50,-25,75,0 50,25,65,5" fill="none" stroke="#EE478C" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+  </g>
+</svg>

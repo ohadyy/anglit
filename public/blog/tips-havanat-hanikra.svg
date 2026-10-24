@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">ספר פתוח עם סימנייה</title>
+  <rect id="background" width="1200" height="675" fill="#19107F"/>
+  <g id="subject" transform="translate(600,337)" fill="none" stroke="#E4E4E4" stroke-width="24" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M-175,-75 Q0,-125 175,-75 L175,105 Q0,55 -175,105 Z"/>
+    <line x1="0" y1="-100" x2="0" y2="80"/>
+  </g>
+  <g id="accent">
+    <path transform="translate(600,337)" d="M48,-150 H72 V-75 L60,-92 L48,-75 Z" fill="#EE478C" opacity="0.9"/>
+    <path transform="translate(110,337) rotate(90)" d="M-220,0c25,-25 50,-25 75,0s50,25 75,0 50,-25,75,0 50,25,65,5" fill="none" stroke="#EE478C" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+  </g>
+</svg>

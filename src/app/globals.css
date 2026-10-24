@@ -276,47 +276,7 @@ body::after {
   animation: word-rise 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-@keyframes mascot-land {
-  from {
-    opacity: 0;
-    transform: translateY(14px) rotate(-5deg);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes mascot-bob {
-  0%,
-  100% {
-    transform: rotate(-4deg);
-  }
-  50% {
-    transform: rotate(4deg);
-  }
-}
-
-.mascot-land {
-  animation: mascot-land 900ms cubic-bezier(0.22, 1, 0.36, 1) 480ms both;
-  transform-origin: 50% 100%;
-}
-
-.mascot-tilt {
-  transform-origin: 50% 100%;
-  transition: transform 560ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.mascot-bob {
-  animation: mascot-bob 3.6s ease-in-out infinite;
-  transform-origin: 50% 100%;
-}
-
 @media (hover: hover) and (pointer: fine) {
-  .group:hover .mascot-tilt {
-    transform: rotate(-5deg);
-  }
-
   .lift {
     transition: transform 420ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 420ms cubic-bezier(0.23, 1, 0.32, 1);
   }
@@ -345,8 +305,7 @@ body::after {
   }
 
   .reveal,
-  .reveal-fade,
-  .mascot-bob {
+  .reveal-fade {
     animation: none;
   }
 
@@ -354,12 +313,6 @@ body::after {
     animation: none;
   }
 
-  .mascot-land {
-    animation: reveal-fade 300ms ease both;
-  }
-
-  .mascot-tilt,
-  .group:hover .mascot-tilt,
   .lift,
   .lift:hover {
     transition: none;
@@ -591,8 +544,26 @@ body::after {
   }
 }
 
+/* Liquid gauge: the surface drifts sideways by exactly one wavelength (100 units), so the loop is seamless */
+@keyframes gauge-wave {
+  to {
+    transform: translateX(-100px);
+  }
+}
+.gauge-wave {
+  animation: gauge-wave 4s linear infinite;
+}
+.gauge-wave-back {
+  animation-duration: 6s;
+  animation-direction: reverse;
+}
+
 /* Reduced motion keeps the fades (they only change opacity) and removes the movement */
 @media (prefers-reduced-motion: reduce) {
+  .gauge-wave {
+    animation: none;
+  }
+
   .sheet-in,
   .toast-in,
   .fade-in {
@@ -610,4 +581,203 @@ body::after {
   .shake-fail {
     animation: none;
   }
+}
+
+/* ── Anglit Platinum ──────────────────────────────────────────────────────────
+ * The hard-exam series (/platinum). Entering it swaps the whole page to a third theme:
+ * near-black, warm platinum text, gold and copper accents. Gold is --gold*, never --fg,
+ * so the shared TactileButton stays a platinum slab on black. Motion is slow on purpose. */
+[data-theme="platinum"] {
+  --bg: #0a0a0a;
+  --fg: #e8e3d6;
+  --raise: rgb(232 227 214 / 0.045);
+  --sunk: #101010;
+  --line: rgb(201 162 75 / 0.24);
+  --ok: #d9b863;
+  --warn: #c98a52;
+  --mark: rgb(201 162 75 / 0.35);
+  --gold: #c9a24b;
+  --gold-hi: #f3dc9a;
+  --gold-lo: #8a6a26;
+  --copper: #b87333;
+  color-scheme: dark;
+}
+
+.plat-root {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse 80% 40% at 50% -8%, rgb(201 162 75 / 0.14), transparent 70%),
+    radial-gradient(ellipse 70% 30% at 50% 108%, rgb(184 115 51 / 0.1), transparent 70%),
+    var(--bg);
+  color: var(--fg);
+}
+
+.plat-serif {
+  font-family: var(--font-plat-serif), var(--font-sans), serif;
+  /* Cormorant's default digits are old-style (a 1 looks like a small i): scores and timers need lining figures */
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.plat-cinzel {
+  font-family: var(--font-plat-cinzel), var(--font-plat-serif), serif;
+}
+
+.plat-script {
+  font-family: var(--font-plat-script), cursive;
+}
+
+.plat-gold-text {
+  background: linear-gradient(100deg, var(--gold-lo) 0%, var(--gold-hi) 38%, var(--gold) 58%, var(--gold-lo) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.plat-card {
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.045), rgb(255 255 255 / 0.012));
+  box-shadow: inset 0 1px 0 rgb(243 220 154 / 0.08);
+}
+
+/* An answer option: hairline gold when idle, a warm glow when chosen */
+.plat-opt {
+  border: 1px solid var(--line);
+  background: rgb(255 255 255 / 0.025);
+  transition: border-color 700ms ease, box-shadow 700ms ease, background-color 700ms ease;
+}
+.plat-opt[aria-pressed="true"] {
+  border-color: var(--gold);
+  background: rgb(201 162 75 / 0.09);
+  box-shadow: 0 0 0 1px rgb(201 162 75 / 0.55), 0 0 36px -10px rgb(201 162 75 / 0.55);
+}
+@media (hover: hover) and (pointer: fine) {
+  .plat-opt:hover {
+    border-color: rgb(201 162 75 / 0.6);
+  }
+}
+
+@keyframes plat-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes plat-rise {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.plat-fade {
+  animation: plat-fade 1400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+.plat-rise {
+  animation: plat-rise 1100ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+
+/* Metallic sheen that sweeps across a gold element, then rests before the next pass */
+@keyframes plat-sheen {
+  0% {
+    transform: translateX(-130%);
+  }
+  38%,
+  100% {
+    transform: translateX(130%);
+  }
+}
+.plat-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.plat-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 32%, rgb(255 246 214 / 0.65) 50%, transparent 68%);
+  transform: translateX(-130%);
+  animation: plat-sheen 5200ms cubic-bezier(0.45, 0, 0.2, 1) infinite;
+  animation-delay: var(--d, 0ms);
+  pointer-events: none;
+}
+
+/* The blank in a sentence-completion stem */
+.plat-blank {
+  display: inline-block;
+  min-width: 3.2em;
+  border-bottom: 1.5px solid var(--gold);
+  margin-inline: 0.15em;
+  transform: translateY(-0.12em);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plat-fade,
+  .plat-rise {
+    animation: none;
+  }
+  .plat-shimmer::after {
+    animation: none;
+    display: none;
+  }
+}
+
+/* One color family per Platinum test: the name, its numeral and the intro title use it */
+.plat-tone-gold { --tone-hi: #f3dc9a; --tone: #c9a24b; --tone-lo: #8a6a26; }
+.plat-tone-platinum { --tone-hi: #ffffff; --tone: #b9c0c9; --tone-lo: #6f7782; }
+.plat-tone-emerald { --tone-hi: #8df0c0; --tone: #2fbf7a; --tone-lo: #11693f; }
+.plat-tone-diamond { --tone-hi: #8fe3ff; --tone: #2fb4ec; --tone-lo: #1560a0; }
+.plat-tone-ruby { --tone-hi: #ff9a8f; --tone: #e0302b; --tone-lo: #8f1112; }
+.plat-tone-text {
+  background: linear-gradient(100deg, var(--tone-lo) 0%, var(--tone-hi) 38%, var(--tone) 58%, var(--tone-lo) 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: plat-tone-shine 6s ease-in-out infinite alternate;
+}
+@keyframes plat-tone-shine {
+  from { background-position: 0% 0; }
+  to { background-position: 100% 0; }
+}
+
+/* The entry popup on /exam: a gold outline that travels around the box */
+@property --plat-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+.plat-glow-border {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(#0a0a0a, #0a0a0a) padding-box,
+    conic-gradient(from var(--plat-angle), #8a6a26, #f3dc9a, #c9a24b, #3a2a0a, #8a6a26) border-box;
+  animation: plat-spin 5s linear infinite;
+  box-shadow: 0 0 60px -20px rgb(201 162 75 / 0.5);
+}
+@keyframes plat-spin {
+  to { --plat-angle: 360deg; }
+}
+
+/* The Anglit Platinum title on /exam: Cinzel with a slowly breathing gold glow */
+.plat-title-glow {
+  color: #d4b25a;
+  animation: plat-glow 3.2s ease-in-out infinite alternate;
+}
+@keyframes plat-glow {
+  from { text-shadow: 0 0 6px rgb(201 162 75 / 0.35), 0 0 14px rgb(201 162 75 / 0.15); }
+  to { text-shadow: 0 0 12px rgb(243 220 154 / 0.9), 0 0 30px rgb(201 162 75 / 0.55); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .plat-tone-text, .plat-glow-border, .plat-title-glow { animation: none; }
 }
