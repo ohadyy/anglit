@@ -517,6 +517,11 @@ body::after {
   animation: flash-fail 500ms ease-out forwards;
 }
 
+/* Home intro overlay is in the server HTML; hidden before paint on repeat visits (see introScript) */
+html[data-intro-seen] [data-home-intro] {
+  display: none;
+}
+
 /* Logo trace loader (src/components/LogoTraceLoader.tsx) */
 @keyframes logo-trace-loader-loop {
   to {

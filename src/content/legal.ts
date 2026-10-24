@@ -6,11 +6,11 @@ export const legalUpdatedAt = "4.10.2026";
 export const businessDetails = {
   name: "Anglit",
   // Legal name of the exempt business (עוסק פטור), as on the registration certificate
-  legalName: "אהד טרבלסי צילום",
+  legalName: "טרבלסי אהד",
   registrationLabel: "מספר עוסק",
   registrationNumber: "326521101",
   // Business address, required on the site before payment (consumer law)
-  address: "העלייה 18, נהריה",
+  address: "העליה 18, נהרייה",
   email: "anglitpro2027@gmail.com",
   phone: "053-566-2012",
   whatsappUrl: "https://wa.me/972535662012",

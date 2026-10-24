@@ -5,7 +5,7 @@ import { MetaPixel } from "@/components/MetaPixel";
 import { SiteChrome } from "@/components/SiteChrome";
 import { PageTransition } from "@/components/PageTransition";
 import { copy } from "@/content/copy";
-import { themeScript } from "@/lib/themeScript";
+import { introScript, themeScript } from "@/lib/themeScript";
 import { site } from "@/lib/site";
 import "./globals.css";
 
@@ -74,6 +74,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <Script id="theme" strategy="beforeInteractive">
           {themeScript}
+        </Script>
+        <Script id="intro-seen" strategy="beforeInteractive">
+          {introScript}
         </Script>
         <MetaPixel />
         <PageTransition>

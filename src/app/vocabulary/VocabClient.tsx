@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { FreeNextCard } from "@/components/FreeNextCard";
 import { vocabCopy, type VocabWord } from "@/content/vocabulary";
@@ -10,11 +10,13 @@ export function VocabClient({
   total,
   known,
   paid,
+  header,
 }: {
   words: VocabWord[];
   total: number;
   known: number;
   paid: boolean;
+  header: ReactNode;
 }) {
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -23,6 +25,7 @@ export function VocabClient({
     return (
       <main className="mx-auto w-full max-w-xl px-4 pb-16 pt-4 sm:px-6">
         <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">{vocabCopy.title}</h1>
+        {header}
         <p className="mt-6 leading-relaxed opacity-80">{vocabCopy.empty}</p>
       </main>
     );
@@ -54,6 +57,8 @@ export function VocabClient({
           זו טעימה חינמית, {total} מילים מהמאגר. כל אוצר המילים נפתח עם התשלום על הסמינר.
         </p>
       )}
+
+      {header}
 
       <div className="mt-8">
         <div className="flex items-center justify-between text-sm">

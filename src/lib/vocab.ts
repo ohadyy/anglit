@@ -1,4 +1,5 @@
 import { vocabulary, type VocabWord } from "@/content/vocabulary";
+import { randomOrder } from "@/lib/shuffle";
 
 export const SESSION_SIZE = 10;
 export const MAX_BOX = 3;
@@ -12,7 +13,8 @@ export function approvedWords(): VocabWord[] {
 // Box 0 means never practiced. Lower boxes come first, so new and missed words
 // come back before the ones a student already knows.
 export function buildSession(boxes: Map<string, number>, words: VocabWord[]): VocabWord[] {
-  return [...words]
+  // Shuffle first: the sort is stable, so words in the same box would otherwise stay in file (A-B-C) order.
+  return randomOrder(words)
     .sort((a, b) => (boxes.get(a.id) ?? 0) - (boxes.get(b.id) ?? 0))
     .slice(0, SESSION_SIZE);
 }

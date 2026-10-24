@@ -3,14 +3,16 @@
 import { useEffect, useState } from "react";
 import { LogoTraceLoader } from "@/components/LogoTraceLoader";
 
-const SEEN_KEY = "anglit-intro-seen";
-const MIN_LOOP_MS = 1200;
-const FADE_MS = 300;
+import { INTRO_SEEN_KEY as SEEN_KEY } from "@/lib/themeScript";
+
+const MIN_LOOP_MS = 800;
+const FADE_MS = 250;
 
 // A short logo-trace splash on first visit this tab session only — repeat
-// visits (back button, re-navigation) skip straight to the page.
+// visits (back button, re-navigation) skip straight to the page. The overlay is part of
+// the server HTML, so it covers the page from the very first paint; for repeat visits
+// introScript (layout) hides it via CSS before paint.
 export function HomeIntro({ children }: { children: React.ReactNode }) {
-  const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(true);
   const [mounted, setMounted] = useState(true);
@@ -20,9 +22,11 @@ export function HomeIntro({ children }: { children: React.ReactNode }) {
     try {
       seen = sessionStorage.getItem(SEEN_KEY) === "1";
     } catch {}
-    if (seen) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- runs once on mount, gated by sessionStorage above
-    setShow(true);
+    if (seen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- runs once on mount, gated by sessionStorage
+      setMounted(false);
+      return;
+    }
     // The session flag is only written once the loader actually finished its
     // minimum run, not here — so a dev StrictMode double-invoke (which mounts,
     // cleans up, and remounts this effect) can't skip the real timer.
@@ -40,16 +44,15 @@ export function HomeIntro({ children }: { children: React.ReactNode }) {
     setTimeout(() => setMounted(false), FADE_MS);
   }
 
-  if (!show) return <>{children}</>;
-
   return (
     <>
       {mounted && (
         <div
+          data-home-intro
           className="fixed inset-0 z-50 flex items-center justify-center bg-bg transition-opacity"
           style={{ opacity: visible ? 1 : 0, transitionDuration: `${FADE_MS}ms` }}
         >
-          <LogoTraceLoader loading={loading} size={96} className="text-fg" onDone={handleDone} />
+          <LogoTraceLoader loading={loading} size={96} loopDurationSeconds={1.1} fillFadeSeconds={0.35} className="text-fg" onDone={handleDone} />
         </div>
       )}
       {children}
