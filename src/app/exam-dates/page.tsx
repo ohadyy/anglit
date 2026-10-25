@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 import { ExamDatesCalendar } from "@/components/ExamDatesCalendar";
+import { ExamCountdown } from "@/components/ExamCountdown";
 import { examDatesAsOf, examDatesCopy } from "@/content/examDates";
 
 export const metadata: Metadata = {
@@ -19,6 +20,8 @@ export default function ExamDatesPage() {
         <div className="mt-8">
           <ExamDatesCalendar />
         </div>
+
+        <ExamCountdown className="mt-8" />
 
         <p className="mt-8 text-sm leading-relaxed opacity-70">{examDatesCopy.disclaimer}</p>
         <p className="mt-2 text-sm opacity-70">

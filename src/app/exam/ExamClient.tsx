@@ -13,6 +13,7 @@ import { AudioCheck } from "@/components/ReadAloud";
 import { TactileButton } from "@/components/TactileButton";
 import { HoldButton } from "@/components/HoldButton";
 import { LiquidGauge } from "@/components/LiquidGauge";
+import { ExtraTimePicker, useExtraTime, withExtraTime } from "@/components/ExtraTimePicker";
 
 type Phase = "intro" | "running" | "submitting" | "done";
 // Multiple choice stores the option index, word formation stores the typed word
@@ -46,6 +47,7 @@ export function ExamClient({
   const [answers, setAnswers] = useState<Answers>({});
   const [result, setResult] = useState<Result | null>(null);
   const [tally, setTally] = useState<TypeTally>([]);
+  const [extraPct, setExtraPct] = useExtraTime();
   const startedAtRef = useRef<string>("");
 
   const totals = planTotals(plan, includePilot);
@@ -114,7 +116,7 @@ export function ExamClient({
         <h1 className="font-display text-2xl font-bold">מבחן תרגול</h1>
         <p className="mt-2 text-sm font-semibold tabular-nums opacity-70">מספר מבחן: {testNumber}</p>
         <p className="mt-3 leading-relaxed opacity-80">
-          {totals.questions} שאלות ב-{totals.sections} פרקים מתוזמנים, {totals.minutes} דקות בסך הכול. כל פרק עובר
+          {totals.questions} שאלות ב-{totals.sections} פרקים מתוזמנים, {withExtraTime(totals.minutes, extraPct)} דקות בסך הכול. כל פרק עובר
           אוטומטית כשהזמן נגמר, גם אם לא סיימתם.
         </p>
 
@@ -129,16 +131,18 @@ export function ExamClient({
               selected={includePilot}
               onClick={() => setIncludePilot(true)}
               title="כן, כולל פרקי ניסיון (כמו במבחן)"
-              detail={`${planTotals(plan, true).questions} שאלות · ${planTotals(plan, true).minutes} דקות`}
+              detail={`${planTotals(plan, true).questions} שאלות · ${withExtraTime(planTotals(plan, true).minutes, extraPct)} דקות`}
             />
             <ChoiceButton
               selected={!includePilot}
               onClick={() => setIncludePilot(false)}
               title="לא, רק פרקי הליבה"
-              detail={`${planTotals(plan, false).questions} שאלות · ${planTotals(plan, false).minutes} דקות`}
+              detail={`${planTotals(plan, false).questions} שאלות · ${withExtraTime(planTotals(plan, false).minutes, extraPct)} דקות`}
             />
           </div>
         </fieldset>
+
+        <ExtraTimePicker value={extraPct} onChange={setExtraPct} className="mt-6" />
 
         <p className="mt-6 text-sm opacity-70">
           בסוף תקבלו הערכת ציון משוערת (50–150). זו לא הציון הרשמי של מאל&quot;ו.
@@ -201,7 +205,7 @@ export function ExamClient({
     <SectionRunner
       key={sectionIndex}
       questions={current.questions}
-      minutes={current.section.minutes}
+      seconds={withExtraTime(current.section.minutes * 60, extraPct)}
       sectionIndex={sectionIndex}
       totalSections={activePlan.length}
       answers={answers}
@@ -304,7 +308,7 @@ function ChoiceButton({
 // what resets the countdown, instead of an effect fighting the timer.
 function SectionRunner({
   questions,
-  minutes,
+  seconds,
   sectionIndex,
   totalSections,
   answers,
@@ -312,7 +316,7 @@ function SectionRunner({
   onSectionDone,
 }: {
   questions: ExamQuestion[];
-  minutes: number;
+  seconds: number;
   sectionIndex: number;
   totalSections: number;
   answers: Answers;
@@ -320,7 +324,7 @@ function SectionRunner({
   onSectionDone: (latestAnswers: Answers) => void;
 }) {
   const [qIndex, setQIndex] = useState(0);
-  const [secondsLeft, setSecondsLeft] = useState(minutes * 60);
+  const [secondsLeft, setSecondsLeft] = useState(seconds);
   const answersRef = useRef(answers);
   const doneRef = useRef(false);
 

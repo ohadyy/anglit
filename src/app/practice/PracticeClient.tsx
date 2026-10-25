@@ -56,8 +56,19 @@ function TypeChooser({ paid, counts }: { paid: boolean; counts: Record<QuestionT
       </p>
 
       <Link
+        href="/practice/daily"
+        className="mt-8 flex items-center justify-between rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] transition-transform active:scale-[0.98] sm:p-6"
+      >
+        <span>
+          <span className="block text-xl font-bold">שאלת היום</span>
+          <span className="mt-1 block text-sm opacity-70">שאלה אחת ביום, ורצף ימים שלא רוצים לשבור</span>
+        </span>
+        <span className="text-sm font-semibold">לענות ←</span>
+      </Link>
+
+      <Link
         href="/practice/words"
-        className="mt-8 flex items-center justify-between rounded-3xl bg-fg p-5 text-bg transition-transform active:scale-[0.98] sm:p-6"
+        className="mt-3 flex items-center justify-between rounded-3xl bg-fg p-5 text-bg transition-transform active:scale-[0.98] sm:p-6"
       >
         <span>
           <span className="block text-xl font-bold">שרשרת מילים</span>
@@ -72,7 +83,7 @@ function TypeChooser({ paid, counts }: { paid: boolean; counts: Record<QuestionT
       >
         <span>
           <span className="block text-xl font-bold">אתגר נגד השעון</span>
-          <span className="mt-1 block text-sm opacity-80">12 שניות לשאלה, בלי טעויות — כמה רחוק תגיעו?</span>
+          <span className="mt-1 block text-sm opacity-80">20 שניות לשאלה, בלי טעויות — כמה רחוק תגיעו?</span>
         </span>
         <span className="text-sm font-semibold">לשחק ←</span>
       </Link>

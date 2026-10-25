@@ -10,6 +10,7 @@ import { scoreExam, scoreMessage, type ExamScore } from "@/lib/examScore";
 import { Ore } from "./Ore";
 import { TactileButton } from "@/components/TactileButton";
 import { HoldButton } from "@/components/HoldButton";
+import { ExtraTimePicker, useExtraTime, withExtraTime } from "@/components/ExtraTimePicker";
 
 // The Platinum exam: same chapters and clock as the regular practice tests, in a black-and-gold
 // shell. Answers are never revealed while a chapter runs. When a chapter ends it is "sealed":
@@ -65,9 +66,10 @@ export function PlatinumExam({
   const [answers, setAnswers] = useState<Answers>({});
   const [result, setResult] = useState<Result | null>(null);
   const startedAtRef = useRef("");
+  const [extraPct, setExtraPct] = useExtraTime();
 
   const totalQuestions = chapters.reduce((n, c) => n + c.questions.length, 0);
-  const totalMinutes = chapters.reduce((n, c) => n + c.section.minutes, 0);
+  const totalMinutes = withExtraTime(chapters.reduce((n, c) => n + c.section.minutes, 0), extraPct);
 
   async function finish(finalAnswers: Answers) {
     setAnswers(finalAnswers);
@@ -117,6 +119,9 @@ export function PlatinumExam({
         <p className="plat-fade mt-4 leading-relaxed opacity-70" style={delay(1100)}>
           כל פרק מסתיים אוטומטית כשהזמן נגמר, ואי אפשר לחזור אליו. בסוף תקבלו הערכת ציון משוערת ותעודה.
         </p>
+        <div className="plat-fade mt-8 w-full" style={delay(1250)}>
+          <ExtraTimePicker value={extraPct} onChange={setExtraPct} />
+        </div>
         <div className="plat-fade mt-10 w-full" style={delay(1400)}>
           <TactileButton
             size="lg"
@@ -197,6 +202,7 @@ export function PlatinumExam({
       answers={answers}
       onAnswer={(id, value) => setAnswers((a) => ({ ...a, [id]: value }))}
       onSectionDone={onSectionDone}
+      extraPct={extraPct}
     />
   );
 
@@ -245,6 +251,7 @@ function SectionRunner({
   answers,
   onAnswer,
   onSectionDone,
+  extraPct,
 }: {
   chapter: Chapter;
   passage: Passage;
@@ -254,10 +261,11 @@ function SectionRunner({
   answers: Answers;
   onAnswer: (id: string, value: number) => void;
   onSectionDone: (latest: Answers) => void;
+  extraPct: number;
 }) {
   const { questions, section } = chapter;
   const [qIndex, setQIndex] = useState(0);
-  const [secondsLeft, setSecondsLeft] = useState(section.minutes * 60);
+  const [secondsLeft, setSecondsLeft] = useState(withExtraTime(section.minutes * 60, extraPct));
   const answersRef = useRef(answers);
   const doneRef = useRef(false);
 

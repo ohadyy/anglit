@@ -6,8 +6,9 @@ import { useEffect, useRef, useState } from "react";
 import type { Question } from "@/content/questions";
 import { randomOrder } from "@/lib/shuffle";
 import { useStored } from "@/lib/useStored";
+import { ExtraTimePicker, useExtraTime, withExtraTime } from "@/components/ExtraTimePicker";
 
-const QUESTION_MS = 12000;
+const QUESTION_MS = 20000;
 const TICK_MS = 100;
 const CONFETTI_COLORS = ["var(--color-mint)", "var(--color-marker)", "var(--color-coral)", "var(--color-ink)"];
 
@@ -38,6 +39,8 @@ export function ChallengeGame({ questions }: { questions: Question[] }) {
   const [revealed, setRevealed] = useState(false);
   const [streak, setStreak] = useState(0);
   const [best, setBest] = useStored("anglit-challenge-best", 0);
+  const [extraPct, setExtraPct] = useExtraTime();
+  const questionMs = withExtraTime(QUESTION_MS, extraPct);
   const [timeLeft, setTimeLeft] = useState(QUESTION_MS);
   const [confetti, setConfetti] = useState<ConfettiPiece[]>([]);
   const [shaking, setShaking] = useState(false);
@@ -86,7 +89,7 @@ export function ChallengeGame({ questions }: { questions: Question[] }) {
     setStreak(0);
     setPicked(null);
     setRevealed(false);
-    setTimeLeft(QUESTION_MS);
+    setTimeLeft(questionMs);
     setMissed(null);
   }
 
@@ -107,7 +110,7 @@ export function ChallengeGame({ questions }: { questions: Question[] }) {
           setIndex((n) => n + 1);
           setPicked(null);
           setRevealed(false);
-          setTimeLeft(QUESTION_MS);
+          setTimeLeft(questionMs);
         }
       }, 550);
     } else {
@@ -121,9 +124,10 @@ export function ChallengeGame({ questions }: { questions: Question[] }) {
         <Image src="/track.svg" alt="" width={2825} height={1910} priority className="mb-6 h-auto w-72 sm:w-96" />
         <h1 className="font-display text-4xl font-bold leading-tight">אתגר נגד השעון</h1>
         <p className="mt-4 max-w-sm text-lg leading-relaxed opacity-80">
-          שאלה אחת, 12 שניות, בלי טעויות. כל תשובה נכונה מאריכה את הרצף שלכם — טעות אחת, או שהזמן נגמר, ומסיימים.
+          שאלה אחת, {Math.round(questionMs / 1000)} שניות, בלי טעויות. כל תשובה נכונה מאריכה את הרצף שלכם — טעות אחת, או שהזמן נגמר, ומסיימים.
         </p>
         {best > 0 && <p className="mt-3 text-sm font-semibold opacity-70">השיא שלכם: {best} ברצף</p>}
+        <ExtraTimePicker value={extraPct} onChange={setExtraPct} className="mt-6 max-w-xs" />
         <button
           type="button"
           onClick={start}
@@ -191,7 +195,7 @@ export function ChallengeGame({ questions }: { questions: Question[] }) {
     );
   }
 
-  const timeFraction = timeLeft / QUESTION_MS;
+  const timeFraction = timeLeft / questionMs;
   const barColor = timeFraction > 0.5 ? "bg-mint" : timeFraction > 0.2 ? "bg-marker" : "bg-coral";
 
   return (

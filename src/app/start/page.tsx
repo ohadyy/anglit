@@ -5,7 +5,7 @@ import { FREE_ACTIVITIES as CARDS } from "@/content/freePractice";
 
 export const metadata: Metadata = {
   title: "תרגול חינם",
-  description: "ארבעה תרגולים חינמיים לאמירנט: שאלות, מבחן תרגול שלם, ושני משחקי מילים.",
+  description: "תרגולים חינמיים לאמירנט: שאלת היום, שאלות לדוגמה, מבחן תרגול שלם, ושני משחקי מילים.",
 };
 
 
