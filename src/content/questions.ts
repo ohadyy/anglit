@@ -1,6 +1,7 @@
 import { grammarQuestions } from "./grammarBank";
 import { audioCompletionSets, lectureSets, pilotPassages, wordFormationSets } from "./pilotBank";
 import { extraPassages, extraQuestions } from "./extraBank";
+import { moreGrammarQuestions, moreRestatementQuestions, moreSentenceQuestions } from "./moreBank";
 // Original question bank. Every question here was written for Anglit —
 // nothing is copied from NITE or from other prep sites.
 // status: "approved" until reviewed by the teacher, then "approved".
@@ -698,6 +699,9 @@ export const questions: Question[] = [
   ...lectureSets.flat(),
   ...audioCompletionSets.flat(),
   ...extraQuestions,
+  ...moreSentenceQuestions,
+  ...moreRestatementQuestions,
+  ...moreGrammarQuestions,
 ];
 
 export function getPassage(id: string) {

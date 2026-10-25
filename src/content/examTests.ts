@@ -19,13 +19,23 @@ export const examTests: ExamTestDef[] = [
   { number: "70243" },
   { number: "36789" },
   { number: "14685" },
+  { number: "23570" },
+  { number: "68104" },
+  { number: "47293" },
+  { number: "91836" },
+  { number: "30562" },
+  { number: "75418" },
+  { number: "12947" },
+  { number: "58360" },
+  { number: "86021" },
+  { number: "39675" },
 ];
 
 /** The grammar-in-context sets, four items each. The first set is in questions.ts,
  * the rest are in grammarBank.ts. A test draws one of these when its chapter is grammar. */
 export const grammarSetIds: string[][] = [
   ["gr-01", "gr-02", "gr-03", "gr-04"],
-  ...[2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => [1, 2, 3, 4].map((k) => `g${n}-${k}`)),
+  ...[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map((n) => [1, 2, 3, 4].map((k) => `g${n}-${k}`)),
 ];
 
 /** Anglit Platinum: five hand-written, harder tests (see content/platinum/ and lib/platinumExam.ts).

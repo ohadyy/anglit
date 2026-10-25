@@ -1,0 +1,135 @@
+import type { GrammarQuestion, Question } from "./questions";
+
+// More original questions for the extra practice tests. In every row the correct
+// option is written FIRST; place() moves it to a position taken from the item number,
+// so the answer key is spread evenly. Original writing for Anglit.
+
+type Opts = [string, string, string, string];
+
+function place(id: string, correctFirst: Opts): { options: Opts; answer: 0 | 1 | 2 | 3 } {
+  const answer = (Number(id.replace(/\D/g, "")) * 3 + 1) % 4;
+  const rest = correctFirst.slice(1);
+  const options = [...rest.slice(0, answer), correctFirst[0], ...rest.slice(answer)] as Opts;
+  return { options, answer: answer as 0 | 1 | 2 | 3 };
+}
+
+const sc = (id: string, stem: string, o: Opts, explanation: string, trick: string): Question => ({
+  id,
+  type: "sentence",
+  stem,
+  ...place(id, o),
+  explanation,
+  trick,
+  status: "approved",
+});
+
+const rs = (id: string, stem: string, o: Opts, explanation: string, trick: string): Question => ({
+  id,
+  type: "restatement",
+  stem,
+  ...place(id, o),
+  explanation,
+  trick,
+  status: "approved",
+});
+
+const gr = (id: string, stem: string, o: Opts, explanation: string, trick: string): GrammarQuestion => ({
+  id,
+  type: "grammar",
+  stem,
+  ...place(id, o),
+  explanation,
+  trick,
+  status: "approved",
+});
+
+export const moreSentenceQuestions: Question[] = [
+  sc("sy-01", "The manager's ____ response to the complaint calmed the angry customers.", ["prompt", "hostile", "vague", "reluctant"], "תגובה מהירה (prompt) מרגיעה לקוחות כועסים. הצלעות האחרות לא מרגיעות.", "בדקו איזו מילה מסבירה את ההרגעה שבהמשך המשפט."),
+  sc("sy-02", "Because the road was ____ with ice, drivers were told to stay home.", ["covered", "tired", "fond", "accused"], "מכוסה בקרח: covered with. שאר התשובות לא מתחברות ל-with ice.", "שימו לב לצירוף שאחרי החסר: covered with."),
+  sc("sy-03", "She is so ____ that she never forgets a name or a date.", ["observant", "careless", "generous", "modest"], "מי שלא שוכח שמות ותאריכים הוא קשוב ובעל זיכרון טוב. observant = בעל כושר הסתכלות.", "so ... that: התוצאה מסבירה את התואר."),
+  sc("sy-04", "The company decided to ____ its operations to three new countries.", ["expand", "reject", "borrow", "imitate"], "חברה שמרחיבה פעילות למדינות חדשות: expand.", "to + פועל + to new countries: חפשו כיוון של גידול."),
+  sc("sy-05", "Although the plan sounded perfect, it proved ____ in practice.", ["unrealistic", "affordable", "memorable", "comfortable"], "Although מציג ניגוד: נשמעה מושלמת, אבל בפועל לא ריאלית.", "Although = ניגוד. הפכו את הכיוון של החלק הראשון."),
+  sc("sy-06", "Scientists hope the new drug will ____ the symptoms of the disease.", ["relieve", "invent", "inherit", "witness"], "תרופה מקלה על תסמינים: relieve = להקל.", "מה תרופה עושה לתסמינים? מקלה."),
+  sc("sy-07", "He spoke so ____ that even the people in the back row could hear him.", ["loudly", "slowly", "politely", "briefly"], "כדי שגם בשורה האחרונה ישמעו, צריך לדבר בקול רם.", "בדקו מה התוצאה (could hear) דורשת."),
+  sc("sy-08", "The two theories are ____ different, so they cannot both be true.", ["completely", "slightly", "barely", "partly"], "אם אי אפשר ששתיהן נכונות, הן שונות לגמרי: completely.", "so אחרי החסר מגלה כמה חזק צריך להיות החסר."),
+  sc("sy-09", "Many farmers were forced to ____ their land after three years of drought.", ["abandon", "decorate", "celebrate", "predict"], "בצורת ממושכת גורמת לנטוש (abandon) קרקע.", "forced to = בלית ברירה, ולכן פעולה שלילית."),
+  sc("sy-10", "The teacher gave a ____ explanation, and every student understood the rule.", ["clear", "confusing", "pointless", "lengthy"], "כל התלמידים הבינו, ולכן ההסבר ברור.", "חפשו את התוצאה בחלק השני."),
+  sc("sy-11", "It is ____ to expect a beginner to play like a professional after one month.", ["unreasonable", "essential", "common", "polite"], "לצפות ממתחיל להיות מקצוען תוך חודש היא ציפייה לא סבירה.", "מה אומר ההיגיון על הציפייה?"),
+  sc("sy-12", "The scandal seriously ____ the mayor's reputation.", ["damaged", "improved", "described", "measured"], "שערורייה פוגעת (damaged) בשם הטוב.", "scandal ... reputation: פגיעה."),
+  sc("sy-13", "Unlike his ____ sister, Dan prefers to spend his evenings alone.", ["sociable", "serious", "tired", "nervous"], "Unlike = ניגוד. דן מעדיף להיות לבד, האחות חברותית.", "Unlike = הפוך מהחלק השני."),
+  sc("sy-14", "The new law will ____ in January, so businesses have a few months to prepare.", ["take effect", "take place", "take care", "take over"], "חוק נכנס לתוקף: take effect.", "חוק: take effect. אירוע: take place."),
+  sc("sy-15", "Her ____ for mathematics led her to study it at university.", ["passion", "fear", "habit", "excuse"], "תשוקה למתמטיקה מובילה ללמוד אותה.", "led her to study: חפשו סיבה חיובית."),
+  sc("sy-16", "The doctor advised him to ____ from heavy exercise until the injury healed.", ["refrain", "benefit", "derive", "depart"], "refrain from = להימנע מ-. התחביר עם from קובע.", "from אחרי החסר: refrain from."),
+  sc("sy-17", "The villagers were ____ by the sudden flood and had no time to leave.", ["overwhelmed", "inspired", "persuaded", "entertained"], "שיטפון פתאומי מציף (overwhelmed) אנשים ללא זמן לברוח.", "sudden + no time: חפשו הלם."),
+  sc("sy-18", "Only a ____ number of tickets remain, so book soon.", ["limited", "growing", "random", "huge"], "נשארו מעט כרטיסים ולכן מזמינים מהר: limited.", "book soon: מעט."),
+  sc("sy-19", "The report was criticized for being too ____ to be of any practical use.", ["theoretical", "detailed", "recent", "official"], "דוח בלי שימוש מעשי הוא תיאורטי מדי.", "practical use הוא ההפך של theoretical."),
+  sc("sy-20", "Few people ____ the importance of sleep until they go without it for days.", ["appreciate", "ignore", "doubt", "reject"], "רק כשחסר שינה מעריכים (appreciate) אותו.", "until: רק אחרי שהדבר חסר מעריכים אותו."),
+  sc("sy-21", "The two companies agreed to ____ their resources and build the factory together.", ["pool", "waste", "borrow", "refuse"], "build together: מאחדים משאבים, pool.", "together מגלה שיתוף."),
+  sc("sy-22", "Despite his ____ appearance, the old man was extremely strong.", ["frail", "wealthy", "cheerful", "typical"], "Despite = ניגוד: נראה שביר אך חזק מאוד.", "Despite הופך את הכיוון."),
+  sc("sy-23", "The mayor's speech was deliberately ____ so that no group would feel offended.", ["neutral", "fierce", "elaborate", "emotional"], "כדי שאף קבוצה לא תיעלב, הנאום ניטרלי.", "so that: המטרה מגלה את התשובה."),
+  sc("sy-24", "Rising prices have made it ____ for many families to buy a home.", ["difficult", "tempting", "natural", "pleasant"], "מחירים עולים מקשים על קניית בית.", "Rising prices: השפעה שלילית."),
+  sc("sy-25", "The museum is ____ closed on Mondays, with no exceptions.", ["strictly", "barely", "partly", "rarely"], "ללא יוצא מן הכלל: strictly = בהחלט, בקפדנות.", "with no exceptions מחזק את החסר."),
+  sc("sy-26", "The explorers were ____ to find fresh water after three days in the desert.", ["relieved", "ashamed", "puzzled", "bored"], "אחרי שלושה ימים במדבר מוצאים מים ומרגישים הקלה.", "מצב + תוצאה טובה = הקלה."),
+  sc("sy-27", "Her ____ comments made it clear that she did not trust the committee.", ["sarcastic", "grateful", "ordinary", "accurate"], "הערות שמבהירות חוסר אמון הן סרקסטיות.", "did not trust: טון שלילי."),
+  sc("sy-28", "The new software is designed to ____ errors before they reach the customer.", ["detect", "create", "admire", "borrow"], "תוכנה בודקת ומאתרת (detect) שגיאות.", "designed to: מה תוכנה עושה לשגיאות?"),
+  sc("sy-29", "After years of ____, the old bridge finally collapsed.", ["neglect", "praise", "growth", "success"], "גשר שקורס אחרי שנים של הזנחה.", "finally collapsed: הסיבה שלילית."),
+  sc("sy-30", "Nothing could ____ him from his decision to leave the company.", ["deter", "attract", "invite", "assist"], "deter = להרתיע. Nothing could deter him: שום דבר לא הרתיע אותו.", "Nothing could ... from: משהו שמרתיע."),
+  sc("sy-31", "The professor is known for her ____ lectures, which students rarely forget.", ["engaging", "dull", "silent", "hasty"], "הרצאות שלא שוכחים הן מרתקות (engaging).", "rarely forget: חיובי."),
+  sc("sy-32", "Heavy rain is ____ to continue throughout the weekend.", ["expected", "pleased", "forced", "remembered"], "is expected to: צפוי להמשיך.", "is ___ to + פועל: חפשו צפי."),
+  sc("sy-33", "He apologized for the ____ and promised it would not happen again.", ["misunderstanding", "celebration", "promotion", "discovery"], "מתנצלים על אי הבנה ומבטיחים שלא תחזור.", "apologized: משהו שלילי."),
+  sc("sy-34", "The two explanations are ____: if one is true, the other must be false.", ["contradictory", "identical", "supportive", "familiar"], "אם אחת נכונה השנייה שגויה: סותרות.", "הנקודתיים מסבירים את החסר."),
+  sc("sy-35", "Employees are ____ to report any safety problem immediately.", ["encouraged", "prevented", "tempted", "warned against"], "מעודדים עובדים לדווח. אין היגיון להזהיר או למנוע דיווח.", "report immediately: כיוון חיובי."),
+  sc("sy-36", "The results were ____ because the sample was too small to prove anything.", ["inconclusive", "convincing", "impressive", "dramatic"], "מדגם קטן לא מוכיח דבר, ולכן לא חד-משמעיות.", "too small to prove: חוסר ודאות."),
+];
+
+export const moreRestatementQuestions: Question[] = [
+  rs("ry-01", "Unless the weather improves, the match will be cancelled.", ["If the weather does not improve, the match will be cancelled.", "If the weather improves, the match will be cancelled.", "The match was cancelled because the weather improved.", "The weather will improve once the match is cancelled."], "Unless = if ... not.", "Unless = אם לא."),
+  rs("ry-02", "Her presentation was so convincing that the board approved the budget at once.", ["The board approved the budget immediately because her presentation was convincing.", "The board approved the budget before her presentation.", "Her presentation was too weak to persuade the board.", "The board rejected the budget despite her presentation."], "so ... that = תוצאה. ההצגה משכנעת ולכן אישרו.", "so ... that = כל כך ש-."),
+  rs("ry-03", "No sooner had we left home than it started to rain.", ["It started to rain right after we left home.", "It rained before we left home.", "We left home because it started to rain.", "It stopped raining when we left home."], "No sooner ... than = מיד לאחר.", "No sooner = מיד אחרי."),
+  rs("ry-04", "Despite being exhausted, Maya finished the race.", ["Maya was exhausted, but she finished the race.", "Maya finished the race because she was exhausted.", "Maya was too exhausted to finish the race.", "Maya did not finish because she was exhausted."], "Despite = למרות. עייפות לא מנעה סיום.", "Despite = but."),
+  rs("ry-05", "The lecture was too difficult for the students to follow.", ["The students could not follow the lecture because it was so difficult.", "The students followed the lecture easily.", "The lecture was difficult only for the teacher.", "The students refused to follow the lecture."], "too ... to = קשה מדי כדי.", "too ... to = לא יכול."),
+  rs("ry-06", "He would have passed the exam if he had studied harder.", ["He failed the exam because he did not study hard enough.", "He passed the exam because he studied hard.", "He studied hard but still failed.", "He did not take the exam."], "תנאי שלישי: לא למד מספיק ולכן נכשל.", "would have + if had: מה שלא קרה."),
+  rs("ry-07", "Few of the guests stayed until the end of the party.", ["Most of the guests left before the party ended.", "Most of the guests stayed until the end.", "No one came to the party.", "All of the guests left early."], "Few = מעט. רוב האורחים עזבו מוקדם.", "few = מעט, כמעט לא."),
+  rs("ry-08", "The more she practiced, the better she played.", ["Her playing improved as she practiced more.", "She played worse the more she practiced.", "She practiced less as she played better.", "She stopped practicing because she played well."], "The more ... the better: שיפור לצד תרגול.", "the more ... the more = ככל ש-."),
+  rs("ry-09", "It was not until midnight that the storm ended.", ["The storm ended at midnight.", "The storm ended before midnight.", "The storm started at midnight.", "The storm never ended."], "not until midnight = רק בחצות.", "not until = רק ב-."),
+  rs("ry-10", "Everyone except Tom agreed with the proposal.", ["Tom was the only one who did not agree.", "Tom was the only one who agreed.", "Nobody agreed with the proposal.", "Tom proposed the idea."], "except = חוץ מ-. רק טום לא הסכים.", "except = חוץ."),
+  rs("ry-11", "She prefers walking to driving.", ["She likes walking more than driving.", "She walks because she cannot drive.", "She drives more than she walks.", "She dislikes both walking and driving."], "prefer A to B = מעדיפה A על B.", "prefer ... to."),
+  rs("ry-12", "The company's profits fell sharply last year.", ["There was a sharp drop in the company's profits last year.", "The company's profits rose sharply last year.", "The company made no profit at all.", "The company's profits stayed the same."], "fell sharply = ירידה חדה.", "fell = ירידה."),
+  rs("ry-13", "I had difficulty finding the address.", ["I found it hard to find the address.", "I found the address easily.", "I did not look for the address.", "I knew the address well."], "had difficulty = התקשיתי.", "difficulty = hard."),
+  rs("ry-14", "Had she left earlier, she would not have missed the train.", ["She missed the train because she did not leave earlier.", "She left early and caught the train.", "She missed the train even though she left early.", "She did not want to take the train."], "היפוך של תנאי שלישי.", "Had + נושא = if had."),
+  rs("ry-15", "Not many students passed the test.", ["Most students failed the test.", "Most students passed the test.", "All students passed the test.", "Many students did not take the test."], "Not many = מעטים. רובם נכשלו.", "not many = few."),
+  rs("ry-16", "The hotel was cheaper than we had expected.", ["The hotel cost less than we thought it would.", "The hotel cost more than we thought.", "The hotel was exactly as expensive as we expected.", "We expected the hotel to be free."], "cheaper than expected = זול ממה שציפינו.", "cheaper = less."),
+  rs("ry-17", "He is the tallest player in the team.", ["No other player in the team is as tall as he is.", "He is shorter than the others.", "All players are equally tall.", "He is the only player in the team."], "superlative = אין גבוה ממנו.", "tallest = no one taller."),
+  rs("ry-18", "Although the film was long, it never felt boring.", ["The film was long but interesting throughout.", "The film was long and boring.", "The film was short and interesting.", "The film felt boring because it was long."], "Although = ניגוד.", "Although = but."),
+];
+
+type G = [string, string, Opts, string, string];
+
+const grammarRows: G[] = [
+  ["g11-1", "If I ___ you, I would accept the offer.", ["were", "am", "was being", "will be"], "תנאי מסוג שני עם I ו-you: were.", "if I were you."],
+  ["g11-2", "The children ___ playing outside since morning.", ["have been", "are", "were", "had"], "פעולה שנמשכת מאז הבוקר: present perfect continuous.", "since + הווה מושלם."],
+  ["g11-3", "She is the only one of my friends who ___ a car.", ["has", "have", "are having", "having"], "who מתייחס ל-one, ביחיד: has.", "the only one who + יחיד."],
+  ["g11-4", "I would rather you ___ smoke in here.", ["did not", "do not", "will not", "are not"], "would rather + נושא חדש: עבר פשוט.", "would rather you + עבר."],
+  ["g12-1", "By next June, they ___ married for ten years.", ["will have been", "are", "have", "would be"], "עד נקודה עתידית: future perfect.", "by + עתיד = will have."],
+  ["g12-2", "The news ___ not good, I am afraid.", ["is", "are", "were", "have been"], "news הוא יחיד.", "news = יחיד."],
+  ["g12-3", "Rarely ___ such a talented young pianist.", ["have I heard", "I have heard", "I heard", "heard I"], "Rarely בתחילת משפט דורש היפוך.", "Rarely + היפוך."],
+  ["g12-4", "He asked me where I ___ the previous night.", ["had been", "was", "have been", "am"], "דיבור עקיף מסיט את הזמן אחורה.", "דיבור עקיף: עבר מושלם."],
+  ["g13-1", "The report must ___ by Friday.", ["be submitted", "submit", "submitting", "to submit"], "דוח מוגש, ולכן סביל אחרי must.", "must be + חלק עבר."],
+  ["g13-2", "She suggested ___ the meeting to next week.", ["postponing", "to postpone", "postpone", "postponed"], "אחרי suggest בא gerund.", "suggest + ing."],
+  ["g13-3", "Either the teacher or the students ___ responsible.", ["are", "is", "was", "has been"], "הפועל מתאים לנושא הקרוב: students.", "either ... or: הקרוב."],
+  ["g13-4", "I look forward to ___ from you soon.", ["hearing", "hear", "heard", "have heard"], "look forward to + ing.", "to כאן מילת יחס."],
+  ["g14-1", "He works as if he ___ the owner of the company.", ["were", "is", "will be", "has been"], "as if לתיאור מצב שאינו אמיתי: were.", "as if + were."],
+  ["g14-2", "The book, ___ cover is red, is on the table.", ["whose", "which", "who", "that"], "קניין: whose.", "whose = של."],
+  ["g14-3", "There ___ several reasons for the delay.", ["were", "was", "is", "has"], "reasons ברבים.", "there + רבים = were."],
+  ["g14-4", "Neither of them ___ the answer.", ["knew", "know", "were knowing", "have known"], "Neither ביחיד, ובעבר: knew.", "neither = יחיד."],
+  ["g15-1", "She is used to ___ up early.", ["getting", "get", "got", "gets"], "be used to + ing.", "used to + ing = רגילה."],
+  ["g15-2", "Having finished the work, ___ went home.", ["the workers", "the work", "it", "home"], "מי סיים? העובדים. הנושא חייב להתאים.", "ing בהתחלה: הנושא עושה את הפעולה."],
+  ["g15-3", "The more you read, ___ you learn.", ["the more", "more", "most", "much"], "the more ... the more.", "the + השוואה פעמיים."],
+  ["g15-4", "I wish he ___ me about the problem yesterday.", ["had told", "told", "tells", "would tell"], "wish על העבר: past perfect.", "wish על עבר = had + חלק עבר."],
+  ["g16-1", "It is essential that she ___ present at the meeting.", ["be", "is", "was", "will"], "אחרי essential that: צורת בסיס.", "essential that + be."],
+  ["g16-2", "Not until he left ___ how much he missed her.", ["did he realize", "he realized", "he did realize", "realized he"], "Not until דורש היפוך.", "Not until + היפוך."],
+  ["g16-3", "The workers, ___ were tired, kept going.", ["who", "which", "whom", "whose"], "מתייחס לאנשים: who.", "אנשים = who."],
+  ["g16-4", "He denied ___ the window.", ["breaking", "to break", "break", "broke"], "deny + gerund.", "deny + ing."],
+];
+
+export const moreGrammarQuestions: GrammarQuestion[] = grammarRows.map(([id, stem, o, e, t]) => gr(id, stem, o, e, t));

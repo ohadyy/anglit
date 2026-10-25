@@ -2,6 +2,10 @@
 // To publish a word, read it, check the translation and example, then change its
 // status from "draft" to "approved". Example sentences must be original.
 
+import { vocabMoreA } from "./vocabMoreA";
+import { vocabMoreB } from "./vocabMoreB";
+import { vocabMoreC } from "./vocabMoreC";
+
 export type VocabTier = "easy" | "medium" | "hard" | "native";
 export type VocabCategory = "verb" | "adjective" | "noun" | "other";
 
@@ -502,6 +506,24 @@ export const vocabulary: VocabWord[] = [
   { id: "vw-465", word: "scarcely", translation: "בקושי", example: "I could scarcely hear her over the noise.", tier: "native", category: "other", level: 2, status: "approved" },
   { id: "vw-466", word: "thereafter", translation: "לאחר מכן, מאז", example: "She moved abroad in 2010 and rarely visited thereafter.", tier: "native", category: "other", level: 2, status: "approved" },
 ];
+
+// Words added later live in vocabMore*.ts as compact tuples; ids continue from vw-467.
+// Tier decides the level (hard and native are level 2). Duplicates of an earlier word are skipped.
+const seenWords = new Set(vocabulary.map((v) => v.word.toLowerCase()));
+for (const [word, translation, example, tier, category] of [...vocabMoreA, ...vocabMoreB, ...vocabMoreC]) {
+  if (seenWords.has(word.toLowerCase())) continue;
+  seenWords.add(word.toLowerCase());
+  vocabulary.push({
+    id: `vw-${vocabulary.length + 1}`,
+    word,
+    translation,
+    example,
+    tier,
+    category,
+    level: tier === "hard" || tier === "native" ? 2 : 1,
+    status: "approved",
+  });
+}
 
 export const vocabCopy = {
   title: "אוצר מילים",

@@ -66,7 +66,7 @@ export default async function AccountPage() {
           delay={120}
           href={paid ? "/exam" : "/pricing"}
           title="מבחנים"
-          text={paid ? "10 מבחני תרגול, וכל אחד עם מספר קבוע" : copy.accountLockedLabel}
+          text={paid ? "20 מבחני תרגול, וכל אחד עם מספר קבוע" : copy.accountLockedLabel}
           badge={paid && attempts.length > 0 ? `${attempts.length} ניסיונות` : undefined}
           locked={!paid}
         />
