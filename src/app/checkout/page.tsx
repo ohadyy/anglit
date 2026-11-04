@@ -18,9 +18,9 @@ export const metadata: Metadata = {
 export default async function CheckoutPage({
   searchParams,
 }: {
-  searchParams: Promise<{ product?: string }>;
+  searchParams: Promise<{ product?: string; coupon?: string }>;
 }) {
-  const { product: productId } = await searchParams;
+  const { product: productId, coupon } = await searchParams;
   const session = await auth.api.getSession({ headers: await headers() });
   const product = getProduct(productId);
   if (!product) redirect("/pricing");
@@ -57,7 +57,7 @@ export default async function CheckoutPage({
                 ) : (
                   <>
                     <p className="mt-1 text-5xl font-bold tracking-tight">{product.price} ₪</p>
-                    <p className="mt-1 text-sm opacity-70">{product.priceUnit}</p>
+                    {product.id !== "course" && <p className="mt-1 text-sm opacity-70">{product.priceUnit}</p>}
                   </>
                 )}
               </div>
@@ -156,6 +156,20 @@ export default async function CheckoutPage({
                       <Link href="/legal/refunds" className="underline">מדיניות הביטול והחזרים</Link>
                     </span>
                   </label>
+                  {product.id === "course" && (
+                    <label className="mb-4 flex flex-col gap-1.5 text-start text-sm">
+                      {checkoutCopy.couponLabel}
+                      <input
+                        type="text"
+                        name="coupon"
+                        dir="ltr"
+                        autoCapitalize="characters"
+                        autoComplete="off"
+                        className="min-h-11 rounded-xl border border-line bg-white px-4 text-base uppercase"
+                      />
+                      {coupon === "bad" && <span className="text-warn">{checkoutCopy.couponBad}</span>}
+                    </label>
+                  )}
                   <button
                     type="submit"
                     className="flex w-full items-center justify-center rounded-full bg-fg px-6 py-4 font-semibold text-bg"

@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 
 const HEBREW = /[֐-׿]/;
 
-function speak(text: string, onEnd: () => void) {
+export function speak(text: string, onEnd: () => void) {
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
   const voice = window.speechSynthesis.getVoices().find((v) => v.lang.startsWith("en"));

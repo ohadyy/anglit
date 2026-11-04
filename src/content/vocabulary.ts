@@ -5,6 +5,7 @@
 import { vocabMoreA } from "./vocabMoreA";
 import { vocabMoreB } from "./vocabMoreB";
 import { vocabMoreC } from "./vocabMoreC";
+import { vocabExam } from "./vocabExam";
 
 export type VocabTier = "easy" | "medium" | "hard" | "native";
 export type VocabCategory = "verb" | "adjective" | "noun" | "other";
@@ -510,7 +511,7 @@ export const vocabulary: VocabWord[] = [
 // Words added later live in vocabMore*.ts as compact tuples; ids continue from vw-467.
 // Tier decides the level (hard and native are level 2). Duplicates of an earlier word are skipped.
 const seenWords = new Set(vocabulary.map((v) => v.word.toLowerCase()));
-for (const [word, translation, example, tier, category] of [...vocabMoreA, ...vocabMoreB, ...vocabMoreC]) {
+for (const [word, translation, example, tier, category] of [...vocabMoreA, ...vocabMoreB, ...vocabMoreC, ...vocabExam]) {
   if (seenWords.has(word.toLowerCase())) continue;
   seenWords.add(word.toLowerCase());
   vocabulary.push({

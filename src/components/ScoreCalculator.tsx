@@ -1,9 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { calculatorCopy as c } from "@/content/examGuide";
 import { SCORE_LEVELS, scoreLevel } from "@/lib/scoreLevels";
+
+// Eases a number toward its target, so a changed cost rolls instead of jumping
+function useRolling(target: number) {
+  const [value, setValue] = useState(target);
+  useEffect(() => {
+    const id = setInterval(() => {
+      setValue((v) => {
+        if (v === target) return v;
+        const step = Math.max(1, Math.round(Math.abs(target - v) / 6));
+        return v < target ? Math.min(v + step, target) : Math.max(v - step, target);
+      });
+    }, 30);
+    return () => clearInterval(id);
+  }, [target]);
+  return value;
+}
 
 export function ScoreCalculator() {
   const [score, setScore] = useState(100);
@@ -11,6 +27,7 @@ export function ScoreCalculator() {
   const [draft, setDraft] = useState("100");
   const level = scoreLevel(score);
   const next = SCORE_LEVELS.find((l) => l.min > score);
+  const cost = useRolling(level.courses * c.costPerCourse);
 
   function set(v: number) {
     const clamped = Math.min(150, Math.max(50, Math.round(v)));
@@ -92,20 +109,33 @@ export function ScoreCalculator() {
         )}
       </div>
 
-      <ol dir="ltr" className="mt-5 grid grid-cols-6 gap-1" aria-hidden>
-        {SCORE_LEVELS.map((l) => (
-          <li
-            key={l.min}
-            className={`h-2 rounded-full ${l.min <= score ? "bg-fg" : "bg-fg/12"}`}
-            title={l.label}
-          />
-        ))}
+      {/* The six levels as a ladder: the current one lit, the ones already passed marked, dots show courses left */}
+      <ol className="mt-5 flex flex-col-reverse gap-2" aria-hidden>
+        {SCORE_LEVELS.map((l) => {
+          const here = l.min === level.min;
+          const passed = l.min < level.min;
+          return (
+            <li
+              key={l.min}
+              className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-300 ${
+                here ? "scale-[1.03] border-ink bg-ink font-semibold text-mist" : passed ? "border-line bg-mint/20" : "border-line opacity-50"
+              }`}
+            >
+              <span>{l.label}</span>
+              <span dir="ltr" className="flex items-center gap-1">
+                {Array.from({ length: 5 }, (_, i) => (
+                  <i key={i} className={`size-2 rounded-full ${i < l.courses ? (here ? "bg-mist" : "bg-ink/50") : here ? "bg-mist/25" : "bg-ink/10"}`} />
+                ))}
+              </span>
+            </li>
+          );
+        })}
       </ol>
 
       {level.courses > 0 && (
         <div className="mt-5 text-center">
           <p className="text-5xl font-bold tabular-nums text-warn">
-            <bdi dir="ltr">{(level.courses * c.costPerCourse).toLocaleString("en-US")} ₪</bdi>
+            <bdi dir="ltr">{cost.toLocaleString("en-US")} ₪</bdi>
           </p>
           <p className="mt-1 text-sm opacity-70">{c.costLabel}</p>
           <p className="mt-4 font-semibold">{c.costPitch}</p>

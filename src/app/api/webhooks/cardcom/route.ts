@@ -35,7 +35,7 @@ async function sendPurchaseThanks(userId: string, productId: string | null) {
   try {
     const [account] = await db.select({ name: user.name, phone: user.phone }).from(user).where(eq(user.id, userId));
     const product = getProduct(productId);
-    if (!account || !product) return;
+    if (!account?.phone || !product) return;
     await sendTemplate(account.phone, process.env.WHATSAPP_TEMPLATE_PURCHASE ?? "purchase_thanks", [account.name, product.name]);
   } catch (err) {
     console.error("[cardcom webhook] purchase WhatsApp failed:", err);
@@ -121,7 +121,7 @@ export async function POST(request: Request) {
       await notifyPurchase(order.userId, order.product, order.amountAgorot);
       // Only here, after the payment is confirmed. The order id is the dedupe key shared with the thank-you page.
       const [buyer] = await db.select({ phone: user.phone }).from(user).where(eq(user.id, order.userId));
-      await sendCapi({ name: "Purchase", eventId: orderId, phone: buyer?.phone, value: order.amountAgorot / 100 });
+      await sendCapi({ name: "Purchase", eventId: orderId, phone: buyer?.phone ?? undefined, value: order.amountAgorot / 100 });
       if (order.product === "course") await enrollInOrderCohort(order.userId, order.cohortId);
     }
   } else if (order.status === "pending") {

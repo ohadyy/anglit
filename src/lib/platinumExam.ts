@@ -1,6 +1,8 @@
 import type { Passage } from "@/content/questions";
 import { CORE_SECTIONS, type ExamPlanItem } from "@/lib/examStructure";
 import type { PlatinumTestBank } from "@/content/platinum/build";
+import { EASY_TEST } from "@/content/examTests";
+import { easyBank } from "@/content/easyExam";
 import { meridian } from "@/content/platinum/t1";
 import { obsidian } from "@/content/platinum/t2";
 import { sovereign } from "@/content/platinum/t3";
@@ -8,7 +10,8 @@ import { vanguard } from "@/content/platinum/t4";
 import { zenith } from "@/content/platinum/t5";
 
 // Server-only: this module holds the Platinum answer key, so client components must not import it.
-const banks: Record<string, PlatinumTestBank> = { P1: meridian, P2: obsidian, P3: sovereign, P4: vanguard, P5: zenith };
+// E1 is the admin-only easy-to-regular warm-up test (content/easyExam.ts), not listed as a Platinum test.
+const banks: Record<string, PlatinumTestBank> = { P1: meridian, P2: obsidian, P3: sovereign, P4: vanguard, P5: zenith, [EASY_TEST]: easyBank };
 
 /** A Platinum test has the real exam's six core chapters (same sizes and minutes as the
  * regular tests) and no experimental ones: it is hand-written, not drawn from a bank. */

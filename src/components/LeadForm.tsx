@@ -28,7 +28,8 @@ export function LeadForm({
       const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, contact: phone, message, source, consent }),
+        // fbclid is the ad-click id Meta puts in the landing URL; sent only at submit, so no cookie is needed to attribute the lead
+        body: JSON.stringify({ name, contact: phone, message, source, consent, fbclid: new URLSearchParams(location.search).get("fbclid") }),
       });
       if (res.ok) trackMeta("Lead", (await res.json()).id);
       setStatus(res.ok ? "sent" : "error");

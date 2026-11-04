@@ -7,6 +7,7 @@ import { Suspense, useState } from "react";
 import { signIn } from "@/lib/auth-client";
 import { phoneToSyntheticEmail } from "@/lib/phoneAuth";
 import { AuthShell } from "@/components/AuthShell";
+import { GoogleButton } from "@/components/GoogleButton";
 import { authCopy } from "@/content/copy";
 import { safeNext } from "@/lib/safeNext";
 
@@ -49,7 +50,9 @@ function SignInForm() {
         </h1>
         <p className="mt-4 text-center text-sm leading-relaxed opacity-70">{authCopy.signInSub}</p>
 
-        <form onSubmit={onSubmit} className="mt-7 flex flex-col gap-3">
+        <GoogleButton next={next} />
+
+        <form onSubmit={onSubmit} className="mt-3 flex flex-col gap-3">
           <input
             type="tel"
             placeholder="מספר טלפון"

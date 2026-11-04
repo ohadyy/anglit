@@ -14,6 +14,7 @@ export async function sendCapi(opts: {
   phone?: string;
   request?: Request;
   value?: number;
+  fbclid?: string;
 }) {
   const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
   const token = process.env.META_CAPI_TOKEN;
@@ -22,8 +23,8 @@ export async function sendCapi(opts: {
   const cookies = opts.request?.headers.get("cookie") ?? "";
   const cookie = (n: string) => cookies.match(new RegExp(`(?:^|; )${n}=([^;]+)`))?.[1];
   const h = opts.request?.headers;
-  // A browser request carries the visitor's answer to the consent banner. No answer or "no" means no event.
-  if (opts.request && cookie("anglit-consent") !== "yes") return;
+  // The event itself always goes, so every lead is counted and priced. The phone number goes only with the visitor's "yes" in the banner (an order has no banner, and is covered by the privacy policy).
+  const sendPhone = !opts.request || cookie("anglit-consent") === "yes";
   try {
     await fetch(`https://graph.facebook.com/v21.0/${pixelId}/events?access_token=${token}`, {
       method: "POST",
@@ -37,9 +38,9 @@ export async function sendCapi(opts: {
             action_source: "website",
             event_source_url: h?.get("referer") ?? undefined,
             user_data: {
-              ph: opts.phone ? [hash(phoneForMeta(opts.phone))] : undefined,
+              ph: opts.phone && sendPhone ? [hash(phoneForMeta(opts.phone))] : undefined,
               fbp: cookie("_fbp"),
-              fbc: cookie("_fbc"),
+              fbc: cookie("_fbc") ?? (opts.fbclid ? `fb.1.${Date.now()}.${opts.fbclid}` : undefined),
               client_ip_address: h?.get("x-forwarded-for")?.split(",")[0].trim(),
               client_user_agent: h?.get("user-agent") ?? undefined,
             },

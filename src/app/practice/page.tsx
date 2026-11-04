@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { hasPaidAccess } from "@/lib/access";
-import { buildFreeSet, buildSet, isQuestionType } from "@/lib/practice";
+import { buildAffixes, buildConnectors, buildDailyPool, buildFreeSet, buildSet, isQuestionType } from "@/lib/practice";
 import { passages, type Passage, type Question, type QuestionType } from "@/content/questions";
 import { ALL_TYPES } from "@/content/questionLabels";
 import { PracticeClient, type PracticeMode } from "./PracticeClient";
@@ -20,7 +20,7 @@ export default async function PracticePage({ searchParams }: PageProps<"/practic
   const session = await auth.api.getSession({ headers: await headers() });
   const paid = session ? await hasPaidAccess(session.user.id) : false;
   const mode: PracticeMode | undefined =
-    type === "free" || type === "mistakes" ? type : isQuestionType(type) ? type : undefined;
+    type === "free" || type === "mistakes" || type === "connectors" || type === "affixes" ? type : isQuestionType(type) ? type : undefined;
 
   // The full practice page is for paid members only. Everyone else is routed through the
   // free-trial chooser at /start — except the explicit free-sample link, which stays open.
@@ -30,7 +30,17 @@ export default async function PracticePage({ searchParams }: PageProps<"/practic
   // Only what this visitor may see is read from the bank and sent to the browser
   const free = buildFreeSet();
   // Mistakes live on the device, so a paid member gets the whole bank and the browser picks them out
-  const set: Question[] = !paid || !mode || mode === "free" ? [] : mode === "mistakes" ? ALL_TYPES.flatMap(buildSet) : buildSet(mode);
+  const set: Question[] =
+    !paid || !mode || mode === "free"
+      ? []
+      : mode === "mistakes"
+        ? [...ALL_TYPES.flatMap(buildSet), ...buildAffixes()]
+        : mode === "connectors"
+          ? buildConnectors()
+          : mode === "affixes"
+            ? buildAffixes()
+            : buildSet(mode);
+
   const shown = [...free, ...set];
   const usedPassages: Passage[] = passages.filter((p) => shown.some((q) => "passageId" in q && q.passageId === p.id));
   const counts = Object.fromEntries(ALL_TYPES.map((t) => [t, paid ? buildSet(t).length : 0])) as Record<QuestionType, number>;
@@ -40,7 +50,7 @@ export default async function PracticePage({ searchParams }: PageProps<"/practic
       <ReadAloud />
       <PracticeClient
         mode={mode}
-        data={{ paid, free, set, counts, passages: usedPassages, notes: questionNotes }}
+        data={{ paid, free, set, counts, dailyPool: !mode ? buildDailyPool() : [], passages: usedPassages, notes: questionNotes }}
       />
     </>
   );

@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { desc, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
@@ -10,12 +10,13 @@ import { examAttempts } from "@/db/schema";
 import { scoreLevel } from "@/lib/examScore";
 import { hasCourse, hasPaidAccess } from "@/lib/access";
 import { cohortOptionsFor } from "@/lib/cohorts";
-import { LockIcon } from "@/components/LockIcon";
+import { MiniTile, PREVIEWS } from "@/components/MiniPreviews";
 import { copy } from "@/content/copy";
 import { UserAvatar } from "./UserAvatar";
 import { SignOutButton } from "./SignOutButton";
 import { CohortPicker } from "./CohortPicker";
 import { StartChecklist } from "./StartChecklist";
+import { ProgressCard } from "./ProgressCard";
 
 export default async function AccountPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -33,6 +34,11 @@ export default async function AccountPage() {
 
   const openTest = attempts.find((a) => a.kind === "open");
   const closeTest = attempts.find((a) => a.kind === "close");
+  // Platinum attempts are a harder series, so they never count toward the opening-to-latest progress
+  const regular = attempts.filter((a) => !a.testNumber?.startsWith("P"));
+  // attempts are newest first, so the last open test is the first one taken: the baseline
+  const openRegular = regular.findLast((a) => a.kind === "open");
+  const latestTest = regular[0] && regular[0].id !== openRegular?.id ? regular[0] : undefined;
   const cohort = course ? await cohortOptionsFor(session.user.id) : null;
 
   return (
@@ -61,42 +67,23 @@ export default async function AccountPage() {
         </div>
       )}
 
-      <nav className="mt-10 grid gap-4 sm:grid-cols-2" aria-label="אזורי הלימוד">
-        <Tile
-          delay={120}
-          href={paid ? "/exam" : "/pricing"}
-          title="מבחנים"
-          text={paid ? "20 מבחני תרגול, וכל אחד עם מספר קבוע" : copy.accountLockedLabel}
-          badge={paid && attempts.length > 0 ? `${attempts.length} ניסיונות` : undefined}
-          locked={!paid}
-        />
-        <Tile
-          delay={180}
-          href="/practice"
-          title="תרגול חופשי"
-          text={paid ? "כל סוגי השאלות פתוחים, עם הסבר לכל תשובה" : "5 שאלות חינם לדוגמה, בלי הרשמה"}
-          badge={paid ? undefined : "חינם"}
-          locked={false}
-        />
-        <Tile
-          delay={240}
-          href={paid ? "/vocabulary" : "/pricing"}
-          title="אוצר מילים"
-          text={paid ? "המילים שחוזרות במבחן, לפי רמת השליטה שלכם" : copy.accountLockedLabel}
-          locked={!paid}
-        />
+      {paid && (
+        <div className="account-enter" style={delayStyle(60)}>
+          <ProgressCard open={openRegular?.estimatedScore ?? null} latest={latestTest?.estimatedScore ?? null} />
+        </div>
+      )}
+
+      <nav className="mt-8 grid grid-cols-2 gap-3" aria-label="אזורי הלימוד">
+        <Tile delay={120} href={paid ? "/exam" : "/pricing"} title="מבחנים" text={paid ? "20 מבחני תרגול" : copy.accountLockedLabel} badge={paid && attempts.length > 0 ? `${attempts.length} ניסיונות` : undefined} locked={!paid} preview={PREVIEWS.exams} />
+        <Tile delay={180} href="/practice" title="תרגול חופשי" text={paid ? "כל סוגי השאלות, עם הסבר" : "5 שאלות חינם לדוגמה"} badge={paid ? undefined : "חינם"} locked={false} preview={PREVIEWS.sentence} />
+        <Tile delay={240} href={paid ? "/vocabulary" : "/pricing"} title="אוצר מילים" text={paid ? "לפי רמת השליטה שלכם" : copy.accountLockedLabel} locked={!paid} preview={PREVIEWS.vocab} />
         <Tile
           delay={300}
           href={course ? "#cohort" : "/pricing"}
           title="המחזור שלי"
-          text={
-            !course
-              ? "לתלמידי \"7 ימים לאמירנט\" בלבד"
-              : cohort?.joinedLabel
-                ? `נרשמתם למחזור שמתחיל ב-${cohort.joinedLabel}`
-                : "בחרו מחזור, ותקבלו אישור בוואטסאפ"
-          }
+          text={!course ? "לתלמידי \"7 ימים לאמירנט\" בלבד" : cohort?.joinedLabel ? `נרשמתם למחזור שמתחיל ב-${cohort.joinedLabel}` : "בחרו מחזור, ותקבלו אישור בוואטסאפ"}
           locked={!course}
+          preview={PREVIEWS.cohort}
         />
       </nav>
 
@@ -152,6 +139,7 @@ function Tile({
   badge,
   locked,
   delay,
+  preview,
 }: {
   href: string;
   title: string;
@@ -159,24 +147,14 @@ function Tile({
   badge?: string;
   locked: boolean;
   delay: number;
+  preview: ReactNode;
 }) {
   return (
-    <Link
-      href={href}
-      data-transition-ignore
-      style={delayStyle(delay)}
-      className="account-enter account-tile group flex min-h-44 flex-col justify-between rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-6 hover:border-fg/30"
-    >
-      <div>
-        <span aria-hidden className="block size-2.5 rounded-full bg-marker" />
-        <p className="font-display mt-6 text-2xl font-bold">{title}</p>
-        <p className="mt-2 text-sm leading-relaxed opacity-70">{text}</p>
-      </div>
-      <div className="mt-6 flex items-center justify-between text-sm font-semibold opacity-70 group-hover:opacity-100">
-        <span>{badge ?? ""}</span>
-        <span aria-hidden>{locked ? <LockIcon className="size-5" /> : "←"}</span>
-      </div>
-    </Link>
+    <div className="account-enter account-tile flex" style={delayStyle(delay)}>
+      <MiniTile href={href} title={title} text={text} aside={badge ?? ""} locked={locked}>
+        {preview}
+      </MiniTile>
+    </div>
   );
 }
 

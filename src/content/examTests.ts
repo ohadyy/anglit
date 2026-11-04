@@ -1,11 +1,13 @@
-// The fixed practice tests. The 5-digit number identifies a test: the same number
-// always gives the same experimental chapters, and the same seeded sentence,
-// restatement and reading selection (see lib/examStructure.ts). Numbers are random,
-// not in sequence.
+// The practice tests. The 5-digit number identifies a test. Numbers are random, not in
+// sequence. The first 20 are frozen exactly as they were (content/frozenTests.ts). The
+// adaptive ones draw each chapter from the exam-only pool by the student's level so far,
+// like the real exam (see lib/examStructure.ts).
 export type ExamTestDef = {
   number: string;
   /** Open to anyone signed in, no payment required. Exactly one test carries this. */
   free?: boolean;
+  /** Chapters chosen by level from content/examPool.ts, instead of a frozen list */
+  adaptive?: true;
 };
 
 export const examTests: ExamTestDef[] = [
@@ -29,6 +31,26 @@ export const examTests: ExamTestDef[] = [
   { number: "58360" },
   { number: "86021" },
   { number: "39675" },
+  { number: "29417", adaptive: true },
+  { number: "64083", adaptive: true },
+  { number: "81356", adaptive: true },
+  { number: "47720", adaptive: true },
+  { number: "15938", adaptive: true },
+  { number: "73061", adaptive: true },
+  { number: "38254", adaptive: true },
+  { number: "92607", adaptive: true },
+  { number: "56149", adaptive: true },
+  { number: "20873", adaptive: true },
+  { number: "61842", adaptive: true },
+  { number: "34509", adaptive: true },
+  { number: "87216", adaptive: true },
+  { number: "19473", adaptive: true },
+  { number: "52638", adaptive: true },
+  { number: "76094", adaptive: true },
+  { number: "43851", adaptive: true },
+  { number: "98327", adaptive: true },
+  { number: "25760", adaptive: true },
+  { number: "69185", adaptive: true },
 ];
 
 /** The grammar-in-context sets, four items each. The first set is in questions.ts,
@@ -50,6 +72,9 @@ export const platinumTests: PlatinumTestDef[] = [
   { number: "P4", name: "Diamond", tone: "diamond" },
   { number: "P5", name: "Ruby", tone: "ruby" },
 ];
+
+/** Number of the admin-only easy warm-up test (/exam/easy), see content/easyExam.ts */
+export const EASY_TEST = "E1";
 
 export function findPlatinumTest(number: string): PlatinumTestDef | undefined {
   return platinumTests.find((t) => t.number === number);

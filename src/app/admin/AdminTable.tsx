@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { scoreLevel } from "@/lib/scoreLevels";
 import { setManualAccess } from "./actions";
+import { ManageSheet } from "./ManageSheet";
 
 // Not imported from @/lib/cohorts: that module also pulls in the Neon db client at
 // module scope, which breaks when bundled into this client component.
@@ -24,13 +25,13 @@ const ENROLLMENT_LABEL: Record<string, string> = {
 export type Row = {
   id: string;
   name: string;
-  phone: string;
+  phone: string | null;
   createdAt: Date;
   staff: boolean;
   paid: boolean;
   manual: boolean;
   products: string[];
-  enrollment?: { status: string; cohortStart: Date };
+  enrollment?: { status: string; cohortStart: Date; cohortId: string };
   attempts?: { count: number; best: number; lastOpen?: number; lastClose?: number };
   improved: boolean | null;
   vocabCount: number;
@@ -38,15 +39,17 @@ export type Row = {
   lastSeen?: Date;
 };
 
+export type CohortOption = { id: string; start: Date; taken: number; capacity: number };
+
 type SortKey = "name" | "createdAt" | "best" | "lastSeen";
 
-export function AdminTable({ rows, now }: { rows: Row[]; now: number }) {
+export function AdminTable({ rows, now, cohorts, selfId }: { rows: Row[]; now: number; cohorts: CohortOption[]; selfId: string }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "createdAt", dir: -1 });
 
   const filtered = useMemo(() => {
     const q = query.trim();
-    const matches = q ? rows.filter((r) => r.name.includes(q) || r.phone.includes(q)) : rows;
+    const matches = q ? rows.filter((r) => r.name.includes(q) || r.phone?.includes(q)) : rows;
     const sorted = [...matches].sort((a, b) => {
       const dir = sort.dir;
       if (sort.key === "name") return a.name.localeCompare(b.name, "he") * dir;
@@ -89,7 +92,7 @@ export function AdminTable({ rows, now }: { rows: Row[]; now: number }) {
           </thead>
           <tbody>
             {filtered.map((r) => (
-              <UserRow key={r.id} row={r} now={now} />
+              <UserRow key={r.id} row={r} now={now} cohorts={cohorts} isSelf={r.id === selfId} />
             ))}
           </tbody>
         </table>
@@ -116,8 +119,9 @@ function SortTh({ label, active, dir, onClick }: { label: string; active: boolea
   );
 }
 
-function UserRow({ row, now }: { row: Row; now: number }) {
+function UserRow({ row, now, cohorts, isSelf }: { row: Row; now: number; cohorts: CohortOption[]; isSelf: boolean }) {
   const [pending, start] = useTransition();
+  const [managing, setManaging] = useState(false);
   const toggle = () => {
     if (row.manual && !confirm(`לבטל את הגישה של ${row.name}?`)) return;
     start(() => setManualAccess(row.id, !row.manual));
@@ -133,7 +137,7 @@ function UserRow({ row, now }: { row: Row; now: number }) {
           <div className="min-w-0">
             <p className="truncate font-semibold">{row.name}</p>
             <p className="text-xs opacity-60">
-              <bdi dir="ltr">{row.phone}</bdi>
+              <bdi dir="ltr">{row.phone ?? "—"}</bdi>
             </p>
           </div>
         </div>
@@ -150,17 +154,28 @@ function UserRow({ row, now }: { row: Row; now: number }) {
           {row.enrollment && <Badge tone="neutral">{ENROLLMENT_LABEL[row.enrollment.status] ?? row.enrollment.status}</Badge>}
           {row.manual && <Badge tone="neutral">ניתנה ידנית</Badge>}
         </div>
-        {/* Staff already have everything; card-paid users are left alone. */}
-        {!row.staff && (row.manual || !row.paid) && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {/* Staff already have everything; card-paid users are left alone. */}
+          {!row.staff && (row.manual || !row.paid) && (
+            <button
+              type="button"
+              onClick={toggle}
+              disabled={pending}
+              className={`min-h-11 whitespace-nowrap rounded-full px-4 text-xs font-bold disabled:opacity-50 ${row.manual ? "border border-line" : "bg-fg text-bg"}`}
+            >
+              {pending ? "רגע..." : row.manual ? "בטל גישה" : "תן גישה מלאה"}
+            </button>
+          )}
           <button
             type="button"
-            onClick={toggle}
-            disabled={pending}
-            className={`mt-2 min-h-11 whitespace-nowrap rounded-full px-4 text-xs font-bold disabled:opacity-50 ${row.manual ? "border border-line" : "bg-fg text-bg"}`}
+            onClick={() => setManaging(true)}
+            className="min-h-11 whitespace-nowrap rounded-full border border-line px-4 text-xs font-bold"
           >
-            {pending ? "רגע..." : row.manual ? "בטל גישה" : "תן גישה מלאה"}
+            ניהול
           </button>
-        )}
+        </div>
+        {/* Mounted only while open so the form always starts from the saved values */}
+        {managing && <ManageSheet row={row} cohorts={cohorts} isSelf={isSelf} open onClose={() => setManaging(false)} />}
       </td>
       <td className="whitespace-nowrap px-4 py-3 opacity-80">{row.enrollment ? formatCohortDate(row.enrollment.cohortStart) : "אין"}</td>
       <td className="whitespace-nowrap px-4 py-3 tabular-nums opacity-80">{dateFmt.format(row.createdAt)}</td>

@@ -4,10 +4,11 @@ import { Fragment } from "react";
 import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { hasPaidAccess } from "@/lib/access";
+import { hasPaidAccess, isStaff } from "@/lib/access";
 import { db } from "@/db";
 import { examAttempts } from "@/db/schema";
 import { examTests } from "@/content/examTests";
+import { attemptedTestNumbers, isListed } from "@/lib/listedTests";
 import { EXAM_CORE_QUESTIONS, EXAM_PILOT_QUESTIONS_RANGE } from "@/lib/examStructure";
 import { PlatinumEntry } from "./PlatinumEntry";
 import { LockIcon } from "@/components/LockIcon";
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
 export default async function ExamListPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   const paid = session ? await hasPaidAccess(session.user.id) : false;
+  const staff = session ? await isStaff(session.user.id) : false;
 
   // The best score so far for each test. A retake can only raise it.
   const attempts = session
@@ -34,11 +36,21 @@ export default async function ExamListPage() {
     bestByTest.set(a.testNumber, Math.max(bestByTest.get(a.testNumber) ?? 0, a.estimatedScore));
   }
 
+  // The new adaptive tests come first, so they are the ones students take. Without paid
+  // access the free test leads. Original tests that nobody has ever taken are not listed.
+  const attempted = await attemptedTestNumbers();
+  const listed = examTests.filter((t) => isListed(t, attempted));
+  const ordered = [
+    ...listed.filter((t) => !paid && t.free),
+    ...listed.filter((t) => t.adaptive && !(!paid && t.free)),
+    ...listed.filter((t) => !t.adaptive && !(!paid && t.free)),
+  ];
+
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col px-4 py-10 sm:px-6">
       <h1 className="font-display text-4xl font-bold leading-tight sm:text-5xl"><mark className="pink">מבחני תרגול</mark></h1>
       <p className="mt-2 leading-relaxed opacity-80">
-        כל מבחן מופיע עם מספר קבוע. אותו מספר תמיד נותן את אותו מבחן. {EXAM_CORE_QUESTIONS} שאלות ליבה
+        כל מבחן מופיע עם מספר קבוע, כדי שתוכלו לחזור אליו. {EXAM_CORE_QUESTIONS} שאלות ליבה
         ועוד {EXAM_PILOT_QUESTIONS_RANGE} שאלות ניסיון. במבחן האמיתי מופיעים תמיד פרקי ניסיון, והמבחן נמשך כ-50 דקות.
       </p>
       {!paid && (
@@ -48,7 +60,7 @@ export default async function ExamListPage() {
       )}
 
       <ol className="mt-6 flex flex-col gap-3">
-        {examTests.map((test, i) => {
+        {ordered.map((test, i) => {
           const best = bestByTest.get(test.number);
           const locked = !paid && !test.free;
           return (
@@ -57,7 +69,7 @@ export default async function ExamListPage() {
               className="flex items-center justify-between gap-3 rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]"
             >
               <div className="min-w-0">
-                <p className="text-sm opacity-70">מבחן {i + 1}</p>
+                <p className="text-sm opacity-70">מבחן מספר</p>
                 <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-1">
                   <p className="text-lg font-bold tabular-nums tracking-tight">{test.number}</p>
                   {best !== undefined && (
@@ -86,6 +98,12 @@ export default async function ExamListPage() {
           );
         })}
       </ol>
+
+      {staff && (
+        <Link href="/exam/easy" className="mt-6 rounded-3xl border border-dashed border-line p-5 text-center font-semibold">
+          מבחן קל (מנהל בלבד): מרמה בסיסית לרמת המבחנים
+        </Link>
+      )}
 
       <Link href="/account" className="mt-10 self-start text-sm underline opacity-70">
         חזרה לאזור האישי

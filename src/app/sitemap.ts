@@ -14,6 +14,8 @@ const PUBLIC_PATHS = [
   { path: "/practice", priority: 0.9, changeFrequency: "weekly" as const },
   { path: "/amirnet", priority: 0.8, changeFrequency: "monthly" as const },
   { path: "/guide", priority: 0.6, changeFrequency: "monthly" as const },
+  { path: "/learn/connectors", priority: 0.7, changeFrequency: "monthly" as const },
+  { path: "/learn/affixes", priority: 0.7, changeFrequency: "monthly" as const },
   { path: "/score", priority: 0.7, changeFrequency: "monthly" as const },
   { path: "/exam-dates", priority: 0.7, changeFrequency: "daily" as const },
   { path: "/pricing", priority: 0.7, changeFrequency: "monthly" as const },

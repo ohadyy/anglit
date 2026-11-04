@@ -18,7 +18,8 @@ export function CourseOfferCta({ className = "", children }: { className?: strin
 }
 
 // The price block shows the live offer when there is one, and the regular price otherwise
-export function CourseOfferPrice({ offer, align = "center" }: { offer: CourseOffer | null; align?: "center" | "start" }) {
+// `big`: the roomier home-page version, with a larger price and without the "one-time payment" line
+export function CourseOfferPrice({ offer, align = "center", big = false }: { offer: CourseOffer | null; align?: "center" | "start"; big?: boolean }) {
   const text = align === "center" ? "text-center" : "text-start";
   if (!offer) {
     return (
@@ -27,15 +28,15 @@ export function CourseOfferPrice({ offer, align = "center" }: { offer: CourseOff
           <s className="text-warn tabular-nums"><span className="sr-only">מחיר מקורי </span>{COURSE_LIST_PRICE} ₪</s>
           <span className="opacity-70">30% הנחה</span>
         </p>
-        <p className="text-4xl font-bold tracking-tight tabular-nums text-ok">{COURSE_REGULAR_PRICE} ₪</p>
-        <p className="mt-1 text-sm opacity-70">לכל הסמינר, תשלום חד פעמי</p>
+        <p className={`font-bold tracking-tight tabular-nums text-ok ${big ? "mt-4 text-6xl" : "text-4xl"}`}>{COURSE_REGULAR_PRICE} ₪</p>
+        {!big && <p className="mt-1 text-sm opacity-70">לכל הסמינר, תשלום חד פעמי</p>}
       </div>
     );
   }
   return (
     <div className={text}>
       <p className="text-sm font-semibold opacity-70">מחיר למחזור {offer.label}</p>
-      <p className="mt-1 text-5xl font-bold tracking-tight tabular-nums text-ok">{offer.priceIls} ₪</p>
+      <p className={`font-bold tracking-tight tabular-nums text-ok ${big ? "mt-4 text-7xl" : "mt-1 text-5xl"}`}>{offer.priceIls} ₪</p>
       <p className="mt-2 text-sm opacity-80">
         מחיר הסמינר הרגיל: <span className="line-through">{COURSE_REGULAR_PRICE} ₪</span>. המחיר נסגר כשהמחזור מתחיל.
       </p>

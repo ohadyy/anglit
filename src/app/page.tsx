@@ -6,10 +6,12 @@ import { TestimonialBubble } from "@/components/TestimonialBubble";
 import { TypingHeadline } from "@/components/TypingHeadline";
 import { TactileLink } from "@/components/TactileButton";
 import { CourseOfferCta, CourseOfferPrice } from "@/components/CourseOfferCard";
-import { ResultsCards } from "@/components/ResultsCards";
 import { StepsList } from "@/components/StepsList";
+import { WeekStory } from "@/components/WeekStory";
 import { TextReveal } from "@/components/TextReveal";
-import { copy, homeFaqGroups, homeFeatures, homeHowSteps } from "@/content/copy";
+import { HeroCards } from "@/components/HeroCards";
+import { QuestionTypeCards } from "@/components/QuestionTypeCards";
+import { copy, homeFaqGroups, homeFeatures, homeHowSteps, homeQuestionTypes } from "@/content/copy";
 import { examDatesCopy } from "@/content/examDates";
 import { calculatorCopy, guideCopy } from "@/content/examGuide";
 import { ScoreCalculator } from "@/components/ScoreCalculator";
@@ -44,20 +46,20 @@ export default async function Home() {
           <p className="rise mx-auto mt-6 max-w-xl text-lg leading-relaxed opacity-80" style={{ animationDelay: "220ms" }}>
             {copy.heroSub}
           </p>
-          <div className="rise mt-10 grid gap-3 sm:flex sm:flex-wrap sm:items-end sm:justify-center" style={{ animationDelay: "320ms" }}>
-            <TactileLink href="/sign-up" size="lg">
+          <div className="rise mx-auto mt-10 flex w-full max-w-sm flex-col items-center gap-3" style={{ animationDelay: "320ms" }}>
+            <TactileLink href="/sign-up" size="lg" fullWidth>
               {copy.heroCta2}
             </TactileLink>
-            <Link
-              href="/start"
-              className="touch-manipulation rounded-full border border-fg/25 px-7 py-4 text-center font-semibold transition-colors hover:bg-fg/5 active:bg-fg/10 sm:py-3.5"
-            >
-              {copy.heroCta1}
+            <Link href="/start" className="inline-flex min-h-11 items-center gap-2 font-semibold underline underline-offset-4">
+              {copy.heroCta1} <span aria-hidden="true">←</span>
             </Link>
           </div>
-          <p className="rise mt-6 text-sm opacity-70" style={{ animationDelay: "420ms" }}>
+          <p className="rise mt-4 text-sm opacity-70" style={{ animationDelay: "420ms" }}>
             {copy.heroNote}
           </p>
+          <div className="rise w-full" style={{ animationDelay: "520ms" }}>
+            <HeroCards />
+          </div>
         </div>
       </div>
 
@@ -111,7 +113,14 @@ export default async function Home() {
           </div>
         </section>
 
-        <ResultsCards />
+
+        {/* The three question types, each opening a free practice set */}
+        <section className="border-t border-line">
+          <div className="mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 sm:py-20">
+            <h2 className="reveal text-3xl font-bold text-balance sm:text-4xl">{homeQuestionTypes.title}</h2>
+            <QuestionTypeCards />
+          </div>
+        </section>
 
         {/* Who teaches: right after "what you get", so the reader meets the teacher while the point is fresh */}
         <section className="border-t border-line">
@@ -131,39 +140,47 @@ export default async function Home() {
         </section>
 
         {/* How the week is built, with the exam's real timing folded in */}
-        <section className="border-t border-line">
-          <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
-            <h2 className="reveal text-3xl font-bold sm:text-4xl">{copy.howTitle}</h2>
-            <div className="mt-8">
-              <StepsList steps={homeHowSteps} />
+        <section className="px-4 py-8 sm:px-6">
+          <div className="mx-auto max-w-4xl rounded-[2rem] bg-raise px-5 py-12 sm:px-10 sm:py-16">
+            <div className="mx-auto max-w-3xl">
+              <h2 className="reveal text-3xl font-bold sm:text-4xl">{copy.howTitle}</h2>
+              <div className="mt-8">
+                <WeekStory />
+              </div>
+              <div className="mt-10">
+                <StepsList steps={homeHowSteps} />
+              </div>
+              <p className="mt-6 max-w-xl text-sm leading-relaxed opacity-70">{copy.howFacts}</p>
             </div>
-            <p className="mt-6 max-w-xl text-sm leading-relaxed opacity-70">{copy.howFacts}</p>
           </div>
         </section>
 
         {/* Price, right next to the guarantee that removes the risk of paying */}
         <section className="border-t border-line">
-          <div className="mx-auto max-w-md px-4 py-16 text-center sm:px-6 sm:py-20">
+          <div className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 sm:py-20">
             <p className="font-hand text-2xl opacity-70">{copy.homePricingTitle}</p>
-            <div className="mt-6 rounded-3xl border border-line bg-white p-6 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
-              <CourseOfferPrice offer={offer} />
-              <CourseOfferCta className="mt-6 w-full">{copy.heroCta2}</CourseOfferCta>
-            </div>
-            <Link href="/pricing" className="mt-4 inline-flex min-h-11 items-center text-sm underline underline-offset-4 opacity-70 transition-opacity hover:opacity-100">
-              {copy.homePricingCta}
-            </Link>
+            {/* Side by side on wider screens: the price on one side, the guarantee that removes the risk on the other */}
+            <div className="mx-auto mt-6 grid max-w-md gap-4 md:max-w-none md:grid-cols-2 md:gap-6">
+              <div className="flex flex-col justify-center rounded-3xl border border-line bg-white p-8 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-10">
+                <CourseOfferPrice offer={offer} big />
+                <CourseOfferCta className="mt-10 w-full">{copy.heroCta2}</CourseOfferCta>
+                <Link href="/pricing" className="mx-auto mt-5 inline-flex min-h-11 items-center text-sm underline underline-offset-4 opacity-70 transition-opacity hover:opacity-100">
+                  {copy.homePricingCta}
+                </Link>
+              </div>
 
-            <div data-invert="" className="mt-10 rounded-3xl p-6 text-start sm:p-8">
-              <p className="text-sm font-semibold opacity-70">{copy.guaranteeEyebrow}</p>
-              <h2 className="mt-3 text-2xl font-bold leading-tight text-balance">{copy.guaranteeTitle}</h2>
-              <p className="mt-3 opacity-70">{copy.guaranteeTerms}</p>
+              <div data-invert="" className="flex flex-col justify-center rounded-[2rem] p-6 text-start sm:p-8">
+                <p className="text-sm font-semibold opacity-70">{copy.guaranteeEyebrow}</p>
+                <h2 className="mt-3 text-2xl font-bold leading-tight text-balance">{copy.guaranteeTitle}</h2>
+                <p className="mt-3 opacity-70">{copy.guaranteeTerms}</p>
+              </div>
             </div>
           </div>
         </section>
 
         {/* Score calculator, with the other reference pages gathered in one quiet row instead of scattered */}
-        <section className="border-t border-line">
-          <div className="mx-auto grid max-w-6xl gap-8 px-4 py-16 sm:px-6 sm:py-20 md:grid-cols-2 md:items-center md:gap-12">
+        <section className="px-4 py-8 sm:px-6">
+          <div className="mx-auto grid max-w-6xl gap-8 rounded-[2rem] bg-raise px-5 py-12 sm:px-10 sm:py-16 md:grid-cols-2 md:items-center md:gap-12">
             <div>
               <p className="font-hand text-2xl opacity-70">{copy.savingsEyebrow}</p>
               <h2 className="reveal mt-1 text-3xl font-bold sm:text-4xl text-balance">{copy.savingsTitle}</h2>

@@ -7,8 +7,8 @@ function staffPhones(): string[] {
 }
 
 /** True for a staff phone number, without a DB round-trip — for lists that already loaded the user. */
-export function isStaffPhone(phone: string): boolean {
-  return staffPhones().includes(phone);
+export function isStaffPhone(phone: string | null): boolean {
+  return !!phone && staffPhones().includes(phone);
 }
 
 // Paid access is derived straight from orders, not from cohort enrollment —
@@ -18,7 +18,7 @@ export function isStaffPhone(phone: string): boolean {
 // STAFF_PHONES (comma-separated) lets the owner's test accounts see everything.
 export async function hasPaidAccess(userId: string): Promise<boolean> {
   const [account] = await db.select({ phone: user.phone }).from(user).where(eq(user.id, userId)).limit(1);
-  if (account && staffPhones().includes(account.phone)) return true;
+  if (account && isStaffPhone(account.phone)) return true;
 
   const [paidOrder] = await db
     .select({ id: orders.id })
@@ -41,5 +41,5 @@ export async function hasCourse(userId: string): Promise<boolean> {
 /** True for the owner's staff accounts (STAFF_PHONES). Used to gate internal pages. */
 export async function isStaff(userId: string): Promise<boolean> {
   const [account] = await db.select({ phone: user.phone }).from(user).where(eq(user.id, userId)).limit(1);
-  return !!account && staffPhones().includes(account.phone);
+  return !!account && isStaffPhone(account.phone);
 }

@@ -7,7 +7,9 @@ import { QuestionView, TypeLabel, WordFormationView } from "@/components/Questio
 import { isCorrectAnswer, type ExamQuestion, type QuestionType } from "@/content/questions";
 import { TYPE_LABELS } from "@/content/questionLabels";
 import { recordAnswers } from "@/lib/mistakes";
-import { planTotals, type ExamPlanItem } from "@/lib/examStructure";
+import { poolLevels } from "@/content/examPool";
+import { findExamTest } from "@/content/examTests";
+import { buildExam, planTotals, type ExamPlanItem } from "@/lib/examStructure";
 import { PILOT_MAX_BONUS, scoreExam, scoreLevel, scoreMessage, type ExamScore } from "@/lib/examScore";
 import { AudioCheck } from "@/components/ReadAloud";
 import { TactileButton } from "@/components/TactileButton";
@@ -33,12 +35,15 @@ export function ExamClient({
   kind,
   testNumber,
   freeUpsell = false,
+  seen = [],
 }: {
   plan: ExamPlanItem[];
   kind: "open" | "close";
   testNumber: string;
   /** The visitor has no paid access: show what to do next after the result */
   freeUpsell?: boolean;
+  /** Pool items met in earlier tests; an adaptive test avoids them (sent back on submit) */
+  seen?: string[];
 }) {
   const [phase, setPhase] = useState<Phase>("intro");
   const [includePilot, setIncludePilot] = useState(true);
@@ -60,13 +65,14 @@ export function ExamClient({
       correctness[question.id] = isCorrectAnswer(question, finalAnswers[question.id]);
     }
     const fallback = scoreExam(correctness);
-    // Core sections only: pilot items come from a separate bank that /practice can't replay
+    // Core sections only: pilot items come from a separate bank that /practice can't replay.
+    // Exam-pool items stay out too, so they are never met before a test.
     recordAnswers(
       Object.fromEntries(
         activePlan
           .filter((p) => !p.section.pilot)
           .flatMap((p) =>
-            p.questions.map((q) => {
+            p.questions.filter((q) => !(q.id in poolLevels)).map((q) => {
               const a = finalAnswers[q.id];
               return [q.id, { correct: correctness[q.id], chosen: typeof a === "number" ? a : null }];
             }),
@@ -85,6 +91,7 @@ export function ExamClient({
           includePilot,
           answers: finalAnswers,
           correctness,
+          seen,
           startedAt: startedAtRef.current,
         }),
       });
@@ -97,6 +104,9 @@ export function ExamClient({
 
   function handleSectionDone(latestAnswers: Answers) {
     if (sectionIndex + 1 < activePlan.length) {
+      // An adaptive test picks its next chapter from the answers so far. Chapters already
+      // taken come out the same, so only what lies ahead can change.
+      setActivePlan(buildExam(testNumber, latestAnswers, seen).filter((p) => includePilot || !p.section.pilot));
       setSectionIndex((i) => i + 1);
     } else {
       void finishExam(latestAnswers);
@@ -119,6 +129,12 @@ export function ExamClient({
           {totals.questions} שאלות ב-{totals.sections} פרקים מתוזמנים, {withExtraTime(totals.minutes, extraPct)} דקות בסך הכול. כל פרק עובר
           אוטומטית כשהזמן נגמר, גם אם לא סיימתם.
         </p>
+        {findExamTest(testNumber)?.adaptive && (
+          <p className="mt-3 text-sm leading-relaxed opacity-70">
+            כמו במבחן האמיתי, הפרק הראשון בינוני, וכל פרק אחריו מותאם לרמה שלכם לפי התשובות עד אז. אם השאלות נעשות קשות,
+            זה סימן שהלך לכם טוב.
+          </p>
+        )}
 
         <fieldset className="mt-8 text-start">
           <legend className="text-sm font-semibold">לפני שמתחילים: לכלול פרקי ניסיון?</legend>

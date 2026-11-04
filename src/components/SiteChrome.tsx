@@ -9,12 +9,12 @@ import { MobileTabBar } from "@/components/MobileTabBar";
 import { WhatsAppFab } from "@/components/WhatsAppFab";
 
 // Internal tools keep their own chrome. The homepage hero runs under the header.
-const OWN_CHROME = ["/studio", "/review", "/content", "/admin", "/journal"];
+const OWN_CHROME = ["/studio", "/review", "/admin", "/journal"];
 const FULL_BLEED = ["/"];
 // Focused pages: practice and exam sessions have their own bottom bar or a timer, the campaign
-// landing pages have one call to action, and the sign-in / sign-up / checkout forms need full attention.
+// landing pages and pricing are for people without an account yet (one call to action), and the sign-in / sign-up / checkout forms need full attention.
 // The homepage is its own full-bleed hero with its own CTAs — the tab bar has no room to sit well there.
-const NO_TAB_BAR = ["/practice", "/exam", "/ads", "/sign-in", "/sign-up", "/checkout", "/start", "/lab"];
+const NO_TAB_BAR = ["/practice", "/exam", "/ads", "/pricing","/sign-in", "/sign-up", "/checkout", "/start", "/lab"];
 
 function hasTabBar(path: string) {
   if (path === "/") return false;
@@ -30,7 +30,7 @@ function variantFor(path: string) {
 
 export function SiteChrome({ children }: { children: React.ReactNode }) {
   const path = usePathname();
-  if (OWN_CHROME.includes(path)) return <>{children}</>;
+  if (OWN_CHROME.includes(path) || path === "/calm" || path.startsWith("/calm/")) return <>{children}</>;
   // Anglit Platinum is a full-screen dark experience: no site header, footer or tab bar, only the accessibility panel
   if (path === "/platinum" || path.startsWith("/platinum/")) {
     return (

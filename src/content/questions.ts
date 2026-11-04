@@ -2,6 +2,8 @@ import { grammarQuestions } from "./grammarBank";
 import { audioCompletionSets, lectureSets, pilotPassages, wordFormationSets } from "./pilotBank";
 import { extraPassages, extraQuestions } from "./extraBank";
 import { moreGrammarQuestions, moreRestatementQuestions, moreSentenceQuestions } from "./moreBank";
+import { connectorQuestions } from "./connectorsBank";
+import { hardPracticePassages, hardPracticeQuestions } from "./practiceHard";
 // Original question bank. Every question here was written for Anglit —
 // nothing is copied from NITE or from other prep sites.
 // status: "approved" until reviewed by the teacher, then "approved".
@@ -95,6 +97,7 @@ export const passages: Passage[] = [
   },
   ...pilotPassages,
   ...extraPassages,
+  ...hardPracticePassages,
 ];
 
 export const questions: Question[] = [
@@ -702,6 +705,8 @@ export const questions: Question[] = [
   ...moreSentenceQuestions,
   ...moreRestatementQuestions,
   ...moreGrammarQuestions,
+  ...connectorQuestions,
+  ...hardPracticeQuestions,
 ];
 
 export function getPassage(id: string) {

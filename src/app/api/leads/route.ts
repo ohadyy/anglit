@@ -70,7 +70,8 @@ export async function POST(request: Request) {
   }
 
   // Same id as the browser pixel event, so Meta counts one Lead
-  await sendCapi({ name: "Lead", eventId: lead.id, phone: contactDigits.length >= 9 && contactDigits.length <= 12 ? contact : undefined, request });
+  const fbclid = typeof (body as { fbclid?: unknown }).fbclid === "string" && /^[\w-]{10,300}$/.test((body as { fbclid: string }).fbclid) ? (body as { fbclid: string }).fbclid : undefined;
+  await sendCapi({ name: "Lead", eventId: lead.id, phone: contactDigits.length >= 9 && contactDigits.length <= 12 ? contact : undefined, request, fbclid });
 
   return NextResponse.json({ ok: true, id: lead.id });
 }

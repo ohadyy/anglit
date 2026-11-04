@@ -1,14 +1,20 @@
-import { passages, questions, wordFormationQuestions, type ExamQuestion, type QuestionType } from "@/content/questions";
+import { isCorrectAnswer, questions, wordFormationQuestions, type ExamQuestion, type QuestionType } from "@/content/questions";
 import { audioCompletionSets, lectureSets, wordFormationSets } from "@/content/pilotBank";
 import { findExamTest, grammarSetIds } from "@/content/examTests";
+import { frozenTests } from "@/content/frozenTests";
+import { poolPassages, poolReading, poolRestatement, poolSentence } from "@/content/examPool";
+import { difficultyOf, estimateAbility } from "@/lib/examScore";
 
 // The structure follows NITE's published format (see the practice-test guide):
 // six core chapters, the same in every test, then two experimental chapters.
 // Each experimental chapter is one of four types, drawn at random, and the same
 // type can appear twice. The student cannot choose them.
 // This is a timing and format simulation with our own original questions, not a
-// reproduction of NITE's content. The real test is also adaptive, and this site's
-// tests are fixed; see docs/project-brain.md.
+// reproduction of NITE's content.
+// Two kinds of test:
+// - frozen: the 20 original tests, served exactly as on 2026-11-04 (content/frozenTests.ts);
+// - adaptive: like the real exam, the first chapter is medium and each later chapter is
+//   picked by the ability estimated so far (see buildAdaptive below).
 export type ExamSection = {
   type: QuestionType;
   count: number;
@@ -113,47 +119,80 @@ function pilotChapters(testNumber: string): ExamPlanItem[] {
   });
 }
 
-/** Builds the full plan of one fixed test. The number decides everything: the
- * core sections are drawn with a seed taken from the number, and the pilot chapters
- * come from pilotChapters(). The same number always produces the same test. */
-export function buildExam(testNumber: string): ExamPlanItem[] {
+type Answers = Record<string, number | string | null | undefined>;
+
+/** Order inside a chapter: easier first, as in the real exam */
+const byDifficulty = (a: ExamQuestion, b: ExamQuestion) => difficultyOf(a.id) - difficultyOf(b.id);
+
+/** The core chapters of an adaptive test. Chapter 1 is drawn around the national mean.
+ * Before each later chapter, the ability is estimated (EAP) from every core answer so far,
+ * and the chapter takes the unused pool items whose difficulty is closest to it. An answer
+ * that is missing counts as wrong, as in the real exam. The test number seeds the draw, so
+ * the same number and the same answers always rebuild the same test: the browser builds it
+ * chapter by chapter, and the server rebuilds it from the final answers to score it.
+ *
+ * `seen` holds the pool items this student met in earlier tests, once per time met. Each
+ * meeting counts as SEEN_PENALTY of distance from the student's level, so a fresh item at
+ * about the right level always wins, a seen one comes back only once the nearby fresh items
+ * run out, and then the least-met ones come back first. */
+const SEEN_PENALTY = 1;
+
+function buildAdaptive(testNumber: string, answers: Answers, seen: ReadonlyMap<string, number>): ExamPlanItem[] {
+  const used = new Set<string>();
+  const asked: { b: number; correct: boolean }[] = [];
+
+  return CORE_SECTIONS.map((section, k): ExamPlanItem => {
+    const theta = estimateAbility(asked);
+    const rand = seededRandom(Number(testNumber) * 31 + k);
+    const gap = (b: number, ids: string[]) => Math.abs(b - theta) + SEEN_PENALTY * Math.max(...ids.map((id) => seen.get(id) ?? 0));
+
+    let picked: ExamQuestion[];
+    if (section.type === "reading") {
+      const meanB = (id: string) => {
+        const qs = poolReading[id];
+        return qs.reduce((sum, q) => sum + difficultyOf(q.id), 0) / qs.length;
+      };
+      const ids = (id: string) => poolReading[id].map((q) => q.id);
+      const passage = shuffle(poolPassages, rand).sort((a, b) => gap(meanB(a.id), ids(a.id)) - gap(meanB(b.id), ids(b.id)))[0];
+      picked = poolReading[passage.id].slice(0, section.count);
+    } else {
+      const pool = section.type === "sentence" ? poolSentence : poolRestatement;
+      picked = shuffle(pool.filter((q) => !used.has(q.id)), rand)
+        .sort((a, b) => gap(difficultyOf(a.id), [a.id]) - gap(difficultyOf(b.id), [b.id]))
+        .slice(0, section.count)
+        .sort(byDifficulty);
+    }
+
+    for (const q of picked) {
+      used.add(q.id);
+      asked.push({ b: difficultyOf(q.id), correct: isCorrectAnswer(q, answers[q.id]) });
+    }
+    return { section, questions: picked };
+  });
+}
+
+/** Builds the full plan of one test. A frozen test ignores the answers. An adaptive test
+ * needs the answers given so far to choose its later chapters; with no answers it shows
+ * the medium path, which has the same chapters, sizes and minutes. `seen` (adaptive only)
+ * lists the pool items the student met in earlier tests (once per time met), to avoid repeating them. */
+export function buildExam(testNumber: string, answers: Answers = {}, seen: readonly string[] = []): ExamPlanItem[] {
   const test = findExamTest(testNumber);
   if (!test) throw new Error(`unknown exam test ${testNumber}`);
 
-  const rand = seededRandom(Number(testNumber));
+  const frozen = frozenTests[testNumber];
+  if (frozen) {
+    return frozen.map((part, i) => {
+      const core = CORE_SECTIONS[i];
+      const pilot = part.pilot ? PILOT_CHAPTER[part.type as PilotChapterType] : null;
+      const section: ExamSection = pilot
+        ? { type: part.type, count: pilot.count, minutes: pilot.minutes, pilot: true }
+        : core;
+      return { section, questions: part.ids.map((id) => byId.get(id)!) };
+    });
+  }
 
-  const sentencePool = shuffle(questions.filter((q) => q.type === "sentence"), rand);
-  const restatementPool = shuffle(questions.filter((q) => q.type === "restatement"), rand);
-
-  // Reading uses one written passage with at least five questions
-  const readablePassages = passages.filter(
-    (p) => !p.audio && questions.filter((q) => q.type === "reading" && q.passageId === p.id).length >= 5,
-  );
-  const passage = readablePassages[Math.floor(rand() * readablePassages.length)];
-  const readingPool = shuffle(
-    questions.filter((q) => q.type === "reading" && q.passageId === passage.id),
-    rand,
-  );
-
-  let sentenceIdx = 0;
-  let restatementIdx = 0;
-  let readingIdx = 0;
-
-  const core = CORE_SECTIONS.map((section): ExamPlanItem => {
-    if (section.type === "sentence") {
-      const slice = sentencePool.slice(sentenceIdx, sentenceIdx + section.count);
-      sentenceIdx += section.count;
-      return { section, questions: slice };
-    }
-    if (section.type === "restatement") {
-      const slice = restatementPool.slice(restatementIdx, restatementIdx + section.count);
-      restatementIdx += section.count;
-      return { section, questions: slice };
-    }
-    const slice = readingPool.slice(readingIdx, readingIdx + section.count);
-    readingIdx += section.count;
-    return { section, questions: slice };
-  });
-
-  return [...core, ...pilotChapters(testNumber)];
+  if (!test.adaptive) throw new Error(`exam test ${testNumber} is neither frozen nor adaptive`);
+  const times = new Map<string, number>();
+  for (const id of seen) times.set(id, (times.get(id) ?? 0) + 1);
+  return [...buildAdaptive(testNumber, answers, times), ...pilotChapters(testNumber)];
 }

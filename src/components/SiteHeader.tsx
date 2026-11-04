@@ -32,8 +32,9 @@ export function SiteHeader() {
   }, [open]);
 
   return (
-    <header className="enter fixed inset-x-0 top-4 z-30 mx-auto w-[calc(100%-2rem)] max-w-3xl rounded-2xl border border-line bg-bg/80 backdrop-blur-md">
-      <div className="flex items-center justify-between gap-3 px-4 py-2.5 sm:px-5">
+    // Flush to the top edge: a gap above the header would let scrolled content show over it
+    <header className="enter fixed inset-x-0 top-0 z-30 border-b border-line bg-bg/90 backdrop-blur-md">
+      <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-2.5 sm:px-5">
         {focused ? (
           <Wordmark className="h-6 w-auto" />
         ) : (
@@ -76,7 +77,7 @@ export function SiteHeader() {
       </div>
 
       {open && !focused && (
-        <nav id="mobile-menu" aria-label="תפריט" className="flex flex-col gap-1 border-t border-line bg-bg px-3 py-3 sm:hidden">
+        <nav id="mobile-menu" aria-label="תפריט" className="mx-auto flex max-w-3xl flex-col gap-1 border-t border-line bg-bg px-3 py-3 sm:hidden">
           {links.map((l) => (
             <Link
               key={l.href}

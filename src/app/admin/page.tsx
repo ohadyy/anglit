@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, ne } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import {
@@ -16,6 +16,7 @@ import {
 } from "@/db/schema";
 import { isStaff, isStaffPhone } from "@/lib/access";
 import { questionType } from "@/lib/examScore";
+import { countUncontactedLeads } from "@/lib/uncontactedLeads";
 import { TYPE_LABELS } from "@/content/questionLabels";
 import { Wordmark } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -35,11 +36,11 @@ export default async function AdminPage() {
   if (!authed) redirect("/sign-in?next=/admin");
   if (!(await isStaff(authed.user.id))) notFound();
 
-  const [users, paidOrders, enrollmentRows, attemptRows, vocabRows, sessionRows] = await Promise.all([
+  const [users, paidOrders, enrollmentRows, attemptRows, vocabRows, sessionRows, cohortRows, waitingLeads] = await Promise.all([
     db.select({ id: user.id, name: user.name, phone: user.phone, createdAt: user.createdAt }).from(user).orderBy(desc(user.createdAt)),
     db.select({ userId: orders.userId, product: orders.product, provider: orders.provider }).from(orders).where(eq(orders.status, "paid")),
     db
-      .select({ userId: enrollments.userId, status: enrollments.status, cohortStart: cohorts.startDate })
+      .select({ userId: enrollments.userId, status: enrollments.status, cohortStart: cohorts.startDate, cohortId: enrollments.cohortId })
       .from(enrollments)
       .innerJoin(cohorts, eq(enrollments.cohortId, cohorts.id))
       .orderBy(cohorts.startDate),
@@ -54,6 +55,8 @@ export default async function AdminPage() {
       .from(examAttempts),
     db.select({ userId: vocabProgress.userId }).from(vocabProgress),
     db.select({ userId: authSession.userId, updatedAt: authSession.updatedAt }).from(authSession),
+    db.select().from(cohorts).where(ne(cohorts.status, "closed")).orderBy(cohorts.startDate),
+    countUncontactedLeads(),
   ]);
 
   const paidMap = new Map<string, Set<string>>();
@@ -64,8 +67,8 @@ export default async function AdminPage() {
 
   const manualIds = new Set(paidOrders.filter((o) => o.provider === "manual").map((o) => o.userId));
 
-  const enrollmentMap =new Map<string, { status: string; cohortStart: Date }>();
-  for (const e of enrollmentRows) enrollmentMap.set(e.userId, { status: e.status, cohortStart: e.cohortStart });
+  const enrollmentMap = new Map<string, { status: string; cohortStart: Date; cohortId: string }>();
+  for (const e of enrollmentRows) enrollmentMap.set(e.userId, { status: e.status, cohortStart: e.cohortStart, cohortId: e.cohortId });
 
   type AttemptAcc = { count: number; best: number; lastOpen?: number; lastClose?: number; lastOpenAt?: Date; lastCloseAt?: Date };
   const attemptMap = new Map<string, AttemptAcc>();
@@ -153,7 +156,16 @@ export default async function AdminPage() {
       </header>
 
       <h1 className="font-display mt-8 text-3xl font-bold sm:text-4xl">פאנל ניהול</h1>
-      <p className="mt-2 leading-relaxed opacity-70">כל מי שנרשם לאתר, ההתקדמות והציונים שלהם. אפשר לתת או לבטל גישה מלאה בלי תשלום, ישר מהשורה.</p>
+      <p className="mt-2 leading-relaxed opacity-70">כל מי שנרשם לאתר, ההתקדמות והציונים שלהם. אפשר לתת או לבטל גישה מלאה בלי תשלום, ישר מהשורה. הכפתור &quot;ניהול&quot; פותח עריכת פרטים, שיבוץ למחזור ומחיקת חשבון.</p>
+
+      <Link href="/admin/crm" className="mt-5 inline-flex min-h-11 w-fit items-center rounded-full bg-fg px-5 text-sm font-bold text-bg">
+        לידים ושיחות
+        {waitingLeads > 0 && <span className="ms-2 rounded-full bg-coral px-2.5 py-0.5 text-xs tabular-nums text-white">{waitingLeads} מחכים</span>}
+      </Link>
+
+      <Link href="/admin/coupons" className="mt-3 inline-flex min-h-11 w-fit items-center rounded-full border border-line bg-white px-5 text-sm font-bold">
+        קופונים
+      </Link>
 
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatPill label="נרשמו" value={stats.total} tone="dark" />
@@ -165,7 +177,17 @@ export default async function AdminPage() {
       {rows.length === 0 ? (
         <p className="mt-10 rounded-3xl border border-dashed border-line p-6 text-center opacity-70">עוד אין משתמשים רשומים.</p>
       ) : (
-        <AdminTable rows={rows} now={now.getTime()} />
+        <AdminTable
+          rows={rows}
+          now={now.getTime()}
+          selfId={authed.user.id}
+          cohorts={cohortRows.map((c) => ({
+            id: c.id,
+            start: c.startDate,
+            taken: enrollmentRows.filter((e) => e.cohortId === c.id).length,
+            capacity: c.capacity,
+          }))}
+        />
       )}
       <div className="pb-10" />
     </div>

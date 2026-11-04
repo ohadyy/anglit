@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { FreeNextCard } from "@/components/FreeNextCard";
+import { speak } from "@/components/ReadAloud";
 import { vocabCopy, type VocabWord } from "@/content/vocabulary";
 
 export function VocabClient({
@@ -43,6 +44,12 @@ export function VocabClient({
     }).catch(() => {});
     setIndex((i) => i + 1);
     setFlipped(false);
+  }
+
+  function pronounce() {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    speak(current.word, () => {});
   }
 
   const progress = Math.round((known / total) * 100);
@@ -99,6 +106,19 @@ export function VocabClient({
         </div>
       ) : (
         <div className="mt-10 flex flex-col gap-5">
+          <div className="relative">
+          {/* Sits beside the flip button, not inside it: a button cannot nest a button */}
+          <button
+            type="button"
+            onClick={pronounce}
+            aria-label="השמעת המילה"
+            className="absolute left-3 top-3 z-10 grid size-11 place-items-center rounded-full border border-line bg-white hover:bg-fg/5"
+          >
+            <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M11 5 6 9H3v6h3l5 4V5Z" />
+              <path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" />
+            </svg>
+          </button>
           <button
             type="button"
             data-flipped={flipped}
@@ -121,6 +141,7 @@ export function VocabClient({
               </span>
             </span>
           </button>
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -133,9 +154,8 @@ export function VocabClient({
             </button>
             <button
               type="button"
-              disabled={!flipped}
               onClick={() => answer(true)}
-              className="bg-fg px-6 py-4 font-semibold text-bg disabled:opacity-50"
+              className="bg-fg px-6 py-4 font-semibold text-bg"
             >
               {vocabCopy.knew}
             </button>

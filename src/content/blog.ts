@@ -10,7 +10,9 @@ export type BlogPost = {
   publishedAt: string; // ISO date
   intro: string;
   sections: BlogSection[];
-  /** Path under /public, e.g. "/blog/my-slug.png". Set once the header image is generated. */
+  /** Typographic cover: a small Hebrew tag and one big English word, drawn by BlogCover */
+  cover: { tag: string; word: string };
+  /** Path under /public, used only for social previews (og:image) and structured data */
   heroImage?: string;
 };
 
@@ -22,6 +24,7 @@ export const blogIndexCopy = {
 export const blogPosts: BlogPost[] = [
   {
     slug: "nichshalti-baamirnet-ma-achshav",
+    cover: { tag: "אחרי כישלון", word: "retake" },
     heroImage: "/blog/nichshalti-baamirnet-ma-achshav.svg",
     title: "נכשלתי באמירנט, מה עכשיו?",
     description: "נכשלתם באמירנט פעם או פעמיים? זה לא אומר שאתם גרועים באנגלית. הנה מה שבאמת משנה בניסיון הבא.",
@@ -58,6 +61,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "kama-zman-lifnei-amirnet-lehatchil",
+    cover: { tag: "תכנון", word: "plan" },
     heroImage: "/blog/kama-zman-lifnei-amirnet-lehatchil.svg",
     title: "כמה זמן לפני אמירנט כדאי להתחיל להתכונן?",
     description: "אין תשובה אחת נכונה לכולם. הנה איך לבחור בין התחלה מוקדמת לסמינר אינטנסיבי של שבוע.",
@@ -92,6 +96,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "moreh-prati-leamirnet-lemi-ze-matim",
+    cover: { tag: "ליווי", word: "tutor" },
     heroImage: "/blog/moreh-prati-leamirnet-lemi-ze-matim.svg",
     title: "מורה פרטי לאמירנט: מה זה אומר בפועל, ולמי זה מתאים",
     description: "לא כל מי שמחפש מורה פרטי לאמירנט צריך בדיוק את זה. ההבדלים בין שיעור פרטי, קבוצה קטנה, ולמידה עצמאית.",
@@ -127,6 +132,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "amirnet-mul-psichometri",
+    cover: { tag: "מבחנים", word: "vs" },
     heroImage: "/blog/amirnet-mul-psichometri.svg",
     title: "אמירנט מול פסיכומטרי: שני מבחנים שונים, וגם הם מתחברים",
     description: "מהפסיכומטרי החורף 2026 אנגלית כבר לא שם, והיא עברה כולה לאמירנט. זה גם אומר שאמירנט יכול להשפיע על הקבלה שלכם, לא רק על קורסי האנגלית.",
@@ -162,6 +168,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "tips-hashlamat-mishpatim",
+    cover: { tag: "טיפים · השלמת משפטים", word: "complete" },
     heroImage: "/blog/tips-hashlamat-mishpatim.svg",
     title: "איך לפתור שאלות השלמת משפטים באמירנט",
     description: "שיטת עבודה פשוטה לשאלות ה-Sentence Completion: מה קוראים קודם, איך פוסלים תשובות, ומתי עצירת מילה אחת עוזרת.",
@@ -194,6 +201,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "tips-nisuach-mechadash",
+    cover: { tag: "טיפים · ניסוח מחדש", word: "restate" },
     heroImage: "/blog/tips-nisuach-mechadash.svg",
     title: "איך לפתור שאלות ניסוח מחדש באמירנט בלי להתבלבל",
     description: "ב-Restatement הטעות הכי נפוצה היא לבחור תשובה שנכונה עובדתית אבל לא אומרת בדיוק את מה שהמשפט המקורי אמר.",
@@ -226,6 +234,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "tips-havanat-hanikra",
+    cover: { tag: "טיפים · הבנת הנקרא", word: "reading" },
     heroImage: "/blog/tips-havanat-hanikra.svg",
     title: "הבנת הנקרא באמירנט: איך לגשת לקטע בלי להיתקע",
     description: "קטע קריאה עם כמה שאלות, וזמן מוגבל. הנה סדר עבודה שחוסך זמן בלי לפספס פרטים.",
@@ -258,6 +267,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "pirkey-pilot-amirnet",
+    cover: { tag: "מבנה המבחן", word: "pilot" },
     heroImage: "/blog/pirkey-pilot-amirnet.svg",
     title: "פרקי הפיילוט באמירנט: דקדוק, יצירת מילה והבנת הנשמע",
     description: "שני פרקי ניסיון מגיעים בסוף המבחן, בלי אזהרה מראש. הנה מה הם כוללים ואיך להתכונן אליהם בלי לחץ מיותר.",
@@ -291,6 +301,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "lemod-levad-o-bekvutza",
+    cover: { tag: "שיטת לימוד", word: "together" },
     heroImage: "/blog/lemod-levad-o-bekvutza.svg",
     title: "לומדים לבד או בקבוצה: מה עדיף בהכנה לאמירנט",
     description: "אין תשובה אחת נכונה, אבל יש שאלות שעוזרות להחליט מה מתאים לכם בפועל.",
@@ -324,6 +335,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "kama-tsarich-amirnet-lehipater",
+    cover: { tag: "ציונים", word: "150" },
     heroImage: "/blog/kama-tsarich-amirnet-lehipater.svg",
     title: "כמה צריך באמירנט כדי להיפטר מקורסי אנגלית",
     description: "ציון 134 ומעלה פוטר בדרך כלל מקורסי הרמה. הנה איך זה עובד בפועל, ולמה כדאי לבדוק מול המוסד שלכם.",
@@ -356,6 +368,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "tauyot-nefotzot-amirnet",
+    cover: { tag: "טעויות", word: "mistakes" },
     heroImage: "/blog/tauyot-nefotzot-amirnet.svg",
     title: "7 טעויות נפוצות בהכנה לאמירנט",
     description: "אלה הטעויות שאנחנו רואים הכי הרבה אצל תלמידים לפני שהם מגיעים אלינו.",
@@ -384,6 +397,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "sheelot-nefotzot-amirnet",
+    cover: { tag: "שאלות נפוצות", word: "FAQ" },
     heroImage: "/blog/sheelot-nefotzot-amirnet.svg",
     title: "שאלות נפוצות על אמירנט שכל מתכונן שואל את עצמו",
     description: "ריכזנו את השאלות שחוזרות הכי הרבה, עם תשובות קצרות וקישור למקור המלא.",
@@ -403,6 +417,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "shigrat-targil-bli-lehisaref",
+    cover: { tag: "שגרה", word: "routine" },
     heroImage: "/blog/shigrat-targil-bli-lehisaref.svg",
     title: "איך בונים שגרת תרגול לאמירנט בלי להישרף",
     description: "תרגול אינטנסיבי לא חייב להיות שחיקה. כמה עקרונות פשוטים שומרים על קצב בלי לאבד מוטיבציה.",
@@ -435,6 +450,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "milot-kishur-amirnet",
+    cover: { tag: "תרגול", word: "although" },
     title: "מילות קישור באמירנט: המילים הקטנות שמכריעות שאלות",
     description: "although, however, therefore ועוד: מה כל מילת קישור אומרת על כיוון המשפט, ואיך זה עוזר בהשלמת משפטים ובניסוח מחדש.",
     publishedAt: "2026-10-25",
@@ -472,50 +488,14 @@ export const blogPosts: BlogPost[] = [
       {
         heading: "איך לתרגל",
         paragraphs: [
-          "כשאתם פותרים שאלה, תסמנו לעצמכם את מילת הקישור לפני שאתם מסתכלים על התשובות. אפשר להתחיל ב[שאלת היום](/practice/daily) או ב[תרגול החינמי](/practice?type=free).",
-        ],
-      },
-    ],
-  },
-  {
-    slug: "phrasal-verbs-amirnet",
-    title: "Phrasal verbs באמירנט: פועל ועוד מילה קטנה, ומשמעות חדשה לגמרי",
-    description: "carry out, point out, rule out: למה פעלים עם מילת יחס מבלבלים, אילו כדאי להכיר, ואיך הם מופיעים בשאלות ניסוח מחדש.",
-    publishedAt: "2026-10-25",
-    intro:
-      "Phrasal verb הוא פועל שמגיע עם מילה קטנה כמו up, out או off, ויחד הם מקבלים משמעות שלא תמיד אפשר לנחש מהחלקים. give זה לתת, אבל give up זה לוותר. באמירנט הם מופיעים הרבה, בעיקר בקטעי קריאה ובניסוח מחדש.",
-    sections: [
-      {
-        heading: "למה הם מבלבלים",
-        paragraphs: [
-          "מכירים כל מילה לבד, ולכן נדמה שמבינים את המשפט. אבל turn down זה לסרב, לא \"לסובב למטה\", ו-put off זה לדחות, לא \"לשים בצד\".",
-        ],
-      },
-      {
-        heading: "כמה שכדאי להכיר",
-        paragraphs: [
-          "carry out: לבצע (carry out a study). point out: להצביע על, לציין. rule out: לשלול. set up: להקים. bring about: לגרום ל-.",
-          "account for: להסביר, או להוות חלק מ-. look into: לבדוק, לחקור. come up with: להמציא, להעלות רעיון. turn out: להתברר. give up: לוותר.",
-          "רשימה כזו לא צריך לשנן בבת אחת. עדיף כמה ביום, כל אחד עם משפט דוגמה.",
-        ],
-      },
-      {
-        heading: "איך זה מופיע בניסוח מחדש",
-        paragraphs: [
-          "הרבה פעמים המשפט המקורי משתמש ב-phrasal verb, והתשובה הנכונה מחליפה אותו במילה אחת: carry out הופך ל-conduct, rule out הופך ל-exclude, put off הופך ל-postpone.",
-          "אם אתם מכירים רק את אחד הצדדים, השאלה נראית קשה. אם מכירים את שניהם, היא נפתרת תוך שניות.",
-        ],
-      },
-      {
-        heading: "איך לתרגל",
-        paragraphs: [
-          "כשנתקלים ב-phrasal verb לא מוכר, רושמים אותו עם המשמעות ועם מילה אחת שמחליפה אותו. אפשר לחזור על מילים ב[כרטיסיות אוצר המילים](/vocabulary).",
+          "כשאתם פותרים שאלה, תסמנו לעצמכם את מילת הקישור לפני שאתם מסתכלים על התשובות. יש גם [שיעור קצר על מילות קישור](/learn/connectors) עם שאלות לדוגמה. אפשר להתחיל ב[שאלת היום](/practice/daily) או ב[תרגול החינמי](/practice?type=free).",
         ],
       },
     ],
   },
   {
     slug: "amir-amiram-amirnet",
+    cover: { tag: "הבהרה", word: "Amirnet" },
     title: "אמיר, אמיר\"ם ואמירנט: מה ההבדל, ומה רלוונטי היום",
     description: "שלושה שמות שמבלבלים הרבה נרשמים. מה כל אחד מהם, איזה מבחן נותנים היום, ומה זה אומר על ההכנה.",
     publishedAt: "2026-10-25",

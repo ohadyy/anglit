@@ -786,3 +786,82 @@ html[data-intro-seen] [data-home-intro] {
 @media (prefers-reduced-motion: reduce) {
   .plat-tone-text, .plat-glow-border, .plat-title-glow { animation: none; }
 }
+
+/* /calm: small shake when a thought is sorted wrong */
+@keyframes calm-shake {
+  25% { translate: -8px 0; }
+  75% { translate: 8px 0; }
+}
+.calm-shake { animation: calm-shake 0.3s 1; }
+@media (prefers-reduced-motion: reduce) {
+  .calm-shake { animation: none; }
+}
+
+/* /calm: soft background and a slow breathing orb, in the spirit of mindfulness apps */
+.calm-bg {
+  background: radial-gradient(120% 60% at 50% 0%, color-mix(in oklab, var(--fg) 10%, var(--bg)) 0%, var(--bg) 70%);
+}
+@keyframes calm-breathe {
+  from { transform: scale(0.92); }
+  to { transform: scale(1.06); }
+}
+@keyframes calm-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes calm-sway {
+  from { rotate: -1.5deg; }
+  to { rotate: 1.5deg; }
+}
+.calm-disc {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: calm-breathe 5s ease-in-out infinite alternate;
+}
+.calm-figure {
+  animation: calm-float 5s ease-in-out infinite alternate;
+}
+@keyframes calm-float {
+  from { transform: translateY(2px); }
+  to { transform: translateY(-3px); }
+}
+.calm-trace {
+  fill: transparent;
+  stroke: currentColor;
+  stroke-width: 0.3;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: calm-draw 2.6s ease-in-out forwards, calm-fill 1s ease-out forwards;
+  animation-delay: var(--d, 0s), calc(var(--d, 0s) + 2.3s);
+}
+@keyframes calm-fill {
+  to { fill: currentColor; }
+}
+.calm-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: calm-draw 2.2s ease-out forwards;
+  animation-delay: var(--d, 0s);
+}
+.calm-sway {
+  transform-box: fill-box;
+  transform-origin: 55% 15%;
+  animation: calm-sway 7s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  .calm-disc, .calm-sway, .calm-figure { animation: none; }
+  .calm-draw { animation: none; stroke-dashoffset: 0; }
+  .calm-trace { animation: none; stroke-dashoffset: 0; fill: currentColor; }
+}
+
+/* Audio player: rings around the play button swell outward while a session plays */
+@keyframes calm-ring {
+  0% { transform: scale(0.9); opacity: 0.5; }
+  100% { transform: scale(1.12); opacity: 0; }
+}
+.calm-ring {
+  animation: calm-ring 4s ease-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .calm-ring { animation: none; }
+}

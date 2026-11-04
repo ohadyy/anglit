@@ -20,8 +20,9 @@ export const user = pgTable("user", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
-  phone: text("phone").notNull().unique(),
-  birthDate: text("birth_date").notNull(),
+  // Null only for Google sign-ins until they finish /complete-profile
+  phone: text("phone").unique(),
+  birthDate: text("birth_date"),
   termsAccepted: boolean("terms_accepted").default(false),
   marketingConsent: boolean("marketing_consent").default(false),
   examDate: text("exam_date"),

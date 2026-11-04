@@ -4,11 +4,12 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { examAttempts } from "@/db/schema";
 import { scoreExam } from "@/lib/examScore";
-import { findExamTest, findPlatinumTest } from "@/content/examTests";
+import { EASY_TEST, findExamTest, findPlatinumTest } from "@/content/examTests";
 import { buildExam } from "@/lib/examStructure";
+import { poolLevels } from "@/content/examPool";
 import { buildPlatinumExam } from "@/lib/platinumExam";
 import { isCorrectAnswer } from "@/content/questions";
-import { hasPaidAccess } from "@/lib/access";
+import { hasPaidAccess, isStaff } from "@/lib/access";
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -25,6 +26,8 @@ export async function POST(request: Request) {
     testNumber: string;
     includePilot: boolean;
     answers: Record<string, number | string | null>;
+    /** Pool items the page avoided as already seen; needed to rebuild the same adaptive test */
+    seen?: unknown;
     startedAt: string;
   } | null;
   if (!body || (body.kind !== "open" && body.kind !== "close")) {
@@ -32,14 +35,22 @@ export async function POST(request: Request) {
   }
 
   // Tests are fixed in the catalog, so the number only has to match one of them
-  const platinum = findPlatinumTest(body.testNumber);
+  const easy = body.testNumber === EASY_TEST;
+  const platinum = findPlatinumTest(body.testNumber) || easy;
   if (!platinum && !findExamTest(body.testNumber)) {
     return NextResponse.json({ error: "invalid test number" }, { status: 400 });
+  }
+  if (easy && !(await isStaff(session.user.id))) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
   // The score is worked out here from the real answer key, never from what the browser says
   const answers = body.answers && typeof body.answers === "object" ? body.answers : {};
-  const asked = (platinum ? buildPlatinumExam(body.testNumber) : buildExam(body.testNumber))
+  // An adaptive test is rebuilt from the answers and the seen list, so its chapters match what
+  // was shown. The seen list only steers which questions were picked; the score still comes
+  // from the answer key here, so a tampered list cannot raise it.
+  const seen = Array.isArray(body.seen) ? body.seen.filter((id): id is string => typeof id === "string" && id in poolLevels).slice(0, 2000) : [];
+  const asked = (platinum ? buildPlatinumExam(body.testNumber) : buildExam(body.testNumber, answers, seen))
     .filter((part) => body.includePilot || !part.section.pilot)
     .flatMap((part) => part.questions);
   const correctness: Record<string, boolean> = {};

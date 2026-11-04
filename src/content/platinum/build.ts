@@ -35,7 +35,7 @@ function hash(s: string): number {
   return h >>> 0;
 }
 
-function toQuestion(
+export function toQuestion(
   id: string,
   type: "sentence" | "restatement" | "reading",
   [stem, correct, wrong, why, paragraph]: RawItem,

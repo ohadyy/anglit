@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { copy } from "@/content/copy";
 import type { Passage, Question, QuestionType } from "@/content/questions";
 import { ALL_TYPES, TYPE_LABELS } from "@/content/questionLabels";
@@ -14,8 +14,10 @@ import { fetchServerMistakes, readMistakes, recordAnswers, removeMistake, saveMi
 import { randomOrder } from "@/lib/shuffle";
 import type { QuestionNote } from "@/content/questionNotes";
 import { FreeNextCard } from "@/components/FreeNextCard";
+import { MiniTile, PREVIEWS } from "@/components/MiniPreviews";
+import { DailyQuestion } from "./daily/DailyQuestion";
 
-export type PracticeMode = QuestionType | "free" | "mistakes";
+export type PracticeMode = QuestionType | "free" | "mistakes" | "connectors" | "affixes";
 
 // The server decides what this visitor may see and passes only that: visitors without paid
 // access get the five free questions, and paid access unlocks every question type.
@@ -27,129 +29,93 @@ export type PracticeData = {
   set: Question[];
   /** How many questions each type has, for the chooser */
   counts: Record<QuestionType, number>;
+  /** Questions the chooser's "question of the day" draws from, empty everywhere else */
+  dailyPool: Question[];
   passages: Passage[];
   /** Hebrew notes for the mistakes review, sent only to paid members on that page */
   notes: Record<string, QuestionNote>;
 };
 
 export function PracticeClient({ mode, data }: { mode?: PracticeMode; data: PracticeData }) {
-  const { paid, free, set, counts, passages, notes } = data;
+  const { paid, free, set, counts, dailyPool, passages, notes } = data;
   return (
     <PassageProvider passages={passages}>
-      {!mode && <TypeChooser paid={paid} counts={counts} />}
+      {!mode && <TypeChooser paid={paid} counts={counts} dailyPool={dailyPool} />}
       {mode === "free" && <PracticeSession mode="free" set={free} notes={notes} paid={paid} />}
       {mode === "mistakes" && <MistakesReview paid={paid} bank={set} notes={notes} />}
-      {mode && mode !== "free" && mode !== "mistakes" && (!paid ? <LockedPractice type={mode} /> : <PracticeSession mode={mode} set={set} notes={notes} paid={paid} />)}
+      {mode && mode !== "free" && mode !== "mistakes" && (!paid ? <LockedPractice label={mode === "connectors" ? "מילות קישור" : mode === "affixes" ? "תחיליות וסופיות" : TYPE_LABELS[mode].he} /> : <PracticeSession mode={mode} set={set} notes={notes} paid={paid} />)}
     </PassageProvider>
   );
 }
 
-function TypeChooser({ paid, counts }: { paid: boolean; counts: Record<QuestionType, number> }) {
+// Every practice is a tile with a miniature of its own screen, two to a row on a phone
+function Category({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="mt-10">
+      <h2 className="text-xl font-bold">{title}</h2>
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">{children}</div>
+    </section>
+  );
+}
+
+function TypeChooser({ paid, counts, dailyPool }: { paid: boolean; counts: Record<QuestionType, number>; dailyPool: Question[] }) {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
       <p className="font-hand text-2xl opacity-70">תרגול חופשי</p>
-      <h1 className="font-display mt-2 text-3xl font-bold sm:text-4xl">בחרו <mark className="pink">סוג שאלה</mark></h1>
+      <h1 className="font-display mt-2 text-3xl font-bold sm:text-4xl">בחרו <mark className="pink">מה לתרגל</mark></h1>
       <p className="mt-3 max-w-xl text-lg leading-relaxed opacity-80">
         {paid
-          ? "בכל סוג יש הרבה שאלות, בלי לחץ זמן. אחרי כל תשובה תקבלו הסבר, ואפשר לעבור לסוג אחר בכל רגע."
+          ? "בלי לחץ זמן. אחרי כל תשובה תקבלו הסבר, ואפשר לעבור בין התרגולים בכל רגע."
           : "בחינם אפשר לתרגל 5 שאלות לדוגמה. לתרגול מלא בכל הסוגים יש מסלול בתשלום."}
       </p>
 
-      <Link
-        href="/practice/daily"
-        className="mt-8 flex items-center justify-between rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] transition-transform active:scale-[0.98] sm:p-6"
-      >
-        <span>
-          <span className="block text-xl font-bold">שאלת היום</span>
-          <span className="mt-1 block text-sm opacity-70">שאלה אחת ביום, ורצף ימים שלא רוצים לשבור</span>
-        </span>
-        <span className="text-sm font-semibold">לענות ←</span>
-      </Link>
+      {dailyPool.length > 0 && (
+        <div className="mt-8">
+          <DailyQuestion pool={dailyPool} embedded />
+        </div>
+      )}
 
-      <Link
-        href="/practice/words"
-        className="mt-3 flex items-center justify-between rounded-3xl bg-fg p-5 text-bg transition-transform active:scale-[0.98] sm:p-6"
-      >
-        <span>
-          <span className="block text-xl font-bold">שרשרת מילים</span>
-          <span className="mt-1 block text-sm opacity-80">משחק קצר: מילה בעברית, ותשובה באנגלית</span>
-        </span>
-        <span className="text-sm font-semibold">לשחק ←</span>
-      </Link>
+      <Category title="תרגול שאלות">
+        {!paid && <MiniTile href="/practice?type=free" title="5 שאלות חינם" text="מכל הסוגים, עם הסבר" aside="להתחיל ←">{PREVIEWS.sentence}</MiniTile>}
+        {ALL_TYPES.map((t) => (
+          <MiniTile
+            key={t}
+            href={paid ? `/practice?type=${t}` : "/pricing"}
+            title={TYPE_LABELS[t].he}
+            text={<bdi dir="ltr">{TYPE_LABELS[t].en}</bdi>}
+            aside={paid ? `${counts[t]} שאלות ←` : "בתשלום"}
+            locked={!paid}
+          >
+            {PREVIEWS[t]}
+          </MiniTile>
+        ))}
+        <MistakesTile />
+      </Category>
 
-      <Link
-        href="/practice/challenge"
-        className="mt-3 flex items-center justify-between rounded-3xl bg-marker p-5 text-ink-deep transition-transform active:scale-[0.98] sm:p-6"
-      >
-        <span>
-          <span className="block text-xl font-bold">אתגר נגד השעון</span>
-          <span className="mt-1 block text-sm opacity-80">20 שניות לשאלה, בלי טעויות — כמה רחוק תגיעו?</span>
-        </span>
-        <span className="text-sm font-semibold">לשחק ←</span>
-      </Link>
+      <Category title="תרגול נוסף">
+        <MiniTile href="/learn/connectors" title="מילות קישור" text="שיעור קצר ו-30 שאלות" aside="ללמוד ←">{PREVIEWS.connectors}</MiniTile>
+        <MiniTile href="/learn/affixes" title="תחיליות וסופיות" text="שיעור קצר ו-30 שאלות" aside="ללמוד ←">{PREVIEWS.affixes}</MiniTile>
+      </Category>
 
-      <MistakesCard />
+      <Category title="משחקים">
+        <MiniTile href="/practice/words" title="שרשרת מילים" text="מילה בעברית, ותשובה באנגלית" aside="לשחק ←">{PREVIEWS.words}</MiniTile>
+        <MiniTile href="/practice/challenge" title="אתגר נגד השעון" text="20 שניות לשאלה, בלי טעויות" aside="לשחק ←">{PREVIEWS.challenge}</MiniTile>
+      </Category>
 
-      <ul className="mt-4 grid gap-3">
-        {!paid && (
-          <li>
-            <Link
-              href="/practice?type=free"
-              className="group flex items-center justify-between rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-5 transition-colors hover:border-fg/30 sm:p-6"
-            >
-              <span>
-                <span className="block text-xl font-bold">5 שאלות חינם</span>
-                <span className="mt-1 block text-sm opacity-70">מכל הסוגים, עם הסבר לכל תשובה</span>
-              </span>
-              <span className="text-sm font-semibold opacity-70 group-hover:opacity-100">להתחיל ←</span>
-            </Link>
-          </li>
-        )}
-
-        {ALL_TYPES.map((t) => {
-          const card = (
-            <>
-              <span>
-                <span className="block text-xl font-bold">{TYPE_LABELS[t].he}</span>
-                <span dir="ltr" className="mt-1 block text-left text-sm opacity-70">
-                  {TYPE_LABELS[t].en}
-                </span>
-              </span>
-              {paid ? (
-                <span className="text-sm font-semibold tabular-nums opacity-70 group-hover:opacity-100">
-                  {counts[t]} שאלות ←
-                </span>
-              ) : (
-                <span className="flex items-center gap-2 text-sm font-semibold opacity-70">
-                  <LockIcon className="size-4" /> בתשלום
-                </span>
-              )}
-            </>
-          );
-
-          return (
-            <li key={t}>
-              <Link
-                href={paid ? `/practice?type=${t}` : "/pricing"}
-                className="group flex items-center justify-between rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-5 transition-colors hover:border-fg/30 sm:p-6"
-              >
-                {card}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+      <Category title="מיינדסט">
+        <MiniTile href="/calm" title="להישאר רגועים במבחן" text="משחקים קצרים והקלטות נגד לחץ" aside="להיכנס ←">{PREVIEWS.calm}</MiniTile>
+      </Category>
     </div>
   );
 }
 
-function LockedPractice({ type }: { type: QuestionType }) {
+function LockedPractice({ label }: { label: string }) {
   return (
     <div className="mx-auto flex flex-1 max-w-md flex-col items-center justify-center px-4 py-16 text-center">
       <div className="flex size-14 items-center justify-center rounded-full bg-white">
         <LockIcon />
       </div>
-      <p className="mt-5 font-hand text-2xl opacity-70">{TYPE_LABELS[type].he}</p>
+      <p className="mt-5 font-hand text-2xl opacity-70">{label}</p>
       <h1 className="font-display mt-2 text-2xl font-bold">התרגול הזה במסלול בתשלום</h1>
       <p className="mt-3 leading-relaxed opacity-80">
         בחינם אפשר לתרגל 5 שאלות לדוגמה מכל הסוגים, עם הסבר מלא לכל תשובה. לתרגול מלא בכל הסוגים יש מסלול בתשלום.
@@ -356,21 +322,17 @@ function useMistakes() {
   return [mistakes, setMistakes] as const;
 }
 
-function MistakesCard() {
+function MistakesTile() {
   const [mistakes] = useMistakes();
   return (
-    <Link
+    <MiniTile
       href="/practice?type=mistakes"
-      className="group mt-3 flex items-center justify-between rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] transition-colors hover:border-fg/30 sm:p-6"
+      title="הטעויות שלי"
+      text="עם הסבר ותרגום"
+      aside={mistakes === null ? "" : `${Object.keys(mistakes).length} שאלות ←`}
     >
-      <span>
-        <span className="block text-xl font-bold">הטעויות שלי</span>
-        <span className="mt-1 block text-sm opacity-70">כל שאלה שטעיתם בה, עם הסבר ותרגום לעברית</span>
-      </span>
-      <span className="text-sm font-semibold tabular-nums opacity-70 group-hover:opacity-100">
-        {mistakes === null ? "" : `${Object.keys(mistakes).length} שאלות ←`}
-      </span>
-    </Link>
+      {PREVIEWS.mistakes}
+    </MiniTile>
   );
 }
 

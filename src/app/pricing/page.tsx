@@ -3,6 +3,7 @@ import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 import Link from "next/link";
 import { featureRows, pricingCopy, products, type Product } from "@/content/pricingCopy";
 import { LeadForm } from "@/components/LeadForm";
+import { FeatureToggle } from "@/components/FeatureToggle";
 import { upcomingCourseOffer, type CourseOffer } from "@/lib/cohorts";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
@@ -17,9 +18,10 @@ export const metadata: Metadata = {
 };
 
 const desktopOrder: Record<Product["id"], string> = {
-  access: "lg:order-3",
-  course: "lg:order-2",
-  private: "lg:order-1",
+  // On phones: seminar, site access, private lessons. Cards are compact there (see FeatureToggle)
+  access: "order-2 lg:order-3",
+  course: "order-1 lg:order-2",
+  private: "order-3 lg:order-1",
 };
 
 export default async function PricingPage() {
@@ -112,7 +114,7 @@ function ProductCard({
   return (
     <div
       style={{ animationDelay: `${delay}ms` }}
-      className={`enter lift relative flex flex-col rounded-[2rem] bg-white p-8 text-center shadow-[0_30px_60px_-24px_rgb(14_8_82/0.15)] ${
+      className={`enter lift relative flex flex-col rounded-[2rem] bg-white p-8 text-center shadow-[0_30px_60px_-24px_rgb(14_8_82/0.15)] max-lg:p-5 ${
         recommended ? "border-2 border-fg" : "border border-line"
       } ${className}`}
     >
@@ -144,8 +146,12 @@ function ProductCard({
               <span className="opacity-70">30% הנחה</span>
             </p>
           )}
-          <p className={`${product.listPrice ? "mt-1 text-ok" : "mt-3"} text-6xl font-bold tracking-tight`}>{product.price}</p>
-          <p className="mt-1 text-sm opacity-70">₪ {product.priceUnit}</p>
+          {/* The course card drops the "one-time payment" line, so its shekel sign sits next to the number */}
+          <p className={`${product.listPrice ? "mt-1 text-ok" : "mt-3"} text-6xl font-bold tracking-tight`}>
+            {product.price}
+            {product.id === "course" && " ₪"}
+          </p>
+          {product.id !== "course" && <p className="mt-1 text-sm opacity-70">₪ {product.priceUnit}</p>}
         </>
       )}
       {product.scarcity && (
@@ -156,13 +162,15 @@ function ProductCard({
       </div>
 
       {/* Every card shows the same rows in the same order, so matching items line up across cards */}
-      <ul className="mt-8 flex flex-1 flex-col text-start">
+      <FeatureToggle label="מה כלול">
+      <ul className="mt-4 flex flex-1 flex-col text-start lg:mt-8">
         {featureRows.map((row, i) => {
           const cell = row[product.id];
           const included = typeof cell === "string";
           const text = included ? cell : cell.missing;
           return (
-            <li key={i} className="flex h-16 items-center gap-2.5 border-t border-line/60 py-2.5 first:border-t-0">
+            // Not-included rows only show on desktop, where they keep the cards' rows aligned
+            <li key={i} className={`${included ? "flex" : "hidden lg:flex"} h-16 items-center gap-2.5 border-t border-line/60 py-2.5 first:border-t-0`}>
               {included ? (
                 <svg viewBox="0 0 20 20" fill="none" className="size-5 shrink-0 text-ok" aria-hidden>
                   <path d="M4 10.5l3.5 3.5L16 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -177,9 +185,10 @@ function ProductCard({
           );
         })}
       </ul>
+      </FeatureToggle>
 
       {product.note && (
-        <p className="mt-6 rounded-2xl bg-fg/5 p-4 text-start text-sm leading-relaxed">{product.note}</p>
+        <p className="mt-6 hidden rounded-2xl lg:block bg-fg/5 p-4 text-start text-sm leading-relaxed">{product.note}</p>
       )}
 
       <Link

@@ -13,6 +13,9 @@ export async function POST(request: Request) {
   if (!session) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+  if (!session.user.phone) {
+    return NextResponse.json({ error: "phone required" }, { status: 403 });
+  }
   if (!(await hasCourse(session.user.id))) {
     return NextResponse.json({ error: "course required" }, { status: 403 });
   }

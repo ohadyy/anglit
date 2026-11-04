@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 import type { ReactNode } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { blogPosts, getBlogPost } from "@/content/blog";
+import { BlogCover } from "@/components/BlogCover";
 import { site } from "@/lib/site";
 
 export function generateStaticParams() {
@@ -76,16 +76,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       <Link href="/blog" className="inline-flex min-h-11 items-center text-sm underline underline-offset-4 opacity-70">
         כל המאמרים
       </Link>
-      {post.heroImage && (
-        <Image
-          src={post.heroImage}
-          alt=""
-          width={1344}
-          height={752}
-          priority
-          className="mt-4 aspect-[16/9] w-full rounded-3xl object-cover"
-        />
-      )}
+      <BlogCover post={post} className="mt-4 aspect-[16/9] w-full rounded-3xl sm:aspect-[2/1]" />
       <h1 className="font-display mt-6 text-3xl font-bold tracking-tight sm:text-4xl">{post.title}</h1>
       <p className="mt-3 leading-relaxed opacity-80">{post.intro}</p>
 
@@ -114,7 +105,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 href={`/blog/${p.slug}`}
                 className="block overflow-hidden rounded-2xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] transition-colors hover:bg-fg/5"
               >
-                {p.heroImage && <Image src={p.heroImage} alt="" width={1344} height={752} className="aspect-[16/9] w-full object-cover" />}
+                <BlogCover post={p} className="aspect-[16/9] w-full" />
                 <p className="p-4 text-sm font-semibold leading-snug">{p.title}</p>
               </Link>
             </li>

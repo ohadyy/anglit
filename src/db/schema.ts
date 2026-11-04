@@ -139,6 +139,33 @@ export const leads = pgTable("leads", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Where a person stands in the sales pipeline (/admin/crm). `kind` says whether refId is a
+// leads.id or a user.id, so a lead and a registered student share one board, with no foreign
+// key because of that. "Paid" is never stored here: it is read from orders.
+export const crmState = pgTable(
+  "crm_state",
+  {
+    kind: text("kind", { enum: ["lead", "user"] }).notNull(),
+    refId: text("ref_id").notNull(),
+    status: text("status", { enum: ["new", "no_answer", "talked_lost", "talked_interested", "talked_paid"] })
+      .notNull()
+      .default("new"),
+    followUpAt: timestamp("follow_up_at"),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.kind, t.refId] })],
+);
+
+// The activity log of one person: a call, a WhatsApp message, or a free note.
+export const crmNotes = pgTable("crm_notes", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  kind: text("kind", { enum: ["lead", "user"] }).notNull(),
+  refId: text("ref_id").notNull(),
+  type: text("type", { enum: ["call", "whatsapp", "note"] }).notNull(),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const cohortsRelations = relations(cohorts, ({ many }) => ({
   enrollments: many(enrollments),
   orders: many(orders),
@@ -153,3 +180,11 @@ export const ordersRelations = relations(orders, ({ one }) => ({
   user: one(user, { fields: [orders.userId], references: [user.id] }),
   cohort: one(cohorts, { fields: [orders.cohortId], references: [cohorts.id] }),
 }));
+
+// Checkout coupons made from /admin/coupons: either a percent off or a fixed final price, never both.
+export const coupons = pgTable("coupons", {
+  code: text("code").primaryKey(),
+  percent: integer("percent"),
+  priceIls: integer("price_ils"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});

@@ -3,7 +3,6 @@ import type { CourseOffer, nextCohortInfo } from "@/lib/cohorts";
 import { HeroDecor } from "@/components/HeroDecor";
 import { COURSE_REGULAR_PRICE, CourseOfferCta, CourseOfferPrice } from "@/components/CourseOfferCard";
 import { LeadForm } from "@/components/LeadForm";
-import { ResultsCards } from "@/components/ResultsCards";
 import { TestimonialBubble } from "@/components/TestimonialBubble";
 import { StepsList } from "@/components/StepsList";
 import { copy } from "@/content/copy";
@@ -60,16 +59,15 @@ export function SprintLanding({ offer, cohort = null }: { offer: CourseOffer | n
 
           <TestimonialBubble />
 
-          <div className="mt-8 w-full max-w-sm rounded-3xl border border-line bg-white p-6 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
-            <CourseOfferPrice offer={offer} />
-            <Cta className="mt-6 w-full" />
+          <div className="mt-8 w-full max-w-sm rounded-3xl border border-line bg-white p-8 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
+            <CourseOfferPrice offer={offer} big />
+            <Cta className="mt-10 w-full" />
             <Urgency cohort={cohort} />
           </div>
         </div>
       </div>
 
       <main className="flex-1">
-        <ResultsCards />
 
         {/* Pain: the problem the reader already has */}
         <section className="border-t border-line">
@@ -97,6 +95,27 @@ export function SprintLanding({ offer, cohort = null }: { offer: CourseOffer | n
           </div>
         </section>
 
+        {/* What a live teacher adds, right after the teacher intro */}
+        <section className="border-t border-line">
+          <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
+            <h2 className="text-center text-2xl font-bold text-balance sm:text-3xl">{sprintCopy.whyTitle}</h2>
+            <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+              {sprintCopy.why.map((w) => (
+                <li key={w.title} className="rounded-3xl border border-line bg-white p-6 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
+                  <p className="font-bold">{w.title}</p>
+                  <p className="mt-2 leading-relaxed opacity-80">{w.text}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section className="border-t border-line">
+          <div className="mx-auto max-w-md px-4 py-10 sm:px-6">
+            <LeadForm source="ads" title={sprintCopy.leadTitle} sub={sprintCopy.leadSub} sentText={sprintCopy.leadSent} />
+          </div>
+        </section>
+
         {/* How the week is built */}
         <section className="border-t border-line">
           <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
@@ -104,12 +123,6 @@ export function SprintLanding({ offer, cohort = null }: { offer: CourseOffer | n
             <div className="mt-8">
               <StepsList steps={sprintCopy.how} />
             </div>
-          </div>
-        </section>
-
-        <section className="border-t border-line">
-          <div className="mx-auto max-w-md px-4 py-10 sm:px-6">
-            <LeadForm source="ads" title={sprintCopy.leadTitle} sub={sprintCopy.leadSub} sentText={sprintCopy.leadSent} />
           </div>
         </section>
 
@@ -127,9 +140,9 @@ export function SprintLanding({ offer, cohort = null }: { offer: CourseOffer | n
                 </li>
               ))}
             </ul>
-            <div className="mt-10 rounded-3xl border border-line bg-white p-6 text-center shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
-              <CourseOfferPrice offer={offer} />
-              <Cta className="mt-6 w-full sm:w-auto sm:px-10" />
+            <div className="mt-10 rounded-3xl border border-line bg-white p-8 text-center shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-10">
+              <CourseOfferPrice offer={offer} big />
+              <Cta className="mt-10 w-full sm:w-auto sm:px-10" />
               <Urgency cohort={cohort} />
             </div>
           </div>

@@ -14,6 +14,13 @@ import { notify } from "@/lib/ntfy";
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg" }),
   emailAndPassword: { enabled: true },
+  // Google users arrive without phone/birth date; /complete-profile collects them
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
+  },
   // Five sign-in attempts per 15 minutes, stored in the database so the count is shared
   // by all serverless instances (the default in-memory counter is per instance)
   rateLimit: {
@@ -32,8 +39,8 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   user: {
     additionalFields: {
-      phone: { type: "string", required: true, unique: true },
-      birthDate: { type: "string", required: true },
+      phone: { type: "string", required: false, unique: true },
+      birthDate: { type: "string", required: false },
       termsAccepted: { type: "boolean", required: false, defaultValue: false, input: true },
       marketingConsent: { type: "boolean", required: false, defaultValue: false, input: true },
       // Asked in a one-time gate right after sign-up, so follow-up WhatsApp messages can

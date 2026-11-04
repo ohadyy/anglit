@@ -7,11 +7,17 @@ import { orders } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { notify } from "@/lib/ntfy";
 import { getProduct } from "@/content/pricingCopy";
+import { couponAgorot } from "@/lib/coupons";
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return NextResponse.redirect(new URL("/sign-in?next=/pricing", request.url));
+  }
+
+  // Google sign-ins have no phone until /complete-profile; checkout and the follow-up calls need it
+  if (!session.user.phone) {
+    return NextResponse.redirect(new URL("/complete-profile?next=/pricing", request.url), { status: 303 });
   }
 
   const form = await request.formData();
@@ -25,14 +31,24 @@ export async function POST(request: Request) {
 
   // The course costs the cohort price while the next cohort is open; the order is tied to that cohort
   const offer = product.id === "course" ? await upcomingCourseOffer() : null;
-  const amountIls = offer ? offer.priceIls : Number(product.price);
+  const baseIls = offer ? offer.priceIls : Number(product.price);
+
+  const couponCode = form.get("coupon")?.toString().trim();
+  // Coupons apply to the seminar only
+  const couponAmount = couponCode ? (product.id === "course" ? await couponAgorot(couponCode, baseIls) : null) : baseIls * 100;
+  if (couponAmount === null) {
+    return NextResponse.redirect(new URL(`/checkout?product=${product.id}&coupon=bad`, request.url), { status: 303 });
+  }
+  // Agorot are whole numbers; the webhook compares against this same stored amount
+  const amountAgorot = Math.round(couponAmount);
+  const amountIls = amountAgorot / 100;
   const origin = new URL(request.url).origin;
 
   const [order] = await db
     .insert(orders)
     .values({
       userId: session.user.id,
-      amountAgorot: Math.round(amountIls * 100),
+      amountAgorot,
       product: product.id,
       cohortId: offer?.cohortId ?? null,
       termsAcceptedAt: new Date(),
