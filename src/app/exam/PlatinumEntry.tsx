@@ -22,10 +22,11 @@ export function PlatinumEntry() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex w-full flex-col items-center gap-3 rounded-3xl bg-[#0a0a0a] px-5 py-5 text-[#e8e3d6] shadow-[0_18px_40px_-24px_rgb(0_0_0/0.6)]"
+        // A slim strip: a side door for the strongest students, never louder than the main "start exam" button
+        className="flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl bg-[#0a0a0a] px-5 py-3 text-[#e8e3d6]"
       >
-        <span dir="ltr" className={`${cinzel.className} plat-title-glow whitespace-nowrap text-[clamp(1.4rem,7.4vw,2.25rem)] font-bold tracking-wide`}>Anglit Platinum</span>
-        <span className="rounded-full bg-gradient-to-b from-[#f3dc9a] to-[#c9a24b] px-7 py-1.5 text-sm font-bold text-[#1a1305]">כניסה</span>
+        <span dir="ltr" className={`${cinzel.className} whitespace-nowrap text-lg font-bold tracking-wide`}>Anglit Platinum</span>
+        <span className="rounded-full bg-gradient-to-b from-[#f3dc9a] to-[#c9a24b] px-5 py-1.5 text-sm font-bold text-[#1a1305]">כניסה</span>
       </button>
 
       {open && (

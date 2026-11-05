@@ -15,7 +15,9 @@ export type QuestionType =
   | "listening"
   | "grammar"
   | "audiocomplete"
-  | "wordformation";
+  | "wordformation"
+  // A typed essay chapter: it has no answer key, so it is never scored (see lib/examStructure.ts)
+  | "writing";
 
 type Options = [string, string, string, string];
 

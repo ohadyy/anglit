@@ -60,6 +60,16 @@ export function MiniTile({
 }
 
 export const PREVIEWS = {
+  writing: (
+    <div className="w-full">
+      <span className="rounded-full bg-ink px-2.5 py-0.5 text-xs font-bold tabular-nums text-mist">12:00</span>
+      <div className="mt-2.5 space-y-1.5 rounded-md border border-line bg-white p-2">
+        <Bar />
+        <Bar w="85%" />
+        <Bar w="40%" />
+      </div>
+    </div>
+  ),
   // Account areas
   exams: (
     <div className="w-full">

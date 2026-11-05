@@ -115,6 +115,12 @@ function checkStructure(label: string, plan: ExamPlanItem[], regular: boolean) {
   if (regular) {
     for (const id of pids) check(knownPassages.has(id), `${label}: passage ${id} missing`);
     const pilots = plan.filter((p) => p.section.pilot);
+    const writing = pilots.filter((p) => p.section.type === "writing");
+    // The 7-chapter version: one writing task instead of the two pilot chapters, never both
+    if (writing.length) {
+      check(pilots.length === 1 && !!writing[0].prompt && writing[0].questions.length === 0, `${label}: bad writing chapter`);
+      return;
+    }
     check(pilots.length === 2, `${label}: ${pilots.length} pilot chapters`);
     for (const p of pilots) {
       const t = p.section.type as (typeof PILOT_CHAPTER_TYPES)[number];

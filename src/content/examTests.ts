@@ -8,10 +8,12 @@ export type ExamTestDef = {
   free?: boolean;
   /** Chapters chosen by level from content/examPool.ts, instead of a frozen list */
   adaptive?: true;
+  /** The 7-chapter version of the real exam: one writing task instead of the two pilot chapters */
+  writing?: true;
 };
 
 export const examTests: ExamTestDef[] = [
-  { number: "42894", free: true },
+  { number: "42894" },
   { number: "18052" },
   { number: "95815" },
   { number: "60317" },
@@ -34,15 +36,15 @@ export const examTests: ExamTestDef[] = [
   { number: "29417", adaptive: true },
   { number: "64083", adaptive: true },
   { number: "81356", adaptive: true },
-  { number: "47720", adaptive: true },
+  { number: "47720", adaptive: true, writing: true },
   { number: "15938", adaptive: true },
-  { number: "73061", adaptive: true },
+  { number: "73061", adaptive: true, writing: true },
   { number: "38254", adaptive: true },
   { number: "92607", adaptive: true },
-  { number: "56149", adaptive: true },
+  { number: "56149", adaptive: true, writing: true },
   { number: "20873", adaptive: true },
   { number: "61842", adaptive: true },
-  { number: "34509", adaptive: true },
+  { number: "34509", adaptive: true, writing: true },
   { number: "87216", adaptive: true },
   { number: "19473", adaptive: true },
   { number: "52638", adaptive: true },
@@ -50,7 +52,7 @@ export const examTests: ExamTestDef[] = [
   { number: "43851", adaptive: true },
   { number: "98327", adaptive: true },
   { number: "25760", adaptive: true },
-  { number: "69185", adaptive: true },
+  { number: "69185", adaptive: true, free: true },
 ];
 
 /** The grammar-in-context sets, four items each. The first set is in questions.ts,

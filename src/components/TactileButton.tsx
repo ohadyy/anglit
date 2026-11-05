@@ -74,14 +74,16 @@ export function TactileButton({
 
 export function TactileLink({
   href,
+  prefetch,
   size = "md",
   fullWidth,
   className = "",
   children,
-}: CommonProps & { href: string }) {
+}: CommonProps & { href: string; prefetch?: boolean }) {
   return (
     <Link
       href={href}
+      prefetch={prefetch}
       className={`${ROOT_CLASS} ${fullWidth ? "w-full" : "w-max"} ${className}`}
       style={DEPTH_VARS}
     >

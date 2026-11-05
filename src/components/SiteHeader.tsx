@@ -7,6 +7,7 @@ import { Wordmark } from "@/components/Logo";
 import { ScrambleLink } from "@/components/ScrambleLink";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { site } from "@/lib/site";
+import { useSession } from "@/lib/auth-client";
 
 const links = [
   { href: "/practice", label: "תרגול" },
@@ -18,6 +19,8 @@ const links = [
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  // Signed-in students get their account instead of the free-practice pitch
+  const { data: session } = useSession();
   // Paid-traffic landing page: nothing in the header may lead away from it
   const focused = usePathname() === "/ads";
 
@@ -54,8 +57,8 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          {!focused && <><Link href="/start" className="flex min-h-11 items-center rounded-full bg-fg px-4 text-sm font-medium text-bg sm:hidden">
-            תרגול חינם
+          {!focused && <><Link href={session ? "/account" : "/start"} className="flex min-h-11 items-center rounded-full bg-fg px-4 text-sm font-medium text-bg sm:hidden">
+            {session ? "אזור אישי" : "תרגול חינם"}
           </Link>
           <button
             type="button"

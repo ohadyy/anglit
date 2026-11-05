@@ -95,6 +95,7 @@ function TypeChooser({ paid, counts, dailyPool }: { paid: boolean; counts: Recor
       <Category title="תרגול נוסף">
         <MiniTile href="/learn/connectors" title="מילות קישור" text="שיעור קצר ו-30 שאלות" aside="ללמוד ←">{PREVIEWS.connectors}</MiniTile>
         <MiniTile href="/learn/affixes" title="תחיליות וסופיות" text="שיעור קצר ו-30 שאלות" aside="ללמוד ←">{PREVIEWS.affixes}</MiniTile>
+        <MiniTile href="/practice/writing" title="מטלת כתיבה" text="12 דקות, הקלדה, וטקסט לדוגמה" aside="לתרגל ←">{PREVIEWS.writing}</MiniTile>
       </Category>
 
       <Category title="משחקים">

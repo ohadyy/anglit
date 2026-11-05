@@ -5,6 +5,7 @@ import { FreeNextCard } from "@/components/FreeNextCard";
 import { useEffect, useRef, useState } from "react";
 import { QuestionView, TypeLabel, WordFormationView } from "@/components/QuestionView";
 import { isCorrectAnswer, type ExamQuestion, type QuestionType } from "@/content/questions";
+import { isQuestionType } from "@/content/questionLabels";
 import { TYPE_LABELS } from "@/content/questionLabels";
 import { recordAnswers } from "@/lib/mistakes";
 import { poolLevels } from "@/content/examPool";
@@ -16,6 +17,7 @@ import { TactileButton } from "@/components/TactileButton";
 import { HoldButton } from "@/components/HoldButton";
 import { LiquidGauge } from "@/components/LiquidGauge";
 import { ExtraTimePicker, useExtraTime, withExtraTime } from "@/components/ExtraTimePicker";
+import { WRITING_MIN_WORDS } from "@/content/writingTasks";
 
 type Phase = "intro" | "running" | "submitting" | "done";
 // Multiple choice stores the option index, word formation stores the typed word
@@ -35,6 +37,7 @@ export function ExamClient({
   kind,
   testNumber,
   freeUpsell = false,
+  inCourse = false,
   seen = [],
 }: {
   plan: ExamPlanItem[];
@@ -42,6 +45,8 @@ export function ExamClient({
   testNumber: string;
   /** The visitor has no paid access: show what to do next after the result */
   freeUpsell?: boolean;
+  /** The student is enrolled in the seminar: the result never sells it to them */
+  inCourse?: boolean;
   /** Pool items met in earlier tests; an adaptive test avoids them (sent back on submit) */
   seen?: string[];
 }) {
@@ -136,10 +141,17 @@ export function ExamClient({
           </p>
         )}
 
+        {plan.some((p) => p.section.type === "writing") && (
+          <p className="mt-3 text-sm leading-relaxed opacity-70">
+            במבחן הזה, כמו בחלק מהמבחנים האמיתיים, יש מטלת כתיבה אחת של 12 דקות במקום שני פרקי ניסיון. אין בה שאלות עם תשובה נכונה,
+            ולכן היא לא נכנסת להערכת הציון. מינימום <bdi dir="ltr">{WRITING_MIN_WORDS}</bdi> מילים.
+          </p>
+        )}
+
         <fieldset className="mt-8 text-start">
           <legend className="text-sm font-semibold">לפני שמתחילים: לכלול פרקי ניסיון?</legend>
           <p className="mt-2 text-sm leading-relaxed opacity-70">
-            במבחן האמיתי פרקי הניסיון תמיד מופיעים, ואי אפשר לבחור אותם. משקלם בציון קטן מאוד: טעות לא פוגעת, ותשובה נכונה
+            במבחן האמיתי פרקי הניסיון תמיד מופיעים, ואי אפשר לבחור אותם. יש מבחנים עם שני פרקי ניסיון (8 פרקים) ויש עם מטלת כתיבה אחת (7 פרקים), לא עם שניהם. משקלם בציון קטן מאוד: טעות לא פוגעת, ותשובה נכונה
             עשויה להעלות את הציון בעד {PILOT_MAX_BONUS} נקודות. באתר אפשר לתרגל גם רק את פרקי הליבה.
           </p>
           <div className="mt-4 grid gap-2">
@@ -204,7 +216,7 @@ export function ExamClient({
             </p>
           )}
         </div>
-        <Diagnosis tally={tally} />
+        <Diagnosis tally={tally} paid={!freeUpsell} inCourse={inCourse} />
         {freeUpsell ? (
           <FreeNextCard current="exam" />
         ) : (
@@ -217,6 +229,18 @@ export function ExamClient({
   }
 
   const current = activePlan[sectionIndex];
+  if (current.prompt) {
+    return (
+      <WritingRunner
+        key={sectionIndex}
+        prompt={current.prompt}
+        seconds={withExtraTime(current.section.minutes * 60, extraPct)}
+        sectionIndex={sectionIndex}
+        totalSections={activePlan.length}
+        onDone={() => handleSectionDone(answers)}
+      />
+    );
+  }
   return (
     <SectionRunner
       key={sectionIndex}
@@ -234,6 +258,7 @@ export function ExamClient({
 function tallyByType(plan: ExamPlanItem[], correctness: Record<string, boolean>): TypeTally {
   const out: TypeTally = [];
   for (const { section, questions } of plan) {
+    if (questions.length === 0) continue; // the writing task has no answer key
     let row = out.find((r) => r.type === section.type);
     if (!row) out.push((row = { type: section.type, correct: 0, total: 0 }));
     for (const q of questions) {
@@ -245,7 +270,7 @@ function tallyByType(plan: ExamPlanItem[], correctness: Record<string, boolean>)
 }
 
 // Shows where the points went, not how to fix it: the method is taught in the course
-function Diagnosis({ tally }: { tally: TypeTally }) {
+function Diagnosis({ tally, paid, inCourse }: { tally: TypeTally; paid: boolean; inCourse: boolean }) {
   const weakest = tally
     .filter((r) => r.correct < r.total)
     .sort((a, b) => a.correct / a.total - b.correct / b.total)[0];
@@ -273,20 +298,25 @@ function Diagnosis({ tally }: { tally: TypeTally }) {
       </ul>
       {weakest ? (
         <p className="mt-4 text-sm leading-relaxed opacity-80">
-          הכי הרבה נקודות הלכו על <strong>{TYPE_LABELS[weakest.type].he}</strong>. משם כדאי להתחיל. בסמינר יש לכל סוג שאלה
-          שיטה משלו, ועוברים עליה צעד אחרי צעד.
+          הכי הרבה נקודות הלכו על <strong>{TYPE_LABELS[weakest.type].he}</strong>. משם כדאי להתחיל.
+          {inCourse && " נעבור על זה יחד בשיעורים."}
         </p>
       ) : (
         <p className="mt-4 text-sm leading-relaxed opacity-80">בלי טעויות בכלל. נשאר לשמור על זה גם ביום המבחן.</p>
       )}
-      <div className="mt-4 flex flex-wrap gap-x-5">
-        <Link href="/practice?type=mistakes" className="flex min-h-11 items-center text-sm font-semibold underline underline-offset-4">
-          להסבר על הטעויות
-        </Link>
-        <Link href="/pricing" className="flex min-h-11 items-center text-sm underline underline-offset-4 opacity-70">
-          לפרטים על הסמינר
-        </Link>
-      </div>
+      {/* Only for students who have access: for everyone else these pages are locked, and the next step is shown below */}
+      {paid && (
+        <div className="mt-4 flex flex-wrap gap-x-5">
+          <Link href="/practice?type=mistakes" className="flex min-h-11 items-center text-sm font-semibold underline underline-offset-4">
+            להסבר על הטעויות
+          </Link>
+          {weakest && isQuestionType(weakest.type) && (
+            <Link href={`/practice?type=${weakest.type}`} className="flex min-h-11 items-center text-sm underline underline-offset-4 opacity-70">
+              לתרגל {TYPE_LABELS[weakest.type].he}
+            </Link>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -437,6 +467,87 @@ function SectionRunner({
                 : returnTo !== null
                   ? `חזרה לשאלה ${returnTo + 1}`
                   : "הפרק הבא"}
+            </TactileButton>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// The writing task of the 7-chapter exam: typed essay, own timer, nothing scored.
+// Keyed by sectionIndex in the parent, like SectionRunner, so the countdown starts fresh.
+function WritingRunner({
+  prompt,
+  seconds,
+  sectionIndex,
+  totalSections,
+  onDone,
+}: {
+  prompt: string;
+  seconds: number;
+  sectionIndex: number;
+  totalSections: number;
+  onDone: () => void;
+}) {
+  const [text, setText] = useState("");
+  const [secondsLeft, setSecondsLeft] = useState(seconds);
+  const doneRef = useRef(false);
+  const onDoneRef = useRef(onDone);
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  });
+
+  const finish = () => {
+    if (doneRef.current) return;
+    doneRef.current = true;
+    onDoneRef.current();
+  };
+
+  useEffect(() => {
+    if (secondsLeft <= 0) {
+      finish();
+      return;
+    }
+    const id = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
+    return () => clearTimeout(id);
+  }, [secondsLeft]);
+
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  const lastSection = sectionIndex + 1 === totalSections;
+  return (
+    <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-4 pb-32 pt-6 sm:px-6">
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span className="opacity-70">
+          פרק {sectionIndex + 1} מתוך {totalSections} · {TYPE_LABELS.writing.he}
+        </span>
+        <span className="rounded-full bg-white px-3 py-1 font-semibold tabular-nums">{formatTime(secondsLeft)}</span>
+      </div>
+      <p dir="ltr" className="mt-6 text-left text-lg font-medium leading-snug">{prompt}</p>
+      <p className={`mt-3 text-sm tabular-nums ${words >= WRITING_MIN_WORDS ? "font-semibold text-ok" : "opacity-70"}`}>
+        <bdi dir="ltr">{words} / {WRITING_MIN_WORDS}</bdi> מילים
+      </p>
+      <textarea
+        dir="ltr"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        autoComplete="off"
+        spellCheck={false}
+        aria-label="הטקסט שלכם"
+        className="mt-3 min-h-64 w-full flex-1 resize-none rounded-2xl border border-line bg-white p-4 text-left text-lg leading-relaxed text-ink outline-none focus:border-fg focus:ring-2 focus:ring-fg/15"
+      />
+      <div
+        className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-bg/95 backdrop-blur"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div className="mx-auto max-w-2xl px-4 py-3 sm:px-6">
+          {lastSection ? (
+            <HoldButton onComplete={finish} fullWidth>
+              החזיקו להגשת המבחן
+            </HoldButton>
+          ) : (
+            <TactileButton onClick={finish} fullWidth>
+              הפרק הבא
             </TactileButton>
           )}
         </div>

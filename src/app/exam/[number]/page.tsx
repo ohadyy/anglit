@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { hasPaidAccess } from "@/lib/access";
+import { hasCourse, hasPaidAccess } from "@/lib/access";
 import { findExamTest } from "@/content/examTests";
-import { attemptedTestNumbers, isListed, seenPoolItems } from "@/lib/listedTests";
+import { seenPoolItems } from "@/lib/listedTests";
 import { buildExam } from "@/lib/examStructure";
 import { passages, type Passage } from "@/content/questions";
 import { poolPassages } from "@/content/examPool";
@@ -21,11 +21,12 @@ export const metadata: Metadata = {
 export default async function ExamRunPage({ params }: PageProps<"/exam/[number]">) {
   const { number } = await params;
   const test = findExamTest(number);
-  // An original test nobody ever took is off the site, link included
-  if (!test || !isListed(test, await attemptedTestNumbers())) notFound();
+  // Only the adaptive tests can be taken. The original (frozen) ones stay in students' history, nothing more.
+  if (!test?.adaptive) notFound();
 
   const session = await auth.api.getSession({ headers: await headers() });
   const paid = session ? await hasPaidAccess(session.user.id) : false;
+  const inCourse = session ? await hasCourse(session.user.id) : false;
 
   if (!test.free && !paid) {
     return <LockedExam />;
@@ -43,7 +44,7 @@ export default async function ExamRunPage({ params }: PageProps<"/exam/[number]"
     <>
       <ReadAloud />
       <PassageProvider passages={usedPassages}>
-        <ExamClient plan={plan} kind="open" testNumber={number} freeUpsell={!paid} seen={seen} />
+        <ExamClient plan={plan} kind="open" testNumber={number} freeUpsell={!paid} inCourse={inCourse} seen={seen} />
       </PassageProvider>
     </>
   );

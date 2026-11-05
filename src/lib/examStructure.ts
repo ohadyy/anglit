@@ -4,6 +4,7 @@ import { findExamTest, grammarSetIds } from "@/content/examTests";
 import { frozenTests } from "@/content/frozenTests";
 import { poolPassages, poolReading, poolRestatement, poolSentence } from "@/content/examPool";
 import { difficultyOf, estimateAbility } from "@/lib/examScore";
+import { WRITING_MINUTES, writingTasks } from "@/content/writingTasks";
 
 // The structure follows NITE's published format (see the practice-test guide):
 // six core chapters, the same in every test, then two experimental chapters.
@@ -50,7 +51,18 @@ const pilotCounts = PILOT_CHAPTER_TYPES.map((t) => PILOT_CHAPTER[t].count);
 export const EXAM_PILOT_QUESTIONS_RANGE = `${2 * Math.min(...pilotCounts)}–${2 * Math.max(...pilotCounts)}`;
 
 /** One section of a fixed test, with its questions */
-export type ExamPlanItem = { section: ExamSection; questions: ExamQuestion[] };
+/** `prompt` is set only on a writing chapter, which has no questions */
+export type ExamPlanItem = { section: ExamSection; questions: ExamQuestion[]; prompt?: string };
+
+/** The writing task of the 7-chapter version. It replaces the two pilot chapters, never joins them.
+ * Like the pilot chapters it is experimental: nothing in it is scored. */
+function writingChapter(testNumber: string): ExamPlanItem {
+  return {
+    section: { type: "writing", count: 0, minutes: WRITING_MINUTES, pilot: true },
+    questions: [],
+    prompt: writingTasks[Number(testNumber) % writingTasks.length].prompt,
+  };
+}
 
 /** Questions and minutes for a test, with or without the pilot sections */
 export function planTotals(plan: ExamPlanItem[], includePilot: boolean) {
@@ -194,5 +206,5 @@ export function buildExam(testNumber: string, answers: Answers = {}, seen: reado
   if (!test.adaptive) throw new Error(`exam test ${testNumber} is neither frozen nor adaptive`);
   const times = new Map<string, number>();
   for (const id of seen) times.set(id, (times.get(id) ?? 0) + 1);
-  return [...buildAdaptive(testNumber, answers, times), ...pilotChapters(testNumber)];
+  return [...buildAdaptive(testNumber, answers, times), ...(test.writing ? [writingChapter(testNumber)] : pilotChapters(testNumber))];
 }

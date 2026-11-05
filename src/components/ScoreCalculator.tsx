@@ -139,7 +139,8 @@ export function ScoreCalculator() {
           </p>
           <p className="mt-1 text-sm opacity-70">{c.costLabel}</p>
           <p className="mt-4 font-semibold">{c.costPitch}</p>
-          <Link href="/sign-up" className="mt-3 inline-flex rounded-full bg-fg px-6 py-3.5 font-semibold text-bg">
+          {/* Checkout handles every visitor: guests sign up there, members get their price, seminar students go to their cohort */}
+          <Link href="/checkout?product=course" className="mt-3 inline-flex rounded-full bg-fg px-6 py-3.5 font-semibold text-bg">
             {c.costCta}
           </Link>
         </div>

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getViewer } from "@/lib/viewer";
 import { copy } from "@/content/copy";
 import { FREE_ACTIVITIES as CARDS } from "@/content/freePractice";
 import { FreePreview } from "@/components/FreePreviews";
@@ -10,7 +12,11 @@ export const metadata: Metadata = {
 };
 
 
-export default function StartPage() {
+export default async function StartPage() {
+  const { tier } = await getViewer();
+  // The free samples are a taste for visitors; a paying member has the full practice
+  if (tier === "access" || tier === "course") redirect("/practice");
+
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-4 py-12 sm:px-6">
       <header>
@@ -46,7 +52,7 @@ export default function StartPage() {
         <h2 className="text-xl font-bold">{copy.onboardingPersuadeTitle}</h2>
         <p className="mt-3 leading-relaxed opacity-80">{copy.onboardingPersuadeText}</p>
         <Link
-          href="/sign-up"
+          href={tier === "guest" ? "/sign-up" : "/checkout?product=course"}
           className="mt-6 flex w-full items-center justify-center rounded-full bg-fg px-6 py-4 font-semibold text-bg sm:w-auto sm:px-10"
         >
           {copy.heroCta2}

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { HeroDecor } from "@/components/HeroDecor";
 import { HomeIntro } from "@/components/HomeIntro";
 import { TestimonialBubble } from "@/components/TestimonialBubble";
@@ -16,14 +17,26 @@ import { examDatesCopy } from "@/content/examDates";
 import { calculatorCopy, guideCopy } from "@/content/examGuide";
 import { ScoreCalculator } from "@/components/ScoreCalculator";
 import { upcomingCourseOffer } from "@/lib/cohorts";
+import { getViewer, isLoyal } from "@/lib/viewer";
+import { TierPreview } from "@/components/TierPreview";
 import { organizationJsonLd } from "@/lib/organizationJsonLd";
 
 // Shows the live cohort offer (price, seats left), so this page cannot be cached at build time
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
-  const offer = await upcomingCourseOffer();
+export default async function Home({ searchParams }: { searchParams: Promise<{ as?: string }> }) {
+  const { as } = await searchParams;
+  const [offer, viewer] = await Promise.all([upcomingCourseOffer(), getViewer(as)]);
+  // A seminar student has already bought everything this page sells: their home is the account.
+  // Staff keep the home page (it is where they work on the site) unless they preview as a student.
+  if (viewer.tier === "course" && (!viewer.staff || as === "course")) redirect("/account");
   const aboutParagraphs = copy.aboutText.split("\n\n");
+  // The calls to action follow what the visitor already has: a guest signs up, a signed-in visitor goes
+  // straight to paying (sign-up would only bounce them to /account).
+  const { tier } = viewer;
+  const primary = { href: tier === "guest" ? "/sign-up" : "/checkout?product=course", label: copy.heroCta2 };
+  const secondary = tier === "guest" || tier === "free" ? { href: "/start", label: copy.heroCta1 } : { href: "/account", label: copy.memberAccountCta };
+  const heroNote = tier === "access" || tier === "course" ? copy.memberAccessNote : copy.heroNote;
 
   return (
     <HomeIntro>
@@ -34,6 +47,11 @@ export default async function Home() {
         <HeroDecor mark="a" font="gevora" />
 
         <div className="relative z-10 mx-auto flex max-w-3xl flex-1 flex-col items-center justify-center px-4 pb-28 pt-32 text-center sm:px-6">
+          {viewer.staff && (
+            <div className="mb-8">
+              <TierPreview viewer={viewer} path="/" />
+            </div>
+          )}
           <TypingHeadline
             className="rise text-[2.75rem] font-bold leading-[1.05] tracking-[-0.03em] text-balance sm:text-7xl"
             marked="שבוע אחד"
@@ -47,15 +65,15 @@ export default async function Home() {
             {copy.heroSub}
           </p>
           <div className="rise mx-auto mt-10 flex w-full max-w-sm flex-col items-center gap-3" style={{ animationDelay: "320ms" }}>
-            <TactileLink href="/sign-up" size="lg" fullWidth>
-              {copy.heroCta2}
+            <TactileLink href={primary.href} size="lg" fullWidth>
+              {primary.label}
             </TactileLink>
-            <Link href="/start" className="inline-flex min-h-11 items-center gap-2 font-semibold underline underline-offset-4">
-              {copy.heroCta1} <span aria-hidden="true">←</span>
+            <Link href={secondary.href} className="inline-flex min-h-11 items-center gap-2 font-semibold underline underline-offset-4">
+              {secondary.label} <span aria-hidden="true">←</span>
             </Link>
           </div>
           <p className="rise mt-4 text-sm opacity-70" style={{ animationDelay: "420ms" }}>
-            {copy.heroNote}
+            {heroNote}
           </p>
           <div className="rise w-full" style={{ animationDelay: "520ms" }}>
             <HeroCards />
@@ -106,8 +124,8 @@ export default async function Home() {
               )}
             </div>
             <div className="mt-16 flex justify-center sm:mt-20">
-              <TactileLink href="/sign-up" size="lg">
-                {copy.heroCta2}
+              <TactileLink href={primary.href} size="lg">
+                {primary.label}
               </TactileLink>
             </div>
           </div>
@@ -162,7 +180,7 @@ export default async function Home() {
             {/* Side by side on wider screens: the price on one side, the guarantee that removes the risk on the other */}
             <div className="mx-auto mt-6 grid max-w-md gap-4 md:max-w-none md:grid-cols-2 md:gap-6">
               <div className="flex flex-col justify-center rounded-3xl border border-line bg-white p-8 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-10">
-                <CourseOfferPrice offer={offer} big />
+                <CourseOfferPrice offer={offer} big loyal={isLoyal(viewer)} />
                 <CourseOfferCta className="mt-10 w-full">{copy.heroCta2}</CourseOfferCta>
                 <Link href="/pricing" className="mx-auto mt-5 inline-flex min-h-11 items-center text-sm underline underline-offset-4 opacity-70 transition-opacity hover:opacity-100">
                   {copy.homePricingCta}
@@ -231,7 +249,7 @@ export default async function Home() {
         <section className="border-t border-line">
           <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
             <h2 className="text-2xl font-bold sm:text-3xl">{copy.closingTitle}</h2>
-            <Link href="/sign-up" className="mt-6 inline-flex touch-manipulation rounded-full bg-fg px-7 py-4 font-semibold text-bg transition-opacity hover:opacity-85 active:opacity-75 sm:w-auto sm:px-10">
+            <Link href={primary.href} className="mt-6 inline-flex touch-manipulation rounded-full bg-fg px-7 py-4 font-semibold text-bg transition-opacity hover:opacity-85 active:opacity-75 sm:w-auto sm:px-10">
               {copy.guaranteeCta}
             </Link>
           </div>

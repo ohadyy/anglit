@@ -1,103 +1,100 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { Fragment } from "react";
 import Link from "next/link";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { hasPaidAccess, isStaff } from "@/lib/access";
 import { db } from "@/db";
 import { examAttempts } from "@/db/schema";
-import { examTests } from "@/content/examTests";
-import { attemptedTestNumbers, isListed } from "@/lib/listedTests";
-import { EXAM_CORE_QUESTIONS, EXAM_PILOT_QUESTIONS_RANGE } from "@/lib/examStructure";
+import { examTests, findExamTest } from "@/content/examTests";
 import { PlatinumEntry } from "./PlatinumEntry";
-import { LockIcon } from "@/components/LockIcon";
+import { TactileLink } from "@/components/TactileButton";
+import Image from "next/image";
+import { copy } from "@/content/copy";
 
 export const metadata: Metadata = {
-  title: "מבחני תרגול",
+  title: copy.examTitle,
   robots: { index: false },
 };
+
+const dateFormat = new Intl.DateTimeFormat("he-IL", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jerusalem" });
 
 export default async function ExamListPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   const paid = session ? await hasPaidAccess(session.user.id) : false;
   const staff = session ? await isStaff(session.user.id) : false;
 
-  // The best score so far for each test. A retake can only raise it.
+  // This student's finished practice tests, newest first. Platinum and the staff test have their own pages.
   const attempts = session
-    ? await db
-        .select({ testNumber: examAttempts.testNumber, estimatedScore: examAttempts.estimatedScore })
-        .from(examAttempts)
-        .where(eq(examAttempts.userId, session.user.id))
+    ? (
+        await db
+          .select({ testNumber: examAttempts.testNumber, estimatedScore: examAttempts.estimatedScore, completedAt: examAttempts.completedAt })
+          .from(examAttempts)
+          .where(eq(examAttempts.userId, session.user.id))
+          .orderBy(desc(examAttempts.completedAt))
+      ).filter((a) => a.testNumber && findExamTest(a.testNumber))
     : [];
-  const bestByTest = new Map<string, number>();
-  for (const a of attempts) {
-    if (!a.testNumber) continue;
-    bestByTest.set(a.testNumber, Math.max(bestByTest.get(a.testNumber) ?? 0, a.estimatedScore));
-  }
 
-  // The new adaptive tests come first, so they are the ones students take. Without paid
-  // access the free test leads. Original tests that nobody has ever taken are not listed.
-  const attempted = await attemptedTestNumbers();
-  const listed = examTests.filter((t) => isListed(t, attempted));
-  const ordered = [
-    ...listed.filter((t) => !paid && t.free),
-    ...listed.filter((t) => t.adaptive && !(!paid && t.free)),
-    ...listed.filter((t) => !t.adaptive && !(!paid && t.free)),
-  ];
+  // One button, one choice: the student never picks a number. A paying student is sent to any of the
+  // adaptive tests at random (/exam/start); a test taken before is a different test the second time anyway.
+  // Without paid access the one free test is the only test; after it, the way forward is the seminar.
+  const free = examTests.find((t) => t.free);
+  const freeTaken = !!free && attempts.some((a) => a.testNumber === free.number);
+  const startHref = paid ? "/exam/start" : free && !freeTaken ? `/exam/${free.number}` : null;
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col px-4 py-10 sm:px-6">
-      <h1 className="font-display text-4xl font-bold leading-tight sm:text-5xl"><mark className="pink">מבחני תרגול</mark></h1>
-      <p className="mt-2 leading-relaxed opacity-80">
-        כל מבחן מופיע עם מספר קבוע, כדי שתוכלו לחזור אליו. {EXAM_CORE_QUESTIONS} שאלות ליבה
-        ועוד {EXAM_PILOT_QUESTIONS_RANGE} שאלות ניסיון. במבחן האמיתי מופיעים תמיד פרקי ניסיון, והמבחן נמשך כ-50 דקות.
-      </p>
-      {!paid && (
-        <p className="mt-2 text-sm leading-relaxed opacity-70">
-          מבחן אחד פתוח לכולם בחינם. שאר המבחנים נפתחים עם התשלום על הסמינר.
-        </p>
+      <h1 className="font-display text-4xl font-bold leading-tight sm:text-5xl"><mark className="pink">{copy.examTitle}</mark></h1>
+      <p className="mt-2 leading-relaxed opacity-80">{copy.examSub}</p>
+
+      {/* The one thing on this page: a big card around the start button */}
+      <div className="mt-8 flex flex-col items-center gap-4 rounded-[2rem] border border-line bg-white p-6 shadow-[0_30px_60px_-24px_rgb(14_8_82/0.25)]">
+        <Image src="/winning.svg" alt="" width={2825} height={1910} priority className="h-auto w-56" />
+        {startHref ? (
+          <>
+            <TactileLink href={startHref} prefetch={false} size="lg" fullWidth>
+              <span className="text-xl">{copy.examStartCta}</span>
+            </TactileLink>
+            {!paid ? (
+              <p className="text-sm font-semibold text-ok">המבחן הראשון חינם</p>
+            ) : (
+              attempts.length > 0 && <p className="text-sm opacity-70">{copy.examNextLabel.replace("{n}", String(attempts.length + 1))}</p>
+            )}
+          </>
+        ) : (
+          <>
+            <TactileLink href="/pricing" size="lg" fullWidth>
+              להמשך התרגול
+            </TactileLink>
+            <p className="text-center text-sm leading-relaxed opacity-70">שאר המבחנים נפתחים עם התשלום על הסמינר.</p>
+          </>
+        )}
+      </div>
+
+      {attempts.length > 0 && (
+        <section className="mt-12">
+          <h2 className="text-sm font-semibold opacity-70">{copy.examHistoryTitle}</h2>
+          <ul className="mt-3 divide-y divide-line rounded-2xl border border-line bg-white">
+            {/* Numbered by order taken (newest first), so the list reads as a series of different exams */}
+            {attempts.map((a, i) => (
+              <li key={i} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                <span>
+                  <span className="font-semibold">מבחן {attempts.length - i}</span>
+                  <span className="opacity-70"> · {dateFormat.format(a.completedAt)}</span>
+                </span>
+                <span className="font-semibold tabular-nums">
+                  {a.estimatedScore}
+                  <span className="ms-1 text-xs font-normal opacity-60">מתוך 150</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
-      <ol className="mt-6 flex flex-col gap-3">
-        {ordered.map((test, i) => {
-          const best = bestByTest.get(test.number);
-          const locked = !paid && !test.free;
-          return (
-            <Fragment key={test.number}>
-            <li
-              className="flex items-center justify-between gap-3 rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]"
-            >
-              <div className="min-w-0">
-                <p className="text-sm opacity-70">מבחן מספר</p>
-                <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                  <p className="text-lg font-bold tabular-nums tracking-tight">{test.number}</p>
-                  {best !== undefined && (
-                    <p className="text-3xl font-bold tabular-nums text-fg">
-                      {best}
-                      <span className="ms-1 text-sm font-semibold opacity-70">מתוך 150</span>
-                    </p>
-                  )}
-                  {!paid && test.free && <p className="text-sm font-semibold text-ok">חינם</p>}
-                </div>
-              </div>
-              <Link
-                href={locked ? "/pricing" : `/exam/${test.number}`}
-                className="flex shrink-0 items-center gap-2 rounded-full bg-fg px-5 py-2.5 text-sm font-semibold text-bg"
-              >
-                {locked ? <LockIcon className="size-4" /> : best !== undefined ? "שפר" : "להתחיל"}
-              </Link>
-            </li>
-            {/* Between tests 5 and 6: not first, but not buried at the bottom either */}
-            {i === 4 && (
-              <li>
-                <PlatinumEntry />
-              </li>
-            )}
-            </Fragment>
-          );
-        })}
-      </ol>
+      <div className="mt-12">
+        <PlatinumEntry />
+      </div>
 
       {staff && (
         <Link href="/exam/easy" className="mt-6 rounded-3xl border border-dashed border-line p-5 text-center font-semibold">

@@ -32,12 +32,12 @@ export default async function AccountPage() {
     hasCourse(session.user.id),
   ]);
 
-  const openTest = attempts.find((a) => a.kind === "open");
   const closeTest = attempts.find((a) => a.kind === "close");
   // Platinum attempts are a harder series, so they never count toward the opening-to-latest progress
   const regular = attempts.filter((a) => !a.testNumber?.startsWith("P"));
   // attempts are newest first, so the last open test is the first one taken: the baseline
   const openRegular = regular.findLast((a) => a.kind === "open");
+  const openTest = openRegular;
   const latestTest = regular[0] && regular[0].id !== openRegular?.id ? regular[0] : undefined;
   const cohort = course ? await cohortOptionsFor(session.user.id) : null;
 
@@ -74,7 +74,7 @@ export default async function AccountPage() {
       )}
 
       <nav className="mt-8 grid grid-cols-2 gap-3" aria-label="אזורי הלימוד">
-        <Tile delay={120} href={paid ? "/exam" : "/pricing"} title="מבחנים" text={paid ? "20 מבחני תרגול" : copy.accountLockedLabel} badge={paid && attempts.length > 0 ? `${attempts.length} ניסיונות` : undefined} locked={!paid} preview={PREVIEWS.exams} />
+        <Tile delay={120} href={paid ? "/exam" : "/pricing"} title="מבחנים" text={paid ? "מבחן חדש בכל פעם" : copy.accountLockedLabel} badge={paid && attempts.length > 0 ? `${attempts.length} ניסיונות` : undefined} locked={!paid} preview={PREVIEWS.exams} />
         <Tile delay={180} href="/practice" title="תרגול חופשי" text={paid ? "כל סוגי השאלות, עם הסבר" : "5 שאלות חינם לדוגמה"} badge={paid ? undefined : "חינם"} locked={false} preview={PREVIEWS.sentence} />
         <Tile delay={240} href={paid ? "/vocabulary" : "/pricing"} title="אוצר מילים" text={paid ? "לפי רמת השליטה שלכם" : copy.accountLockedLabel} locked={!paid} preview={PREVIEWS.vocab} />
         <Tile

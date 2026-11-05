@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { upcomingCourseOffer } from "@/lib/cohorts";
-import { hasCourse } from "@/lib/access";
+import { paidProducts } from "@/lib/access";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { checkoutCopy, getProduct } from "@/content/pricingCopy";
+import { checkoutCopy, getProduct, loyaltyLabel, loyaltyPrice } from "@/content/pricingCopy";
 import { OfferToast } from "./OfferToast";
 import { CheckoutSummaryBar } from "@/components/CheckoutSummaryBar";
 
@@ -27,9 +27,15 @@ export default async function CheckoutPage({
 
   const next = `/checkout?product=${product.id}`;
   const offer = product.id === "course" ? await upcomingCourseOffer() : null;
-  // Someone who already bought the course goes to their cohort instead of paying twice
-  if (session && product.id === "course" && (await hasCourse(session.user.id))) redirect("/account#cohort");
+  const owned = session ? await paidProducts(session.user.id) : [];
+  // Never charge twice: the course owner goes to their cohort, and anyone who paid already has site access
+  if (product.id === "course" && owned.includes("course")) redirect("/account#cohort");
+  if (product.id === "access" && owned.length > 0) redirect("/account");
   const joiningCohort = !!session && product.id === "course" && !!offer;
+  // Same rule as /api/checkout/create, which charges this price
+  const loyal = product.id === "course" && owned.length > 0;
+  const listIls = offer ? offer.priceIls : Number(product.price);
+  const priceIls = loyal ? loyaltyPrice(listIls) : listIls;
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -48,15 +54,20 @@ export default async function CheckoutPage({
 
             <div className="mt-5 flex items-end justify-between gap-4">
               <div>
+                {loyal && (
+                  <p className="text-sm font-semibold text-ok">
+                    <s className="text-warn">{listIls} ₪</s> · {loyaltyLabel}
+                  </p>
+                )}
                 {offer ? (
                   <>
-                    <p className="mt-1 text-5xl font-bold tracking-tight">{offer.priceIls} ₪</p>
+                    <p className="mt-1 text-5xl font-bold tracking-tight">{priceIls} ₪</p>
                     <p className="mt-1 text-sm opacity-70">למחזור {offer.label} בלבד · חוזר למחיר מלא למחזור הבא</p>
                     <p className="mt-1 text-sm opacity-70">מחיר הסמינר: {product.price} ₪</p>
                   </>
                 ) : (
                   <>
-                    <p className="mt-1 text-5xl font-bold tracking-tight">{product.price} ₪</p>
+                    <p className="mt-1 text-5xl font-bold tracking-tight">{priceIls} ₪</p>
                     {product.id !== "course" && <p className="mt-1 text-sm opacity-70">{product.priceUnit}</p>}
                   </>
                 )}
@@ -194,13 +205,13 @@ export default async function CheckoutPage({
 
       <CheckoutSummaryBar
         name={product.name}
-        price={offer ? String(offer.priceIls) : product.price}
-        note={offer ? `למחזור ${offer.label} בלבד · חוזר למחיר מלא למחזור הבא` : product.priceUnit}
+        price={String(priceIls)}
+        note={[loyal && loyaltyLabel, offer ? `למחזור ${offer.label} בלבד · חוזר למחיר מלא למחזור הבא` : product.priceUnit].filter(Boolean).join(" · ")}
         included={product.included}
         excluded={product.excluded}
       />
 
-      {offer && <OfferToast priceIls={offer.priceIls} regularPrice={product.price} />}
+      {offer && <OfferToast priceIls={priceIls} regularPrice={product.price} />}
 
     </div>
   );

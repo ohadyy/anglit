@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 import Link from "next/link";
-import { featureRows, pricingCopy, products, type Product } from "@/content/pricingCopy";
+import { featureRows, getProduct, loyaltyLabel, loyaltyPrice, pricingCopy, products, type Product } from "@/content/pricingCopy";
 import { LeadForm } from "@/components/LeadForm";
 import { FeatureToggle } from "@/components/FeatureToggle";
+import { TierPreview } from "@/components/TierPreview";
 import { upcomingCourseOffer, type CourseOffer } from "@/lib/cohorts";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
-import { hasCourse } from "@/lib/access";
+import { getViewer, isLoyal } from "@/lib/viewer";
 
 // Shows the live cohort offer and seat count, so this page cannot be cached at build time
 export const dynamic = "force-dynamic";
@@ -24,51 +23,88 @@ const desktopOrder: Record<Product["id"], string> = {
   private: "order-3 lg:order-1",
 };
 
-export default async function PricingPage() {
-  const offer = await upcomingCourseOffer();
-  const session = await auth.api.getSession({ headers: await headers() });
-  const boughtCourse = session ? await hasCourse(session.user.id) : false;
+// The grid narrows when a member already owns some of the products
+const gridFor: Record<number, string> = { 1: "max-w-md", 2: "max-w-3xl lg:grid-cols-2", 3: "max-w-5xl lg:grid-cols-3" };
+
+export default async function PricingPage({ searchParams }: { searchParams: Promise<{ as?: string }> }) {
+  const { as } = await searchParams;
+  const [offer, viewer] = await Promise.all([upcomingCourseOffer(), getViewer(as)]);
+  const { member } = pricingCopy;
+  const paid = viewer.tier === "access" || viewer.tier === "course";
+  const loyal = isLoyal(viewer);
+  // Never offer what they already have. Every product includes site access, so a paying member never sees it.
+  const shown = products.filter((p) => !viewer.owned.includes(p.id) && !(p.id === "access" && paid));
+  const ownedNames = viewer.owned.map((id) => getProduct(id)?.name).filter(Boolean).join(" + ") || getProduct("access")?.name;
+
+  const hero =
+    viewer.tier === "course"
+      ? { eyebrow: `${member.yourPlan}: ${ownedNames}`, title: shown.length ? member.courseTitle : member.allSetTitle, sub: shown.length ? member.courseSub : member.allSetSub }
+      : viewer.tier === "access"
+        ? { eyebrow: `${member.yourPlan}: ${ownedNames}`, title: member.accessTitle, sub: member.accessSub }
+        : null;
+
   return (
     <div className="flex min-h-dvh flex-col">
       <main className="flex-1">
       <BreadcrumbJsonLd trail={[{ name: "מחיר", path: "/pricing" }]} />
+        <TierPreview viewer={viewer} path="/pricing" />
         <section className="mx-auto max-w-3xl px-4 pb-10 pt-6 text-center sm:px-6">
-          <p className="text-sm font-semibold tracking-[0.08em] opacity-70">{pricingCopy.eyebrow}</p>
+          <p className="text-sm font-semibold tracking-[0.08em] opacity-70">{hero ? hero.eyebrow : pricingCopy.eyebrow}</p>
           <h1 className="font-display mt-3 text-4xl font-bold leading-[1.1] tracking-[-0.02em] text-balance sm:text-5xl">
-            {pricingCopy.title}
+            {hero ? hero.title : pricingCopy.title}
           </h1>
           <p className="mx-auto mt-4 max-w-md text-lg leading-relaxed opacity-80">
-            {pricingCopy.sub.split("פעם אחת").map((part, i, all) => (
-              <span key={i}>
-                {part}
-                {i < all.length - 1 && <mark className="pink">פעם אחת</mark>}
-              </span>
-            ))}
+            {hero
+              ? hero.sub
+              : pricingCopy.sub.split("פעם אחת").map((part, i, all) => (
+                  <span key={i}>
+                    {part}
+                    {i < all.length - 1 && <mark className="pink">פעם אחת</mark>}
+                  </span>
+                ))}
           </p>
-        </section>
-
-        <section className="px-4 sm:px-6">
-          <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-3 lg:items-stretch">
-            {products.map((product, i) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                className={desktopOrder[product.id]}
-                delay={i * 140}
-                offer={product.id === "course" ? offer : null}
-              />
-            ))}
-          </div>
-          <div className="mt-8 flex justify-center">
-            <Link
-              href={!session ? "/sign-up" : boughtCourse ? "/account#cohort" : "/checkout?product=course"}
-              className="rounded-full border border-fg/25 px-6 py-3 font-semibold hover:bg-fg/5"
-            >
-              {pricingCopy.cta}
+          {viewer.tier === "course" && (
+            <Link href="/account" className="mt-6 inline-flex min-h-12 items-center justify-center rounded-full bg-fg px-8 py-3 font-semibold text-bg">
+              {member.courseCta}
             </Link>
-          </div>
+          )}
         </section>
 
+        {shown.length > 0 && (
+          <section className="px-4 sm:px-6">
+            {viewer.tier === "course" && (
+              <div className="mx-auto mb-6 max-w-md text-center">
+                <h2 className="text-2xl font-bold">{member.privateTitle}</h2>
+                <p className="mt-2 leading-relaxed opacity-80">{member.privateSub}</p>
+              </div>
+            )}
+            <div className={`mx-auto grid gap-6 lg:items-stretch ${gridFor[shown.length]}`}>
+              {shown.map((product, i) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  className={desktopOrder[product.id]}
+                  delay={i * 140}
+                  offer={product.id === "course" ? offer : null}
+                  loyal={loyal && product.id === "course"}
+                />
+              ))}
+            </div>
+            {viewer.tier !== "course" && (
+              <div className="mt-8 flex justify-center">
+                <Link
+                  href={viewer.tier === "guest" ? "/sign-up" : "/checkout?product=course"}
+                  className="rounded-full border border-fg/25 px-6 py-3 font-semibold hover:bg-fg/5"
+                >
+                  {viewer.tier === "access" ? member.accessCta : pricingCopy.cta}
+                </Link>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* The FAQ is about choosing a product; a seminar student has already chosen */}
+        {viewer.tier !== "course" && (
         <section className="mt-16 border-t border-line">
           <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
             <h2 className="text-center text-2xl font-bold">{pricingCopy.faqTitle}</h2>
@@ -86,12 +122,16 @@ export default async function PricingPage() {
             </div>
           </div>
         </section>
+        )}
 
-        <section className="px-4 py-14 sm:px-6">
-          <div className="mx-auto max-w-md">
-            <LeadForm source="pricing" />
-          </div>
-        </section>
+        {/* We already have a paying member's details, so no "leave your details" form */}
+        {!paid && (
+          <section className="px-4 py-14 sm:px-6">
+            <div className="mx-auto max-w-md">
+              <LeadForm source="pricing" />
+            </div>
+          </section>
+        )}
       </main>
 
     </div>
@@ -103,13 +143,16 @@ function ProductCard({
   className,
   delay,
   offer,
+  loyal,
 }: {
   product: Product;
   className: string;
   delay: number;
   offer: CourseOffer | null;
+  loyal: boolean;
 }) {
   const recommended = !!product.badge;
+  const listIls = offer ? offer.priceIls : Number(product.price);
 
   return (
     <div
@@ -126,7 +169,20 @@ function ProductCard({
 
       <div className="flex flex-col lg:min-h-[17rem]">
       <p className="text-sm opacity-70">{product.name}</p>
-      {offer ? (
+      {loyal ? (
+        <>
+          <p className="mt-3 text-2xl">
+            <s className="text-warn">{listIls} ₪</s>
+          </p>
+          <p className="mt-1 text-6xl font-bold tracking-tight text-ok">{loyaltyPrice(listIls)} ₪</p>
+          <p className="mt-4 rounded-full bg-ok/15 px-4 py-2 text-sm font-semibold text-ok">{loyaltyLabel}</p>
+          {offer && (
+            <p className="mt-3 rounded-full border border-warn/40 bg-warn/10 px-4 py-2 text-sm font-semibold text-warn">
+              למחזור {offer.label} בלבד · חוזר למחיר מלא למחזור הבא
+            </p>
+          )}
+        </>
+      ) : offer ? (
         <>
           <p className="mt-3 text-6xl font-bold tracking-tight text-ok">{offer.priceIls}</p>
           <p className="mt-1 text-sm opacity-70">₪ למחזור {offer.label} בלבד</p>

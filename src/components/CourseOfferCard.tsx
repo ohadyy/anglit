@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { CourseOffer } from "@/lib/cohorts";
-import { getProduct } from "@/content/pricingCopy";
+import { getProduct, loyaltyLabel, loyaltyPrice } from "@/content/pricingCopy";
 
 // The regular price comes from the same product list as the pricing page
 export const COURSE_REGULAR_PRICE = getProduct("course")?.price ?? "347";
@@ -19,8 +19,22 @@ export function CourseOfferCta({ className = "", children }: { className?: strin
 
 // The price block shows the live offer when there is one, and the regular price otherwise
 // `big`: the roomier home-page version, with a larger price and without the "one-time payment" line
-export function CourseOfferPrice({ offer, align = "center", big = false }: { offer: CourseOffer | null; align?: "center" | "start"; big?: boolean }) {
+// `loyal`: an existing customer, who sees (and is charged) the loyalty price
+export function CourseOfferPrice({ offer, align = "center", big = false, loyal = false }: { offer: CourseOffer | null; align?: "center" | "start"; big?: boolean; loyal?: boolean }) {
   const text = align === "center" ? "text-center" : "text-start";
+  if (loyal) {
+    const listIls = offer ? offer.priceIls : Number(COURSE_REGULAR_PRICE);
+    return (
+      <div className={text}>
+        <p className="flex items-center justify-center gap-4 text-lg">
+          <s className="text-warn tabular-nums"><span className="sr-only">מחיר מקורי </span>{listIls} ₪</s>
+          <span className="opacity-70">{loyaltyLabel}</span>
+        </p>
+        <p className={`font-bold tracking-tight tabular-nums text-ok ${big ? "mt-4 text-6xl" : "text-4xl"}`}>{loyaltyPrice(listIls)} ₪</p>
+        {offer && <p className="mt-2 text-sm tabular-nums opacity-80">למחזור {offer.label}. נשארו {offer.seatsLeft} מקומות.</p>}
+      </div>
+    );
+  }
   if (!offer) {
     return (
       <div className={text}>

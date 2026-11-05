@@ -10,6 +10,7 @@ export const TYPE_LABELS: Record<QuestionType, { he: string; en: string }> = {
   grammar: { he: "דקדוק בהקשר", en: "Grammar in Context" },
   audiocomplete: { he: "השלמת קטע שמע", en: "Listening Text Continuation" },
   wordformation: { he: "יצירת מילה", en: "Word Formation" },
+  writing: { he: "מטלת כתיבה", en: "Writing Task" },
 };
 
 /** The three types the homepage shows as free-practice cards */

@@ -98,6 +98,11 @@ export function getProduct(id: string | null | undefined): Product | undefined {
   return products.find((p) => p.id === id);
 }
 
+// Anyone who already paid for something gets this much off the seminar. The checkout API charges the same number.
+export const LOYALTY_PERCENT = 10;
+export const loyaltyPrice = (ils: number) => Math.round((ils * (100 - LOYALTY_PERCENT)) / 100);
+export const loyaltyLabel = `${LOYALTY_PERCENT}% הנחה ללקוחות קיימים`;
+
 export const checkoutCopy = {
   title: "השלמת הרכישה",
   summaryTitle: "מה אתם רוכשים",
@@ -134,6 +139,22 @@ export const pricingCopy = {
 
   payCta: "לתשלום",
   cta: "הרשמה למחזור הקרוב",
+
+  // The page changes with what the signed-in visitor already bought
+  member: {
+    yourPlan: "המסלול שלכם",
+    accessTitle: "הצעד הבא: הסמינר",
+    accessSub:
+      "כבר יש לכם גישה לאתר. בסמינר מוסיפים שבוע בקבוצה קטנה בזום, ליווי אישי, ומבחן פתיחה ומבחן סיום שמראים כמה השתפרתם.",
+    accessCta: "להצטרפות לסמינר עם ההנחה",
+    courseTitle: "אתם כבר בסמינר",
+    courseSub: "הגישה לאתר כלולה בסמינר, אז אין מה לשלם שוב. כל מה שצריך מחכה באזור האישי.",
+    courseCta: "לאזור האישי",
+    privateTitle: "רוצים גם שיעורים פרטיים?",
+    privateSub: "אחד על אחד עם אהד, על מה שהכי קשה לכם. למי שרוצה עוד דחיפה לפני המבחן.",
+    allSetTitle: "יש לכם הכול",
+    allSetSub: "הסמינר, השיעורים הפרטיים והגישה לאתר. נשאר רק להתאמן.",
+  },
 
   faqTitle: "שאלות על המחיר",
   faq: [

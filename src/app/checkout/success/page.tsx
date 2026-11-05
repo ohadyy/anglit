@@ -5,7 +5,7 @@ import { checkoutSuccessStepsByProduct } from "@/content/copy";
 import { upcomingCourseOffer } from "@/lib/cohorts";
 import { MetaEvent } from "@/components/MetaPixel";
 import ReceiptPrinter from "@/components/ReceiptPrinter";
-import { getProduct } from "@/content/pricingCopy";
+import { getProduct, loyaltyLabel, loyaltyPrice } from "@/content/pricingCopy";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { orders } from "@/db/schema";
@@ -78,7 +78,7 @@ export default async function CheckoutSuccessPage({
         <div className="mt-8 rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
           <p className="font-semibold">רוצים להצטרף גם לסמינר?</p>
           <p className="mt-1 text-sm leading-relaxed opacity-80">
-            המחזור הקרוב מתחיל ב-{offer.label}, והמחיר למחזור הזה הוא {offer.priceIls} ₪. המחיר נסגר כשהמחזור מתחיל.
+            המחזור הקרוב מתחיל ב-{offer.label}. בתור לקוחות קיימים, המחיר שלכם הוא {loyaltyPrice(offer.priceIls)} ₪ ({loyaltyLabel}). המחיר נסגר כשהמחזור מתחיל.
           </p>
           <Link href="/checkout?product=course" className="mt-4 flex min-h-11 items-center justify-center rounded-full bg-fg px-6 py-3 font-semibold text-bg">
             לפרטים ולהצטרפות
