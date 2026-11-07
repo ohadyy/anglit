@@ -6,7 +6,9 @@ import { site } from "@/lib/site";
 import { InstagramIcon } from "@/components/InstagramIcon";
 
 const study = [
-  { href: "/practice", label: "תרגול חינמי" },
+  { href: "/start", label: "תרגול חינמי" },
+  { href: "/sample-test", label: "מבחן אמירנט לדוגמה" },
+  { href: "/amirnet-words", label: "אוצר מילים לאמירנט" },
   { href: "/pricing", label: "מסלולים ומחירים" },
   { href: "/private-tutor", label: "מורה פרטי לאמירנט" },
   { href: "/blog", label: "בלוג" },

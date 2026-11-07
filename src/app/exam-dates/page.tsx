@@ -5,8 +5,9 @@ import { ExamCountdown } from "@/components/ExamCountdown";
 import { examDatesAsOf, examDatesCopy } from "@/content/examDates";
 
 export const metadata: Metadata = {
-  title: "מועדי מבחן",
-  description: "מועדי מבחן אמירנט הפנויים לפי מרכז בחינה.",
+  title: "מועדי אמירנט פנויים",
+  description: "מועדי מבחן אמירנט הפנויים לפי מרכז בחינה, וספירה לאחור עד המבחן שלכם עם מה לעשות בכל יום.",
+  alternates: { canonical: "/exam-dates" },
 };
 
 export default function ExamDatesPage() {

@@ -3,7 +3,7 @@ import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { blogPosts, getBlogPost } from "@/content/blog";
+import { blogAuthor, blogPosts, getBlogPost } from "@/content/blog";
 import { BlogCover } from "@/components/BlogCover";
 import { site } from "@/lib/site";
 
@@ -23,7 +23,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: post.title,
     description: post.description,
     alternates: { canonical: `/blog/${post.slug}` },
-    openGraph: post.heroImage ? { images: [post.heroImage] } : undefined,
+    openGraph: {
+      type: "article",
+      publishedTime: post.publishedAt,
+      modifiedTime: post.updatedAt ?? post.publishedAt,
+      ...(post.heroImage ? { images: [post.heroImage] } : {}),
+    },
   };
 }
 
@@ -59,11 +64,18 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     headline: post.title,
     description: post.description,
     datePublished: post.publishedAt,
-    dateModified: post.publishedAt,
+    dateModified: post.updatedAt ?? post.publishedAt,
+    inLanguage: "he",
     mainEntityOfPage: `${site.url}/blog/${post.slug}`,
     image: post.heroImage ? `${site.url}${post.heroImage}` : undefined,
     url: `${site.url}/blog/${post.slug}`,
-    author: { "@type": "Organization", name: "Anglit" },
+    author: {
+      "@type": "Person",
+      name: blogAuthor.name,
+      jobTitle: blogAuthor.jobTitle,
+      description: blogAuthor.description,
+      worksFor: { "@type": "EducationalOrganization", name: "Anglit", url: site.url },
+    },
     publisher: { "@type": "Organization", name: "Anglit", url: site.url },
   };
 
@@ -78,6 +90,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       </Link>
       <BlogCover post={post} className="mt-4 aspect-[16/9] w-full rounded-3xl sm:aspect-[2/1]" />
       <h1 className="font-display mt-6 text-3xl font-bold tracking-tight sm:text-4xl">{post.title}</h1>
+      <p className="mt-3 text-sm opacity-70">
+        {blogAuthor.byline} · <time dateTime={post.updatedAt ?? post.publishedAt}>{post.updatedAt ? "עודכן" : "פורסם"} ב-{new Date(post.updatedAt ?? post.publishedAt).toLocaleDateString("he-IL")}</time>
+      </p>
       <p className="mt-3 leading-relaxed opacity-80">{post.intro}</p>
 
       <div className="mt-10 flex flex-col gap-8">

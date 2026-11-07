@@ -7,6 +7,7 @@ import { calculatorCopy as c } from "@/content/examGuide";
 export const metadata: Metadata = {
   title: "מחשבון ציון אמירנט",
   description: "מכניסים ציון אמירנט ורואים באיזו רמה תשובצו וכמה קורסי אנגלית יישארו לפני הפטור.",
+  alternates: { canonical: "/score" },
 };
 
 export default function ScorePage() {

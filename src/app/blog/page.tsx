@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 import Link from "next/link";
-import { blogIndexCopy, blogPosts } from "@/content/blog";
+import { blogIndexCopy, blogPostsByDate } from "@/content/blog";
 import { BlogCover } from "@/components/BlogCover";
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export default function BlogIndexPage() {
 
       {/* Grid on desktop, one column on mobile (that's 90% of visits). Cards lift a little on hover. */}
       <ul className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {blogPosts.map((post) => (
+        {blogPostsByDate.map((post) => (
           <li key={post.slug} className="relative">
             <Link
               href={`/blog/${post.slug}`}

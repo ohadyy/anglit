@@ -7,11 +7,14 @@ import { institutions } from "@/content/institutions";
 // and account/checkout flows are
 // deliberately left out — they carry robots: { index: false } in their own metadata.
 // Bump by hand when page content really changes; "now" on every build teaches Google to ignore lastmod.
-const PAGES_UPDATED = new Date("2026-10-20");
+const PAGES_UPDATED = new Date("2026-11-06");
 
 const PUBLIC_PATHS = [
   { path: "", priority: 1, changeFrequency: "weekly" as const },
-  { path: "/practice", priority: 0.9, changeFrequency: "weekly" as const },
+  { path: "/start", priority: 0.9, changeFrequency: "weekly" as const },
+  { path: "/sample-test", priority: 0.8, changeFrequency: "monthly" as const },
+  { path: "/amirnet-words", priority: 0.8, changeFrequency: "monthly" as const },
+  { path: "/practice/daily", priority: 0.6, changeFrequency: "daily" as const },
   { path: "/amirnet", priority: 0.8, changeFrequency: "monthly" as const },
   { path: "/guide", priority: 0.6, changeFrequency: "monthly" as const },
   { path: "/learn/connectors", priority: 0.7, changeFrequency: "monthly" as const },
@@ -21,7 +24,6 @@ const PUBLIC_PATHS = [
   { path: "/pricing", priority: 0.7, changeFrequency: "monthly" as const },
   { path: "/private-tutor", priority: 0.7, changeFrequency: "monthly" as const },
   { path: "/ads", priority: 0.6, changeFrequency: "weekly" as const },
-  { path: "/start", priority: 0.6, changeFrequency: "monthly" as const },
   { path: "/blog", priority: 0.6, changeFrequency: "weekly" as const },
   { path: "/llm-information", priority: 0.5, changeFrequency: "monthly" as const },
 ];
@@ -35,7 +37,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
   const blogEntries = blogPosts.map((post) => ({
     url: `${site.url}/blog/${post.slug}`,
-    lastModified: new Date(post.publishedAt),
+    lastModified: new Date(post.updatedAt ?? post.publishedAt),
     changeFrequency: "monthly" as const,
     priority: 0.6,
   }));

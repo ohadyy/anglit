@@ -7,8 +7,9 @@ import { FREE_ACTIVITIES as CARDS } from "@/content/freePractice";
 import { FreePreview } from "@/components/FreePreviews";
 
 export const metadata: Metadata = {
-  title: "תרגול חינם",
+  title: "תרגול אמירנט חינם",
   description: "תרגולים חינמיים לאמירנט: שאלת היום, שאלות לדוגמה, מבחן תרגול שלם, ושני משחקי מילים.",
+  alternates: { canonical: "/start" },
 };
 
 

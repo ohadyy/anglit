@@ -27,7 +27,18 @@ export function DailyQuestion({ pool, embedded = false }: { pool: Question[]; em
   // eslint-disable-next-line react-hooks/set-state-in-effect -- read the device date once
   useEffect(() => setToday(localDay()), []);
 
-  if (!today) return embedded ? null : <div className="flex-1" />;
+  const header = (
+    <>
+      <p className="font-hand text-2xl opacity-70">שאלה אחת ביום</p>
+      <h1 className="font-display mt-1 text-3xl font-bold">
+        <mark className="pink">שאלת היום</mark>
+      </h1>
+    </>
+  );
+  const shell = "mx-auto flex w-full max-w-xl flex-1 flex-col px-4 py-8 sm:px-6";
+
+  // The title still renders on the server, so the page is not empty for search engines
+  if (!today) return embedded ? null : <div className={shell}>{header}</div>;
 
   const q = pool[dayIndex(today, pool.length)];
   const answeredToday = state.day === today;
@@ -67,11 +78,8 @@ export function DailyQuestion({ pool, embedded = false }: { pool: Question[]; em
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 py-8 sm:px-6">
-      <p className="font-hand text-2xl opacity-70">שאלה אחת ביום</p>
-      <h1 className="font-display mt-1 text-3xl font-bold">
-        <mark className="pink">שאלת היום</mark>
-      </h1>
+    <div className={shell}>
+      {header}
       <p className="mt-3 text-sm font-semibold tabular-nums opacity-70">{streakText}</p>
 
       <div className="mt-6">{card}</div>

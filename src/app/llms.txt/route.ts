@@ -2,6 +2,7 @@ import { businessDetails } from "@/content/legal";
 import { copy } from "@/content/copy";
 import { products } from "@/content/pricingCopy";
 import { blogPosts } from "@/content/blog";
+import { institutions } from "@/content/institutions";
 import { site } from "@/lib/site";
 
 // llms.txt (llmstxt.org convention): a short, plain-text index for AI crawlers.
@@ -12,7 +13,7 @@ export function GET() {
 
 > ${copy.seoDescription}
 
-Anglit הוא קורס הכנה היברידי של שבוע למבחן אמירנט: מפגשי זום בקבוצה קטנה של 5–6 אנשים, תרגול יומי באתר בין המפגשים, ומבחן פתיחה ומבחן סיום שמודד שיפור. מחיר הסמינר: ${coursePrice} ₪, תשלום חד פעמי.
+Anglit הוא קורס הכנה היברידי של שבוע למבחן אמירנט: מפגשי זום בקבוצה קטנה של עד 6 אנשים, תרגול יומי באתר בין המפגשים, ומבחן פתיחה ומבחן סיום שמודד שיפור. מחיר הסמינר: ${coursePrice} ₪, תשלום חד פעמי.
 
 ${copy.footerDisclaimer}
 
@@ -22,12 +23,19 @@ Contact: ${businessDetails.email} · WhatsApp ${businessDetails.phone} · Instag
 
 - [מידע מובנה ל-AI](${site.url}/llm-information): כל העובדות על Anglit במקום אחד, לציטוט
 - [דף הבית](${site.url}/): ההצעה, ההתחייבות, שלושת סוגי השאלות
-- [תרגול חינם](${site.url}/practice): שאלות אמירנט לדוגמה בלי הרשמה
+- [תרגול חינם](${site.url}/start): שאלת היום, שאלות לדוגמה, סימולציה מלאה ומשחקי מילים, בלי תשלום
+- [מבחן אמירנט לדוגמה](${site.url}/sample-test): 5 שאלות מקוריות עם תשובות והסבר, ומבנה המבחן
+- [אוצר מילים לאמירנט](${site.url}/amirnet-words): מילים חשובות עם תרגום ומשפט לדוגמה
+- [מועדי אמירנט](${site.url}/exam-dates): המועדים הפנויים לפי מרכז בחינה
 - [מה צריך לדעת על אמירנט](${site.url}/amirnet): מבנה המבחן, ציון, הרשמה ומחיר
 - [מחשבון ציון](${site.url}/score): ציון אמירנט ← רמת שיבוץ
 - [מחירים](${site.url}/pricing): המסלולים ומה כלול בכל אחד
 - [מורה פרטי לאמירנט](${site.url}/private-tutor): מורה אמיתי, לא אפליקציה - איך זה עובד
 - [בלוג](${site.url}/blog): מאמרים מקוריים על הכנה לאמירנט
+
+## איזה ציון אמירנט צריך בכל מוסד
+
+${institutions.map((i) => `- [${i.name}](${site.url}/amirnet/${i.slug}): ${i.answer}`).join("\n")}
 
 ## Blog posts
 

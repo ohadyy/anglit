@@ -12,8 +12,9 @@ import { getViewer, isLoyal } from "@/lib/viewer";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "מחיר",
-  description: "המחיר לסמינר הכנה לאמירנט של Anglit.",
+  title: "מחיר קורס הכנה לאמירנט",
+  description: "כמה עולה קורס הכנה לאמירנט ב-Anglit: הסמינר של שבוע בקבוצת זום קטנה, גישה לאתר התרגול, ומה כלול בכל מסלול.",
+  alternates: { canonical: "/pricing" },
 };
 
 const desktopOrder: Record<Product["id"], string> = {

@@ -11,8 +11,15 @@ import { ScrollIndex } from "@/components/ScrollIndex";
 
 export const metadata: Metadata = {
   title: "מה צריך לדעת על אמירנט",
-  description: "מבנה מבחן אמירנט, מה אומר הציון, הרשמה ומחיר, התאמות, ומה קורה ביום המבחן.",
+  description: "מבנה מבחן אמירנט, מה אומר הציון, איזה ציון צריך לפטור בכל מוסד, הרשמה ומחיר, התאמות, ומה קורה ביום המבחן.",
+  alternates: { canonical: "/amirnet" },
 };
+
+// "134–150" must stay LTR or it flips; "134 ומעלה" must stay RTL
+function exemptRange(bands: { level: string; range: string }[]) {
+  const r = bands.find((b) => b.level === "פטור")?.range ?? "ראו בעמוד המוסד";
+  return <bdi dir={/[֐-׿]/.test(r) ? "rtl" : "ltr"}>{r}</bdi>;
+}
 
 const CARD = "rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-6";
 
@@ -87,16 +94,30 @@ export default function AmirnetGuidePage() {
           ))}
         </ul>
         <p className="mt-3 text-sm leading-relaxed opacity-70">{g.scoreDisclaimer}</p>
-        <h3 className="mt-8 text-lg font-bold">הציון הנדרש לפי מוסד</h3>
-        <ul className="mt-3 flex flex-wrap gap-2">
-          {institutions.map((i) => (
-            <li key={i.slug}>
-              <Link href={`/amirnet/${i.slug}`} className="inline-flex min-h-11 items-center rounded-full border border-fg/25 px-4 text-sm hover:bg-fg/5">
-                {i.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <h3 className="mt-8 text-lg font-bold">איזה ציון אמירנט נותן פטור, לפי מוסד</h3>
+        {/* A real table: the comparison people (and AI answers) look for, each row linked to the full page */}
+        <div className={`${CARD} mt-3 overflow-hidden !p-0`}>
+        <table className="w-full text-right">
+          <thead>
+            <tr className="border-b border-line text-sm">
+              <th scope="col" className="p-4 font-semibold">מוסד</th>
+              <th scope="col" className="p-4 font-semibold">ציון לפטור</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line">
+            {institutions.map((i) => (
+              <tr key={i.slug}>
+                <td className="p-4">
+                  <Link href={`/amirnet/${i.slug}`} className="underline underline-offset-4">
+                    {i.name}
+                  </Link>
+                </td>
+                <td className="p-4 tabular-nums">{exemptRange(i.bands)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        </div>
         <Link href="/score" className="mt-4 inline-flex min-h-11 items-center rounded-full border border-fg/25 px-6 font-semibold hover:bg-fg/5">
           {g.scoreCta}
         </Link>
@@ -147,6 +168,28 @@ export default function AmirnetGuidePage() {
             <li key={line} className="flex gap-2.5 leading-relaxed">
               <span aria-hidden className="mt-2.5 size-1.5 shrink-0 rounded-full bg-fg" />
               <span className="opacity-90">{line}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* Hub links: each topic above has a deeper page */}
+      <section className="mt-14">
+        <h2 className="text-2xl font-bold">להעמיק בכל נושא</h2>
+        <ul className="mt-4 grid gap-2">
+          {[
+            { href: "/sample-test", label: "מבחן אמירנט לדוגמה, עם תשובות והסבר" },
+            { href: "/amirnet-words", label: "אוצר מילים לאמירנט" },
+            { href: "/blog/harshama-leamirnet", label: "איך נרשמים לאמירנט: מחיר, מועדים וכל השלבים" },
+            { href: "/blog/hatamot-baamirnet", label: "התאמות באמירנט: מי זכאי ואיך מגישים בקשה" },
+            { href: "/blog/yom-hamivchan-amirnet", label: "מה להביא למבחן, ומה קורה ביום עצמו" },
+            { href: "/blog/tokef-tziyun-amirnet", label: "כמה זמן ציון אמירנט בתוקף" },
+            { href: "/blog/psichometri-bli-anglit", label: "פסיכומטרי בלי אנגלית: מה השתנה מדצמבר 2026" },
+          ].map((l) => (
+            <li key={l.href}>
+              <Link href={l.href} className="inline-flex min-h-11 items-center underline underline-offset-4">
+                {l.label}
+              </Link>
             </li>
           ))}
         </ul>

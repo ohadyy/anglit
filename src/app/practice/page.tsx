@@ -13,6 +13,8 @@ import { questionNotes } from "@/content/questionNotes";
 export const metadata: Metadata = {
   title: "תרגול חינם",
   description: "5 שאלות אמירנט לדוגמה בחינם, עם הסבר מלא לכל תשובה. תרגול מלא בכל הסוגים במסלול בתשלום.",
+  // Guests (and Googlebot) are redirected to /start, which is the indexable page
+  robots: { index: false },
 };
 
 export default async function PracticePage({ searchParams }: PageProps<"/practice">) {

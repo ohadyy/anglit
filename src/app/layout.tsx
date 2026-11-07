@@ -49,7 +49,6 @@ export const metadata: Metadata = {
     template: "%s · Anglit",
   },
   description: copy.seoDescription,
-  alternates: { canonical: "/" },
   // Opening from the iPhone home screen hides the browser bar — cleaner recordings
   appleWebApp: { capable: true, title: "Anglit", statusBarStyle: "default" },
   // Meta business domain verification (Business Manager → Brand safety → Domains)

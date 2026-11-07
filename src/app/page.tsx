@@ -20,6 +20,34 @@ import { upcomingCourseOffer } from "@/lib/cohorts";
 import { getViewer, isLoyal } from "@/lib/viewer";
 import { TierPreview } from "@/components/TierPreview";
 import { organizationJsonLd } from "@/lib/organizationJsonLd";
+import { products } from "@/content/pricingCopy";
+import { site } from "@/lib/site";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
+
+// Course + FAQ + WebSite structured data, built from the same copy the page shows
+const homeJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "WebSite", name: "Anglit", url: site.url, inLanguage: "he" },
+    {
+      "@type": "Course",
+      name: "7 ימים לאמירנט",
+      description: copy.seoDescription,
+      inLanguage: "he",
+      provider: { "@type": "EducationalOrganization", name: "Anglit", url: site.url },
+      hasCourseInstance: { "@type": "CourseInstance", courseMode: "online", courseWorkload: "P7D" },
+      offers: { "@type": "Offer", priceCurrency: "ILS", price: products.find((p) => p.id === "course")?.price, category: "Paid" },
+    },
+    {
+      "@type": "FAQPage",
+      mainEntity: homeFaqGroups.flatMap((g) =>
+        g.items.map((item) => ({ "@type": "Question", name: item.q, acceptedAnswer: { "@type": "Answer", text: item.a } }))
+      ),
+    },
+  ],
+};
 
 // Shows the live cohort offer (price, seats left), so this page cannot be cached at build time
 export const dynamic = "force-dynamic";
@@ -42,6 +70,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ a
     <HomeIntro>
     <div className="flex min-h-dvh flex-col">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd) }} />
       {/* Header + hero share one continuous gradient, so the nav bar doesn't sit on a flat block above it */}
       <div className="hero-mesh relative flex min-h-dvh flex-col">
         <HeroDecor mark="a" font="gevora" />
