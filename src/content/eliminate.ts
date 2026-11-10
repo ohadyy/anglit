@@ -5,8 +5,8 @@ export type EliminateQuestion = {
   id: string;
   stem: string;
   keep: [string, string]; // the two options that survive; keep[0] is the correct answer
-  out: [string, string]; // the two that cannot work
-  why: string; // Hebrew, one line: why the two can go
+  out: [string, string];
+  why: string;
   pick: string; // Hebrew, one line: why keep[0] beats keep[1]
 };
 
@@ -180,6 +180,9 @@ export const ELIMINATE: EliminateQuestion[] = [
     pick: "ההשוואה היא למה שציפו, לא לטלפון הישן. התשובה השנייה משווה לדבר אחר.",
   },
 ];
+
+export const ELIMINATE_ROUNDS = 8;
+export const ELIMINATE_SECONDS = 25;
 
 export const eliminateCopy = {
   intro: "קודם פוסלים שתי תשובות שאי אפשר שיהיו נכונות. אחר כך בוחרים מהשתיים שנשארו. כך עושים גם במבחן כשנתקעים.",

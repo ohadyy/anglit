@@ -1,6 +1,8 @@
 // Legal pages, served from /legal/[slug]. Drafts based on what the site actually does.
 // Check with a lawyer before launch, and keep the guarantee wording identical to copy.ts.
 
+import { GUARANTEE_CONDITION, REFUND_DAYS } from "./facts";
+
 export const legalUpdatedAt = "4.10.2026";
 
 export const businessDetails = {
@@ -13,12 +15,11 @@ export const businessDetails = {
   address: "העליה 18, נהרייה",
   email: "anglitpro2027@gmail.com",
   phone: "053-566-2012",
-  whatsappUrl: "https://wa.me/972535662012",
   instagram: "@anglitpro",
 };
 
-export type LegalSection = { title: string; paragraphs: string[] };
-export type LegalDoc = { slug: string; title: string; sections: LegalSection[] };
+type LegalSection = { title: string; paragraphs: string[] };
+type LegalDoc = { slug: string; title: string; sections: LegalSection[] };
 
 export const legalDocs: LegalDoc[] = [
   {
@@ -48,7 +49,7 @@ export const legalDocs: LegalDoc[] = [
       {
         title: "התחייבות המחזור הבא",
         paragraphs: [
-          "לא השתפרתם בין מבחן הפתיחה למבחן הסיום? המחזור הבא עלינו. בתנאי שהשתתפתם בכל המפגשים והגשתם את התרגולים.",
+          `לא השתפרתם בין מבחן הפתיחה למבחן הסיום? המחזור הבא עלינו. ${GUARANTEE_CONDITION}.`,
         ],
       },
       {
@@ -110,7 +111,7 @@ export const legalDocs: LegalDoc[] = [
         title: "הזכויות שלכם",
         paragraphs: [
           `בעל המאגר: ${businessDetails.legalName}, כתובת: ${businessDetails.address}.`,
-          "אתם יכולים לבקש לעיין במידע שנשמר עליכם, לתקן אותו או למחוק אותו. פנו אלינו באימייל anglitpro2027@gmail.com או באינסטגרם @anglitpro או בוואטסאפ 053-566-2012.",
+          `אתם יכולים לבקש לעיין במידע שנשמר עליכם, לתקן אותו או למחוק אותו. פנו אלינו באימייל ${businessDetails.email} או באינסטגרם ${businessDetails.instagram} או בוואטסאפ ${businessDetails.phone}.`,
         ],
       },
       {
@@ -133,20 +134,20 @@ export const legalDocs: LegalDoc[] = [
     title: "מדיניות ביטול והחזרים",
     sections: [
       {
-        title: "ביטול תוך 14 יום",
+        title: `ביטול תוך ${REFUND_DAYS} יום`,
         paragraphs: [
-          "ניתן לבטל רכישה תוך 14 יום מיום התשלום, והסכום יוחזר במלואו.",
+          `ניתן לבטל רכישה תוך ${REFUND_DAYS} יום מיום התשלום, והסכום יוחזר במלואו.`,
         ],
       },
       {
-        title: "ביטול לאחר 14 יום",
+        title: `ביטול לאחר ${REFUND_DAYS} יום`,
         paragraphs: [
-          "לאחר 14 יום, ביטול אינו מזכה בהחזר כספי, אלא אם המחזור לא התקיים מסיבות של Anglit. במקרה כזה מוחזר סכום יחסי או מוצעת העברה למחזור אחר.",
+          `לאחר ${REFUND_DAYS} יום, ביטול אינו מזכה בהחזר כספי, אלא אם המחזור לא התקיים מסיבות של Anglit. במקרה כזה מוחזר סכום יחסי או מוצעת העברה למחזור אחר.`,
         ],
       },
       {
         title: "איך מבטלים",
-        paragraphs: ["פנו אלינו באימייל anglitpro2027@gmail.com או באינסטגרם @anglitpro או בוואטסאפ 053-566-2012, וציינו את פרטי הרכישה."],
+        paragraphs: [`פנו אלינו באימייל ${businessDetails.email} או באינסטגרם ${businessDetails.instagram} או בוואטסאפ ${businessDetails.phone}, וציינו את פרטי הרכישה.`],
       },
     ],
   },
@@ -218,7 +219,7 @@ export const legalDocs: LegalDoc[] = [
       {
         title: "נתקלתם בבעיה?",
         paragraphs: [
-          "אם נתקלתם בקושי בשימוש באתר, פנו אלינו באימייל anglitpro2027@gmail.com או באינסטגרם @anglitpro או בוואטסאפ 053-566-2012 ונטפל בבעיה.",
+          `אם נתקלתם בקושי בשימוש באתר, פנו אלינו באימייל ${businessDetails.email} או באינסטגרם ${businessDetails.instagram} או בוואטסאפ ${businessDetails.phone} ונטפל בבעיה.`,
         ],
       },
     ],

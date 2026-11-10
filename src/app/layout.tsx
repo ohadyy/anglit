@@ -46,11 +46,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
     default: copy.seoTitle,
-    template: "%s · Anglit",
+    template: `%s · ${site.name}`,
   },
   description: copy.seoDescription,
   // Opening from the iPhone home screen hides the browser bar — cleaner recordings
-  appleWebApp: { capable: true, title: "Anglit", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: site.name, statusBarStyle: "default" },
   // Meta business domain verification (Business Manager → Brand safety → Domains)
   other: { "facebook-domain-verification": "we24xrkueg3joxpeu8g5derw3uar74" },
 };

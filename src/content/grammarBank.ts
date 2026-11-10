@@ -1,6 +1,5 @@
 // Grammar-in-context items for exam tests 2–10 (the first test's grammar is in questions.ts).
 // Original writing for Anglit. Each exam uses one set of four items (see examTests.ts).
-// status: "approved" per the teacher's approval of the question bank.
 
 import type { GrammarQuestion } from "./questions";
 

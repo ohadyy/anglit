@@ -4,8 +4,9 @@ import { and, count, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { cohorts, enrollments } from "@/db/schema";
-import { hasCourse } from "@/lib/access";
-import { COHORT_SESSIONS, formatCohortDate } from "@/lib/cohorts";
+import { paidProducts } from "@/lib/access";
+import { COHORT_SESSIONS } from "@/content/cohortSchedule";
+import { formatCohortDate } from "@/lib/jerusalemTime";
 import { sendTemplate } from "@/lib/whatsapp";
 
 export async function POST(request: Request) {
@@ -16,7 +17,7 @@ export async function POST(request: Request) {
   if (!session.user.phone) {
     return NextResponse.json({ error: "phone required" }, { status: 403 });
   }
-  if (!(await hasCourse(session.user.id))) {
+  if (!(await paidProducts(session.user.id)).includes("course")) {
     return NextResponse.json({ error: "course required" }, { status: 403 });
   }
 
@@ -34,7 +35,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "cohort not open" }, { status: 404 });
   }
 
-  // One cohort per student
   const [existing] = await db
     .select({ id: enrollments.id })
     .from(enrollments)
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     await sendTemplate(
       session.user.phone,
       process.env.WHATSAPP_TEMPLATE_COHORT ?? "cohort_confirmation",
-      [session.user.name, formatCohortDate(cohort.startDate), COHORT_SESSIONS],
+      [session.user.name, formatCohortDate(cohort.startDate), cohort.sessions ?? COHORT_SESSIONS],
     );
   } catch (err) {
     console.error("[cohorts] confirmation WhatsApp failed:", err);

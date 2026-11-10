@@ -1,13 +1,17 @@
 import { vocabulary, type VocabWord } from "@/content/vocabulary";
-import { randomOrder } from "@/lib/shuffle";
+import { FREE_WORD_LIMIT } from "@/content/practiceFacts";
+import { randomOrder } from "@/lib/random";
 
-export const SESSION_SIZE = 10;
+const SESSION_SIZE = 10;
 export const MAX_BOX = 3;
-// Free visitors (no payment) get only the first words of the bank, everywhere it's used.
-export const FREE_WORD_LIMIT = 20;
 
 export function approvedWords(): VocabWord[] {
   return vocabulary.filter((w) => w.status === "approved");
+}
+
+/** The first words of the bank: all that visitors without payment get, everywhere it's used */
+export function freeWords(): VocabWord[] {
+  return approvedWords().slice(0, FREE_WORD_LIMIT);
 }
 
 // Box 0 means never practiced. Lower boxes come first, so new and missed words

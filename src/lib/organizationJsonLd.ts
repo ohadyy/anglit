@@ -8,7 +8,7 @@ import { site } from "@/lib/site";
 export const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": ["EducationalOrganization", "LocalBusiness"],
-  name: "Anglit",
+  name: site.name,
   url: site.url,
   email: businessDetails.email,
   telephone: businessDetails.phone,

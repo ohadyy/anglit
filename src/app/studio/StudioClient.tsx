@@ -1,11 +1,13 @@
 "use client";
 
+import { Stem } from "@/components/Stem";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { copy } from "@/content/copy";
-import { questions, TYPE_LABELS, type QuestionType } from "@/content/questions";
+import { questions, type QuestionType } from "@/content/questions";
+import { TYPE_LABELS, TYPES } from "@/content/questionLabels";
 import { QuestionView, TypeLabel } from "@/components/QuestionView";
 import { Mark } from "@/components/Logo";
-import { TYPES } from "@/lib/practice";
+import { STORAGE_KEYS } from "@/lib/storageKeys";
 import { site } from "@/lib/site";
 import { useTheme } from "@/lib/theme";
 import { useStored } from "@/lib/useStored";
@@ -20,7 +22,7 @@ const PREFS = {
 };
 
 export function StudioClient() {
-  const [prefs, setPrefs] = useStored("anglit-studio", PREFS);
+  const [prefs, setPrefs] = useStored(STORAGE_KEYS.studio, PREFS);
   const set = <K extends keyof typeof PREFS>(k: K, v: (typeof PREFS)[K]) =>
     setPrefs((p) => ({ ...p, [k]: v }));
 
@@ -58,7 +60,6 @@ export function StudioClient() {
     setTimeout(() => setHint(false), 2600);
   };
 
-  // Desktop keyboard shortcuts (the phone uses taps and swipes)
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.metaKey || e.ctrlKey || e.altKey || sheet) return;
@@ -77,7 +78,6 @@ export function StudioClient() {
     return () => window.removeEventListener("keydown", onKey);
   }, [go, i, pick, sheet]);
 
-  // Swipe left → next question, swipe right → previous
   const start = useRef<{ x: number; y: number } | null>(null);
   const onPointerDown = (e: React.PointerEvent) => {
     start.current = { x: e.clientX, y: e.clientY };
@@ -339,7 +339,7 @@ function Settings({
               >
                 <span className="w-6 shrink-0 text-sm font-semibold tabular-nums opacity-70">{n + 1}</span>
                 <span dir="ltr" className="flex-1 truncate text-left text-sm">
-                  {x.stem}
+                  <Stem text={x.stem} revealed={false} />
                 </span>
               </button>
             </li>

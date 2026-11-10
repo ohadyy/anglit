@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { hasPaidAccess } from "@/lib/access";
-import { approvedWords, buildSession, FREE_WORD_LIMIT, MAX_BOX } from "@/lib/vocab";
+import { approvedWords, buildSession, freeWords, MAX_BOX } from "@/lib/vocab";
 import { vocabCategories, vocabCopy, vocabTiers, type VocabCategory, type VocabTier } from "@/content/vocabulary";
 import { db } from "@/db";
 import { vocabProgress } from "@/db/schema";
@@ -32,7 +32,7 @@ export default async function VocabularyPage({ searchParams }: PageProps<"/vocab
   const boxes = new Map(rows.map((r) => [r.wordId, r.box]));
 
   // Free visitors only draw from the first words of the bank; the rest stays behind payment
-  const pool = paid ? approvedWords() : approvedWords().slice(0, FREE_WORD_LIMIT);
+  const pool = paid ? approvedWords() : freeWords();
 
   const inTier = tier ? pool.filter((w) => w.tier === tier) : pool;
   const tierCounts = Object.fromEntries(

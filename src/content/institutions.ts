@@ -5,6 +5,8 @@
 // copy the table, fill `sourceUrl` + `checkedAt`. Institutions set levels themselves (NITE says so).
 // Not added yet because the official page could not be read: Reichman, Sapir, Ariel.
 
+import { NITE_FACTS } from "./facts";
+
 export type InstitutionBand = {
   level: string;
   /** Score range as the institution prints it, e.g. "120–133" */
@@ -66,7 +68,7 @@ export const institutions: Institution[] = [
     facts: [
       "כל המועמדים נדרשים להגיע לרמת מתקדמים א׳ לפחות עד תחילת שנת הלימודים, אלא אם בטבלת הקבלה של היחידה כתוב אחרת. מי שסווג טרום בסיסי נדחה.",
       "מ-1.5.2024 אפשר להיבחן רק באמירנט. ציוני אמיר ואמירם ממבחנים שנערכו לפני התאריך הזה עדיין מתקבלים.",
-      "מותר להיבחן באמירנט גם אם כבר יש לכם רמת אנגלית בתוקף. בין מבחן למבחן צריך לעבור לפחות 35 יום, ומבחן שנערך מוקדם יותר מתבטל בלי החזר כספי.",
+      `מותר להיבחן באמירנט גם אם כבר יש לכם רמת אנגלית בתוקף. בין מבחן למבחן צריך לעבור לפחות ${NITE_FACTS.minDaysBetweenTests} יום, ומבחן שנערך מוקדם יותר מתבטל בלי החזר כספי.`,
     ],
   },
   {

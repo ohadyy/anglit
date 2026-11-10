@@ -1,12 +1,11 @@
 import { grammarQuestions } from "./grammarBank";
-import { audioCompletionSets, lectureSets, pilotPassages, wordFormationSets } from "./pilotBank";
+import { audioCompletionSets, lectureExtras, lectureSets, pilotPassages, wordFormationSets } from "./pilotBank";
 import { extraPassages, extraQuestions } from "./extraBank";
 import { moreGrammarQuestions, moreRestatementQuestions, moreSentenceQuestions } from "./moreBank";
 import { connectorQuestions } from "./connectorsBank";
 import { hardPracticePassages, hardPracticeQuestions } from "./practiceHard";
 // Original question bank. Every question here was written for Anglit —
 // nothing is copied from NITE or from other prep sites.
-// status: "approved" until reviewed by the teacher, then "approved".
 
 export type QuestionType =
   | "sentence"
@@ -32,7 +31,7 @@ type BaseQuestion = {
   trick?: string;
   /** Words in the stem to highlight after answering */
   keywords?: string[];
-  status: "approved" | "approved";
+  status: "approved";
 };
 
 export type SentenceQuestion = BaseQuestion & { type: "sentence" };
@@ -63,7 +62,6 @@ export type WordFormationQuestion = {
   status: "approved";
 };
 
-/** Anything an exam can ask: the multiple-choice types plus typed word formation */
 export type ExamQuestion = Question | WordFormationQuestion;
 
 export type Question =
@@ -74,8 +72,6 @@ export type Question =
   | GrammarQuestion;
 
 export type Passage = { id: string; title: string; paragraphs: string[]; audio?: string; image?: string };
-
-export { TYPE_LABELS } from "./questionLabels";
 
 export const passages: Passage[] = [
   {
@@ -103,7 +99,6 @@ export const passages: Passage[] = [
 ];
 
 export const questions: Question[] = [
-  // ─── Sentence Completion ───────────────────────────────────────────
   {
     id: "sc-01",
     type: "sentence",
@@ -283,7 +278,6 @@ export const questions: Question[] = [
     status: "approved",
   },
 
-  // ─── Restatements ─────────────────────────────────────────────────
   {
     id: "rs-01",
     type: "restatement",
@@ -485,7 +479,6 @@ export const questions: Question[] = [
     status: "approved",
   },
 
-  // ─── Reading Comprehension ────────────────────────────────────────
   {
     id: "rc-heat-1",
     type: "reading",
@@ -702,6 +695,7 @@ export const questions: Question[] = [
   },
   ...grammarQuestions,
   ...lectureSets.flat(),
+  ...lectureExtras,
   ...audioCompletionSets.flat(),
   ...extraQuestions,
   ...moreSentenceQuestions,
@@ -713,10 +707,6 @@ export const questions: Question[] = [
 
 export function getPassage(id: string) {
   return passages.find((p) => p.id === id)!;
-}
-
-export function questionsByType(type?: QuestionType) {
-  return type ? questions.filter((q) => q.type === type) : questions;
 }
 
 /** Word formation items, used only in the exam's pilot chapters */

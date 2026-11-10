@@ -1,14 +1,17 @@
 "use client";
 
+import { Stem } from "@/components/Stem";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { Question } from "@/content/questions";
-import { randomOrder } from "@/lib/shuffle";
+import { randomOrder } from "@/lib/random";
+import { STORAGE_KEYS } from "@/lib/storageKeys";
 import { useStored } from "@/lib/useStored";
+import { CHALLENGE_SECONDS } from "@/content/practiceFacts";
 import { ExtraTimePicker, useExtraTime, withExtraTime } from "@/components/ExtraTimePicker";
 
-const QUESTION_MS = 20000;
+const QUESTION_MS = CHALLENGE_SECONDS * 1000;
 const TICK_MS = 100;
 const CONFETTI_COLORS = ["var(--color-mint)", "var(--color-marker)", "var(--color-coral)", "var(--color-ink)"];
 
@@ -38,7 +41,7 @@ export function ChallengeGame({ questions }: { questions: Question[] }) {
   const [picked, setPicked] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [streak, setStreak] = useState(0);
-  const [best, setBest] = useStored("anglit-challenge-best", 0);
+  const [best, setBest] = useStored(STORAGE_KEYS.challengeBest, 0);
   const [extraPct, setExtraPct] = useExtraTime();
   const questionMs = withExtraTime(QUESTION_MS, extraPct);
   const [timeLeft, setTimeLeft] = useState(QUESTION_MS);
@@ -46,7 +49,11 @@ export function ChallengeGame({ questions }: { questions: Question[] }) {
   const [shaking, setShaking] = useState(false);
   const [flashing, setFlashing] = useState(false);
   const [missed, setMissed] = useState<Question | null>(null);
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Every delayed effect (flash, shake, confetti, next question) goes through here so leaving the page cancels them
+  const timers = useRef<number[]>([]);
+  const later = (fn: () => void, ms: number) => {
+    timers.current.push(window.setTimeout(fn, ms));
+  };
 
   const current = order[index];
 
@@ -54,12 +61,11 @@ export function ChallengeGame({ questions }: { questions: Question[] }) {
     setMissed(q);
     setFlashing(true);
     setShaking(true);
-    window.setTimeout(() => setFlashing(false), 550);
-    window.setTimeout(() => setShaking(false), 450);
-    advanceTimer.current = setTimeout(() => setPhase("gameover"), timedOut ? 650 : 900);
+    later(() => setFlashing(false), 550);
+    later(() => setShaking(false), 450);
+    later(() => setPhase("gameover"), timedOut ? 650 : 900);
   }
 
-  // The countdown. Stops the moment an answer is picked (correct or not).
   useEffect(() => {
     if (phase !== "playing" || picked !== null) return;
     const iv = setInterval(() => {
@@ -77,9 +83,8 @@ export function ChallengeGame({ questions }: { questions: Question[] }) {
   }, [phase, picked, index]);
 
   useEffect(() => {
-    return () => {
-      if (advanceTimer.current) clearTimeout(advanceTimer.current);
-    };
+    const pending = timers.current;
+    return () => pending.forEach(clearTimeout);
   }, []);
 
   function start() {
@@ -102,8 +107,8 @@ export function ChallengeGame({ questions }: { questions: Question[] }) {
       setStreak(next);
       if (next > best) setBest(next);
       setConfetti(makeBurst(next));
-      window.setTimeout(() => setConfetti([]), 1000);
-      advanceTimer.current = setTimeout(() => {
+      later(() => setConfetti([]), 1000);
+      later(() => {
         if (index + 1 >= questions.length) {
           setPhase("victory");
         } else {
@@ -165,7 +170,7 @@ export function ChallengeGame({ questions }: { questions: Question[] }) {
         {!won && missed && (
           <div className="mt-8 w-full rounded-3xl border border-line bg-white p-5 text-start">
             <p dir="ltr" className="text-left font-semibold leading-snug">
-              {missed.stem}
+              <Stem text={missed.stem} revealed={false} />
             </p>
             <p className="mt-2 text-sm leading-relaxed opacity-80">
               <span dir="ltr" className="font-semibold">
@@ -200,7 +205,7 @@ export function ChallengeGame({ questions }: { questions: Question[] }) {
 
   return (
     <div className={`relative mx-auto flex min-h-dvh max-w-xl flex-col px-4 py-6 sm:px-6 ${shaking ? "shake-fail" : ""}`}>
-      {flashing && <div aria-hidden className="flash-fail pointer-events-none fixed inset-0 z-40 bg-coral" />}
+      {flashing && <div aria-hidden className="flash-fail pointer-events-none fixed inset-0 z-(--z-modal) bg-coral" />}
 
       <div className="flex items-center justify-between gap-4 text-sm">
         <Link href="/practice" className="inline-flex min-h-11 items-center opacity-70 underline underline-offset-4">
@@ -245,7 +250,7 @@ export function ChallengeGame({ questions }: { questions: Question[] }) {
       {current && (
         <div key={index} className="rise mt-8 flex flex-1 flex-col">
           <div dir="ltr" className="text-left text-xl font-semibold leading-snug text-balance">
-            {current.stem}
+            <Stem text={current.stem} revealed={false} />
           </div>
 
           <div className="mt-6 grid gap-3">

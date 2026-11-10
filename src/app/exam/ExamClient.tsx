@@ -5,32 +5,28 @@ import { FreeNextCard } from "@/components/FreeNextCard";
 import { useEffect, useRef, useState } from "react";
 import { QuestionView, TypeLabel, WordFormationView } from "@/components/QuestionView";
 import { isCorrectAnswer, type ExamQuestion, type QuestionType } from "@/content/questions";
-import { isQuestionType } from "@/content/questionLabels";
-import { TYPE_LABELS } from "@/content/questionLabels";
+import { isQuestionType, TYPE_LABELS } from "@/content/questionLabels";
 import { recordAnswers } from "@/lib/mistakes";
-import { poolLevels } from "@/content/examPool";
+import { isPoolId } from "@/content/examPool";
 import { findExamTest } from "@/content/examTests";
-import { buildExam, planTotals, type ExamPlanItem } from "@/lib/examStructure";
-import { PILOT_MAX_BONUS, scoreExam, scoreLevel, scoreMessage, type ExamScore } from "@/lib/examScore";
+import { buildExam, planFor, planTotals, type ExamPlanItem } from "@/lib/examStructure";
+import { PILOT_MAX_BONUS, scoreExam, scoreMessage, type ExamScore } from "@/lib/examScore";
+import { scoreLevel } from "@/lib/scoreLevels";
+import { formatClock } from "@/lib/formatClock";
 import { AudioCheck } from "@/components/ReadAloud";
 import { TactileButton } from "@/components/TactileButton";
 import { HoldButton } from "@/components/HoldButton";
 import { LiquidGauge } from "@/components/LiquidGauge";
 import { ExtraTimePicker, useExtraTime, withExtraTime } from "@/components/ExtraTimePicker";
-import { WRITING_MIN_WORDS } from "@/content/writingTasks";
+import { countWords, WRITING_MINUTES, WRITING_MIN_WORDS } from "@/content/practiceFacts";
+import { EXAM_FORMAT, SCORE_MAX, SCORE_RANGE_TEXT } from "@/content/facts";
+import { ExamReview, type ReviewItem } from "@/components/ExamReview";
 
 type Phase = "intro" | "running" | "submitting" | "done";
 // Multiple choice stores the option index, word formation stores the typed word
 type Answers = Record<string, number | string | null>;
 type Result = ExamScore & { id?: string };
-// Right answers out of asked, per question type, in exam order
 type TypeTally = { type: QuestionType; correct: number; total: number }[];
-
-function formatTime(sec: number) {
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
 
 export function ExamClient({
   plan,
@@ -57,6 +53,7 @@ export function ExamClient({
   const [answers, setAnswers] = useState<Answers>({});
   const [result, setResult] = useState<Result | null>(null);
   const [tally, setTally] = useState<TypeTally>([]);
+  const [review, setReview] = useState<ReviewItem[]>([]);
   const [extraPct, setExtraPct] = useExtraTime();
   const startedAtRef = useRef<string>("");
 
@@ -77,7 +74,7 @@ export function ExamClient({
         activePlan
           .filter((p) => !p.section.pilot)
           .flatMap((p) =>
-            p.questions.filter((q) => !(q.id in poolLevels)).map((q) => {
+            p.questions.filter((q) => !isPoolId(q.id)).map((q) => {
               const a = finalAnswers[q.id];
               return [q.id, { correct: correctness[q.id], chosen: typeof a === "number" ? a : null }];
             }),
@@ -85,6 +82,7 @@ export function ExamClient({
       ),
     );
     setTally(tallyByType(activePlan, correctness));
+    setReview(all.map((q) => ({ q, value: finalAnswers[q.id] ?? null })));
 
     try {
       const res = await fetch("/api/exam/submit", {
@@ -111,7 +109,7 @@ export function ExamClient({
     if (sectionIndex + 1 < activePlan.length) {
       // An adaptive test picks its next chapter from the answers so far. Chapters already
       // taken come out the same, so only what lies ahead can change.
-      setActivePlan(buildExam(testNumber, latestAnswers, seen).filter((p) => includePilot || !p.section.pilot));
+      setActivePlan(planFor(buildExam(testNumber, latestAnswers, seen), includePilot));
       setSectionIndex((i) => i + 1);
     } else {
       void finishExam(latestAnswers);
@@ -120,7 +118,7 @@ export function ExamClient({
 
   function start() {
     startedAtRef.current = new Date().toISOString();
-    setActivePlan(plan.filter((p) => includePilot || !p.section.pilot));
+    setActivePlan(planFor(plan, includePilot));
     setSectionIndex(0);
     setPhase("running");
   }
@@ -132,7 +130,7 @@ export function ExamClient({
         <p className="mt-2 text-sm font-semibold tabular-nums opacity-70">מספר מבחן: {testNumber}</p>
         <p className="mt-3 leading-relaxed opacity-80">
           {totals.questions} שאלות ב-{totals.sections} פרקים מתוזמנים, {withExtraTime(totals.minutes, extraPct)} דקות בסך הכול. כל פרק עובר
-          אוטומטית כשהזמן נגמר, גם אם לא סיימתם.
+          אוטומטית כשהזמן נגמר, גם אם לא סיימתם. בתוך כל פרק אפשר לחזור לשאלות קודמות, אבל לא לפרק שהסתיים.
         </p>
         {findExamTest(testNumber)?.adaptive && (
           <p className="mt-3 text-sm leading-relaxed opacity-70">
@@ -143,7 +141,7 @@ export function ExamClient({
 
         {plan.some((p) => p.section.type === "writing") && (
           <p className="mt-3 text-sm leading-relaxed opacity-70">
-            במבחן הזה, כמו בחלק מהמבחנים האמיתיים, יש מטלת כתיבה אחת של 12 דקות במקום שני פרקי ניסיון. אין בה שאלות עם תשובה נכונה,
+            במבחן הזה, כמו בחלק מהמבחנים האמיתיים, יש מטלת כתיבה אחת של {WRITING_MINUTES} דקות במקום שני פרקי ניסיון. אין בה שאלות עם תשובה נכונה,
             ולכן היא לא נכנסת להערכת הציון. מינימום <bdi dir="ltr">{WRITING_MIN_WORDS}</bdi> מילים.
           </p>
         )}
@@ -151,7 +149,7 @@ export function ExamClient({
         <fieldset className="mt-8 text-start">
           <legend className="text-sm font-semibold">לפני שמתחילים: לכלול פרקי ניסיון?</legend>
           <p className="mt-2 text-sm leading-relaxed opacity-70">
-            במבחן האמיתי פרקי הניסיון תמיד מופיעים, ואי אפשר לבחור אותם. יש מבחנים עם שני פרקי ניסיון (8 פרקים) ויש עם מטלת כתיבה אחת (7 פרקים), לא עם שניהם. משקלם בציון קטן מאוד: טעות לא פוגעת, ותשובה נכונה
+            במבחן האמיתי פרקי הניסיון תמיד מופיעים, ואי אפשר לבחור אותם. יש מבחנים עם שני פרקי ניסיון ({EXAM_FORMAT.practiceChapters}) ויש עם מטלת כתיבה אחת (7 פרקים), לא עם שניהם. משקלם בציון קטן מאוד: טעות לא פוגעת, ותשובה נכונה
             עשויה להעלות את הציון בעד {PILOT_MAX_BONUS} נקודות. באתר אפשר לתרגל גם רק את פרקי הליבה.
           </p>
           <div className="mt-4 grid gap-2">
@@ -173,7 +171,7 @@ export function ExamClient({
         <ExtraTimePicker value={extraPct} onChange={setExtraPct} className="mt-6" />
 
         <p className="mt-6 text-sm opacity-70">
-          בסוף תקבלו הערכת ציון משוערת (50–150). זו לא הציון הרשמי של מאל&quot;ו.
+          בסוף תקבלו הערכת ציון משוערת ({SCORE_RANGE_TEXT}). זו לא הציון הרשמי של מאל&quot;ו.
         </p>
         <div className="mt-8">
           <AudioCheck />
@@ -195,14 +193,17 @@ export function ExamClient({
 
   if (phase === "done" && result) {
     const level = scoreLevel(result.estimatedScore);
+    // The full review is for students with access; a free visitor gets the summary and the next step
+    const showReview = !freeUpsell && review.length > 0;
     return (
+      <>
       <div className="mx-auto flex flex-1 max-w-sm flex-col items-center justify-center px-4 py-16 text-center">
         <p className="text-sm font-semibold opacity-70">סיימתם!</p>
         <LiquidGauge score={result.estimatedScore} className="mt-4 w-56" />
-        <p className="mt-2 text-sm font-semibold opacity-70">מתוך 150</p>
+        <p className="mt-2 text-sm font-semibold opacity-70">מתוך {SCORE_MAX}</p>
         <p className="mt-1 text-sm opacity-70">הערכה משוערת, לא הציון הרשמי</p>
         <p className="mt-6 max-w-sm leading-relaxed">{scoreMessage(result.estimatedScore)}</p>
-        <div className="mt-6 rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-5">
+        <div className="mt-6 rounded-3xl border border-line bg-white shadow-card p-5">
           <p className="font-semibold">{level.label}</p>
           <p className="mt-1 text-sm opacity-70">{level.note}</p>
           <p className="mt-2 text-sm opacity-60">מספר הקורסים הסופי נקבע על ידי המוסד שבו תלמדו.</p>
@@ -217,14 +218,25 @@ export function ExamClient({
           )}
         </div>
         <Diagnosis tally={tally} paid={!freeUpsell} inCourse={inCourse} />
+        {showReview && (
+          <a href="#review" className="mt-4 flex min-h-11 items-center text-sm font-semibold underline underline-offset-4">
+            לסקירה מלאה של השאלות ↓
+          </a>
+        )}
         {freeUpsell ? (
           <FreeNextCard current="exam" />
         ) : (
-          <Link href="/account" className="mt-8 rounded-full bg-fg px-6 py-3 font-semibold text-bg">
+          <Link href="/account" className="mt-4 rounded-full bg-fg px-6 py-3 font-semibold text-bg">
             לאזור האישי
           </Link>
         )}
       </div>
+      {showReview && (
+        <div className="mx-auto w-full max-w-md px-4 pb-24">
+          <ExamReview items={review} />
+        </div>
+      )}
+      </>
     );
   }
 
@@ -276,7 +288,7 @@ function Diagnosis({ tally, paid, inCourse }: { tally: TypeTally; paid: boolean;
     .sort((a, b) => a.correct / a.total - b.correct / b.total)[0];
   if (tally.length === 0) return null;
   return (
-    <div className="mt-6 w-full rounded-3xl border border-line bg-white p-5 text-start shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
+    <div className="mt-6 w-full rounded-3xl border border-line bg-white p-5 text-start shadow-card">
       <p className="font-semibold">איפה הלכו הנקודות</p>
       <ul className="mt-4 grid gap-3">
         {tally.map((r) => (
@@ -396,6 +408,12 @@ function SectionRunner({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- onSectionDone is stable enough per section mount
   }, []);
 
+  // The start button sits at the bottom of the intro page, so without this the first question
+  // opens scrolled down to the footer. Runs on mount (new chapter) and on every question change.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [qIndex]);
+
   const q = questions[qIndex];
   const saved = answers[q.id] ?? null;
   const selected = typeof saved === "number" ? saved : null;
@@ -436,7 +454,7 @@ function SectionRunner({
           פרק {sectionIndex + 1} מתוך {totalSections} · שאלה {qIndex + 1} מתוך {questions.length}
         </span>
         <span className="rounded-full bg-white px-3 py-1 font-semibold tabular-nums">
-          {formatTime(secondsLeft)}
+          {formatClock(secondsLeft)}
         </span>
       </div>
 
@@ -452,23 +470,42 @@ function SectionRunner({
       </div>
 
       <div
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-bg/95 backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-(--z-fab) border-t border-line bg-bg/95 backdrop-blur"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="mx-auto max-w-2xl px-4 py-3 sm:px-6">
-          {finalSubmit ? (
-            <HoldButton onComplete={nextQuestion} fullWidth>
-              החזיקו להגשת המבחן
-            </HoldButton>
-          ) : (
-            <TactileButton onClick={nextQuestion} fullWidth>
-              {qIndex + 1 < questions.length
-                ? "השאלה הבאה"
-                : returnTo !== null
-                  ? `חזרה לשאלה ${returnTo + 1}`
-                  : "הפרק הבא"}
-            </TactileButton>
+        <div className="mx-auto flex max-w-2xl items-start gap-3 px-4 py-3 sm:px-6">
+          {/* Back is allowed inside the chapter only: a finished chapter is locked, because the next one is picked from its answers */}
+          {qIndex > 0 && (
+            <button
+              type="button"
+              onClick={() => setQIndex((i) => i - 1)}
+              className="h-12 shrink-0 rounded-full border border-line bg-white px-5 font-semibold text-ink"
+            >
+              → הקודמת
+            </button>
           )}
+          <div className="min-w-0 flex-1">
+            {returnTo !== null && (
+              <p role="status" className="mb-2 text-center text-sm font-semibold text-warn">
+                {questions.filter((qq) => !isAnswered(qq)).length === 1
+                  ? "נשארה שאלה אחת בלי תשובה"
+                  : `נשארו ${questions.filter((qq) => !isAnswered(qq)).length} שאלות בלי תשובה`}
+              </p>
+            )}
+            {finalSubmit ? (
+              <HoldButton onComplete={nextQuestion} fullWidth>
+                החזיקו להגשת המבחן
+              </HoldButton>
+            ) : (
+              <TactileButton onClick={nextQuestion} fullWidth>
+                {qIndex + 1 < questions.length
+                  ? "השאלה הבאה"
+                  : returnTo !== null
+                    ? `חזרה לשאלה ${returnTo + 1}`
+                    : "הפרק הבא"}
+              </TactileButton>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -513,7 +550,7 @@ function WritingRunner({
     return () => clearTimeout(id);
   }, [secondsLeft]);
 
-  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  const words = countWords(text);
   const lastSection = sectionIndex + 1 === totalSections;
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-4 pb-32 pt-6 sm:px-6">
@@ -521,7 +558,7 @@ function WritingRunner({
         <span className="opacity-70">
           פרק {sectionIndex + 1} מתוך {totalSections} · {TYPE_LABELS.writing.he}
         </span>
-        <span className="rounded-full bg-white px-3 py-1 font-semibold tabular-nums">{formatTime(secondsLeft)}</span>
+        <span className="rounded-full bg-white px-3 py-1 font-semibold tabular-nums">{formatClock(secondsLeft)}</span>
       </div>
       <p dir="ltr" className="mt-6 text-left text-lg font-medium leading-snug">{prompt}</p>
       <p className={`mt-3 text-sm tabular-nums ${words >= WRITING_MIN_WORDS ? "font-semibold text-ok" : "opacity-70"}`}>
@@ -537,7 +574,7 @@ function WritingRunner({
         className="mt-3 min-h-64 w-full flex-1 resize-none rounded-2xl border border-line bg-white p-4 text-left text-lg leading-relaxed text-ink outline-none focus:border-fg focus:ring-2 focus:ring-fg/15"
       />
       <div
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-bg/95 backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-(--z-fab) border-t border-line bg-bg/95 backdrop-blur"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="mx-auto max-w-2xl px-4 py-3 sm:px-6">

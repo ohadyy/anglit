@@ -14,13 +14,16 @@
 //    and a simulated national population reproduces NITE's 2024 distribution.
 
 import { questions, passages, isCorrectAnswer, type ExamQuestion } from "@/content/questions";
-import { examTests, platinumTests, EASY_TEST } from "@/content/examTests";
+import { examTests } from "@/content/examTests";
 import { frozenTests } from "@/content/frozenTests";
 import { poolPassages, poolReading, poolRestatement, poolSentence } from "@/content/examPool";
 import { levelOf } from "@/content/difficulty";
-import { buildExam, CORE_SECTIONS, PILOT_CHAPTER, PILOT_CHAPTER_TYPES, type ExamPlanItem } from "@/lib/examStructure";
-import { buildPlatinumExam, platinumPassage } from "@/lib/platinumExam";
+import { buildExam, CORE_SECTIONS, type ExamPlanItem } from "@/lib/examStructure";
+import { PILOT_CHAPTER, PILOT_CHAPTER_TYPES } from "@/lib/pilotChapters";
 import { difficultyOf, pCorrect, scoreExam, scoreFromAbility } from "@/lib/examScore";
+import { seededRandom } from "@/lib/random";
+import { buildFreeSet } from "@/lib/practice";
+import { FREE_QUESTION_COUNT } from "@/content/practiceFacts";
 
 let failures = 0;
 function check(ok: boolean, msg: string) {
@@ -30,15 +33,8 @@ function check(ok: boolean, msg: string) {
   }
 }
 
-// Small seeded PRNG so every run gives the same numbers
-let seed = 12345;
-const rand = () => {
-  seed = (seed + 0x6d2b79f5) >>> 0;
-  let t = seed;
-  t = Math.imul(t ^ (t >>> 15), t | 1);
-  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-};
+// Seeded so every run gives the same numbers
+const rand = seededRandom(12345);
 const normal = () => Math.sqrt(-2 * Math.log(rand() || 1e-9)) * Math.cos(2 * Math.PI * rand());
 const trueScore = (theta: number) => scoreFromAbility(theta);
 
@@ -75,7 +71,6 @@ const practiceIds = new Set(questions.map((q) => q.id));
 const allCore = [
   ...questions.filter((q) => q.type === "sentence" || q.type === "restatement" || q.type === "reading"),
   ...pool,
-  ...[...platinumTests.map((t) => t.number), EASY_TEST].flatMap((n) => core(buildPlatinumExam(n))),
 ];
 const seenIds = new Set<string>();
 for (const q of allCore) {
@@ -88,6 +83,7 @@ for (const q of allCore) {
   check(levelOf(q.id) !== undefined, `${q.id}: no difficulty level`);
 }
 for (const q of pool) check(!practiceIds.has(q.id), `${q.id}: exam-pool item is also in the practice bank`);
+check(buildFreeSet().length === FREE_QUESTION_COUNT, `the free set has ${buildFreeSet().length} questions, FREE_QUESTION_COUNT says ${FREE_QUESTION_COUNT}`);
 console.log(`  ${allCore.length} core questions checked, ${pool.length} in the exam-only pool`);
 // Practice must reach every level, so students can train up to the exam's harder chapters
 for (const type of ["sentence", "restatement", "reading"] as const) {
@@ -149,10 +145,6 @@ for (const n of adaptiveNumbers) {
     check(JSON.stringify(buildExam(n, answers)) === JSON.stringify(plan), `${n}@${theta}: not deterministic`);
   }
 }
-for (const n of [...platinumTests.map((t) => t.number), EASY_TEST]) {
-  checkStructure(n, buildPlatinumExam(n), false);
-  check(!!platinumPassage(n), `${n}: no passage`);
-}
 
 // A student who already met some pool items: the test must still rebuild identically, and avoid them
 for (const n of adaptiveNumbers.slice(0, 3)) {
@@ -176,7 +168,7 @@ for (const n of adaptiveNumbers) {
   const strong = lastB(2);
   check(strong > weak + 1, `${n}: routing too flat (last chapter difficulty ${weak.toFixed(2)} → ${strong.toFixed(2)})`);
 }
-console.log(`  ${frozenNumbers.length} frozen, ${adaptiveNumbers.length} adaptive, ${platinumTests.length + 1} hand-written tests checked`);
+console.log(`  ${frozenNumbers.length} frozen, ${adaptiveNumbers.length} adaptive, 1 hand-written tests checked`);
 
 // Repeats: one student takes every adaptive test in turn. How many tests before anything repeats?
 console.log("  repeats for one student taking all adaptive tests in turn:");
@@ -199,9 +191,9 @@ for (const theta of [-1, 0, 1, 2]) {
 
 // ---------- 5: scoring sanity ----------
 console.log("5. Scoring");
-const everyTest = [...frozenNumbers, ...adaptiveNumbers, ...platinumTests.map((t) => t.number), EASY_TEST];
+const everyTest = [...frozenNumbers, ...adaptiveNumbers];
 for (const n of everyTest) {
-  const plan = n.startsWith("P") || n === EASY_TEST ? buildPlatinumExam(n) : buildExam(n);
+  const plan = buildExam(n);
   const qs = core(plan);
   const s = (rightMask: boolean[]) => scoreExam(Object.fromEntries(qs.map((q, i) => [q.id, rightMask[i]]))).estimatedScore;
   check(s(qs.map(() => false)) <= 65, `${n}: all wrong scores ${s(qs.map(() => false))}`);
@@ -265,8 +257,8 @@ check(sd >= 18 && sd <= 28, `population SD ${sd.toFixed(1)}`);
 
 // ---------- per-test table ----------
 console.log("\nPer test: average level, and the score for 50% / 70% / 90% right (old formula in brackets)");
-for (const n of [...frozenNumbers, ...platinumTests.map((t) => t.number), EASY_TEST]) {
-  const qs = core(n.startsWith("P") || n === EASY_TEST ? buildPlatinumExam(n) : buildExam(n));
+for (const n of frozenNumbers) {
+  const qs = core(buildExam(n));
   const avg = qs.reduce((s, q) => s + (levelOf(q.id) ?? 0), 0) / qs.length;
   const at = (ratio: number) => {
     const k = Math.round(qs.length * ratio);

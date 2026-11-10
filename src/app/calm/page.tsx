@@ -18,7 +18,6 @@ const CARDS = [
 export default function CalmPage() {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 pb-20 pt-24">
-      {/* Angela: a meditating figure inside a breathing bubble */}
       <AngelaFigure />
 
       <p className="font-hand mt-10 text-center text-3xl opacity-70">{calmCopy.greeting}</p>

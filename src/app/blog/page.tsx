@@ -19,13 +19,12 @@ export default function BlogIndexPage() {
       </h1>
       <p className="mt-3 max-w-xl leading-relaxed opacity-80">{blogIndexCopy.intro}</p>
 
-      {/* Grid on desktop, one column on mobile (that's 90% of visits). Cards lift a little on hover. */}
       <ul className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {blogPostsByDate.map((post) => (
           <li key={post.slug} className="relative">
             <Link
               href={`/blog/${post.slug}`}
-              className="relative block overflow-hidden rounded-2xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_30px_60px_-20px_rgb(14_8_82/0.45)]"
+              className="relative block overflow-hidden rounded-2xl border border-line bg-white shadow-card transition-transform duration-300 hover:-translate-y-1 hover:shadow-card-lift"
             >
               <BlogCover post={post} className="aspect-[16/9] w-full" />
               <div className="p-4">

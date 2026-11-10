@@ -1,27 +1,17 @@
 "use client";
 
+import { Stem } from "@/components/Stem";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ELIMINATE, eliminateCopy as t, type EliminateQuestion } from "@/content/eliminate";
+import { ELIMINATE, ELIMINATE_ROUNDS as ROUNDS, ELIMINATE_SECONDS as SECONDS, eliminateCopy as t, type EliminateQuestion } from "@/content/eliminate";
 import { LtrWords } from "@/components/LtrWords";
-import { useStored } from "@/lib/useStored";
-
-const ROUNDS = 8;
-const SECONDS = 25;
+import { randomOrder } from "@/lib/random";
+import { useCalmBest } from "../useCalmBest";
 
 type Round = EliminateQuestion & { options: string[] };
 
-function shuffle<T>(arr: T[]) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 export function EliminateGame() {
-  const [best, setBest] = useStored("anglit-calm", { thoughtsBest: 0, eliminateBest: 0 });
+  const [best, setBest] = useCalmBest();
   const [phase, setPhase] = useState<"intro" | "play" | "done">("intro");
   const [rounds, setRounds] = useState<Round[]>([]);
   const [qi, setQi] = useState(0);
@@ -44,7 +34,7 @@ export function EliminateGame() {
   }, [phase, status, left]);
 
   function start() {
-    setRounds(shuffle(ELIMINATE).slice(0, ROUNDS).map((q) => ({ ...q, options: shuffle([...q.keep, ...q.out]) })));
+    setRounds(randomOrder(ELIMINATE).slice(0, ROUNDS).map((q) => ({ ...q, options: randomOrder([...q.keep, ...q.out]) })));
     setQi(0);
     setWins(0);
     setStruck([]);
@@ -71,7 +61,6 @@ export function EliminateGame() {
 
   const q = rounds[qi];
 
-  // Step 1: cross out the two impossible options. Step 2: pick the answer from the two left.
   function tap(opt: string) {
     if (status !== "play" || struck.includes(opt)) return;
     if (struck.length < 2) {
@@ -125,7 +114,7 @@ export function EliminateGame() {
         <div className="h-full bg-fg transition-[width] duration-1000 ease-linear" style={{ width: `${(left / SECONDS) * 100}%` }} />
       </div>
 
-      <p dir="ltr" className="mt-8 text-left text-xl font-semibold leading-relaxed">{q.stem}</p>
+      <p dir="ltr" className="mt-8 text-left text-xl font-semibold leading-relaxed"><Stem text={q.stem} revealed={false} /></p>
 
       <ul dir="ltr" className="mt-6 flex flex-col gap-3">
         {q.options.map((opt) => {

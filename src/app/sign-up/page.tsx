@@ -2,17 +2,16 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useRef, useState } from "react";
+import { useModalLock } from "@/lib/useModalLock";
 import { trackMeta } from "@/components/MetaPixel";
 import { signUp } from "@/lib/auth-client";
 import { phoneToSyntheticEmail } from "@/lib/phoneAuth";
-import { AuthShell } from "@/components/AuthShell";
+import { AuthShell, authInput as input } from "@/components/AuthShell";
 import { GoogleButton } from "@/components/GoogleButton";
 import { authCopy } from "@/content/copy";
+import { SCORE_MAX, SCORE_MIN } from "@/content/facts";
 import { safeNext } from "@/lib/safeNext";
-
-const input =
-  "w-full rounded-2xl border border-line bg-white px-4 py-3.5 text-base outline-none transition-colors focus:border-fg focus:ring-2 focus:ring-fg/15";
 
 function SignUpForm() {
   const router = useRouter();
@@ -28,6 +27,9 @@ function SignUpForm() {
   // questions before the account is actually created, so a WhatsApp follow-up
   // can reference a real exam date or score instead of being generic.
   const [gateOpen, setGateOpen] = useState(false);
+  const gateRef = useRef<HTMLDivElement>(null);
+  // Keeps Tab inside the questions dialog; the no-op close is deliberate (see the dialog below)
+  useModalLock(gateOpen, () => {}, gateRef);
   const [examDate, setExamDate] = useState("");
   const [priorScore, setPriorScore] = useState("");
 
@@ -72,7 +74,7 @@ function SignUpForm() {
   return (
     <AuthShell>
       <div
-        className="account-enter rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-7 shadow-[0_24px_48px_-20px_rgb(14_8_82/0.35)] sm:p-9"
+        className="account-enter rounded-3xl border border-line bg-white p-7 shadow-[0_24px_48px_-20px_rgb(14_8_82/0.35)] sm:p-9"
         style={{ "--delay": "0ms" } as React.CSSProperties}
       >
         <h1 className="font-display text-center text-3xl font-bold">
@@ -83,9 +85,12 @@ function SignUpForm() {
         <GoogleButton next={next} />
 
         <form onSubmit={onSubmit} className="mt-3 flex flex-col gap-3">
-          <input type="text" placeholder="שם מלא" value={name} onChange={(e) => setName(e.target.value)} required className={input} />
+          <input type="text" name="name" autoComplete="name" placeholder="שם מלא" value={name} onChange={(e) => setName(e.target.value)} required className={input} />
           <input
             type="tel"
+            name="tel"
+            autoComplete="tel"
+            inputMode="tel"
             placeholder="מספר טלפון"
             dir="ltr"
             value={phone}
@@ -95,7 +100,7 @@ function SignUpForm() {
           />
           <label className="flex flex-col gap-1.5">
             <span className="text-sm opacity-70">תאריך לידה</span>
-            <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} required className={input} />
+            <input type="date" name="bday" autoComplete="bday" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} required className={input} />
           </label>
           <label className="mt-1 flex items-start gap-2.5 text-sm leading-relaxed">
             <input
@@ -106,8 +111,9 @@ function SignUpForm() {
               className="mt-1 size-4 shrink-0 accent-fg"
             />
             <span>
-              קראתי ואני מסכים/ה ל<Link href="/legal/terms" className="inline-flex min-h-11 items-center underline">תקנון</Link> ול
-              <Link href="/legal/privacy" className="inline-flex min-h-11 items-center underline">מדיניות הפרטיות</Link>
+              {/* Inline text links, not boxes: a box splits the sentence across lines */}
+              קראתי ואני מסכים/ה ל<Link href="/legal/terms" className="underline">תקנון</Link> ול
+              <Link href="/legal/privacy" className="underline">מדיניות הפרטיות</Link>
             </span>
           </label>
           <label className="flex items-start gap-2.5 text-sm leading-relaxed opacity-80">
@@ -119,7 +125,7 @@ function SignUpForm() {
             />
             <span>אני רוצה לקבל הודעות על מחזורים ומבצעים (אופציונלי)</span>
           </label>
-          {error && <p className="text-sm text-warn">{error}</p>}
+          {error && <p role="alert" className="text-sm text-warn">{error}</p>}
           <button
             type="submit"
             disabled={loading}
@@ -140,7 +146,7 @@ function SignUpForm() {
       {gateOpen && (
         // Intentionally has no backdrop click, no X and no Escape handler — the only way
         // through is "המשך", so the two questions below always get asked once.
-        <div role="dialog" aria-modal="true" aria-labelledby="gate-title" className="fixed inset-0 z-50 grid place-items-center bg-fg/40 p-4">
+        <div ref={gateRef} role="dialog" aria-modal="true" aria-labelledby="gate-title" className="fixed inset-0 z-(--z-overlay) grid place-items-center bg-fg/40 p-4">
           <div className="fade-in w-full max-w-sm rounded-3xl border border-line bg-white p-7 shadow-2xl">
             <h2 id="gate-title" className="font-display text-xl font-bold">עוד שתי שאלות, ואתם בפנים</h2>
             <p className="mt-2 text-sm leading-relaxed opacity-70">
@@ -155,8 +161,8 @@ function SignUpForm() {
               <input
                 type="number"
                 inputMode="numeric"
-                min={50}
-                max={150}
+                min={SCORE_MIN}
+                max={SCORE_MAX}
                 placeholder="למשל 95"
                 dir="ltr"
                 value={priorScore}

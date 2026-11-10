@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { prefersReducedMotion } from "@/lib/useReducedMotion";
 
 // The Anglit "A" mark, vectorized from public/brand/mark-dark.png (potrace, even-odd fill
 // so the triangular counter stays a hole). One compound path serves both the traced
@@ -41,10 +42,9 @@ export function LogoTraceLoader({
     onDone?.();
   };
 
-  // Reduced motion: skip straight to the finished mark.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (prefersReducedMotion()) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- reads a platform API once on mount
       setPhase("done");
       callDone();
@@ -110,7 +110,7 @@ export function LogoTraceLoader({
           pathLength={1}
           strokeDasharray="1 0"
           style={{
-            animation: `logo-trace-loader-close ${loopDurationSeconds / 2}s cubic-bezier(0.22,1,0.36,1) both`,
+            animation: `logo-trace-loader-close ${loopDurationSeconds / 2}s var(--ease-enter) both`,
           }}
         />
       )}

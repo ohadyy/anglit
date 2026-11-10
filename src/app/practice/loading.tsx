@@ -1,4 +1,3 @@
-// Skeleton for the practice chooser while the question bank is prepared on the server
 export default function PracticeLoading() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-14" aria-busy="true" aria-label="טוען">

@@ -1,8 +1,10 @@
+// FROZEN: ids (vw-N) come from the position in the merged list (vocabulary.ts) and are saved in student
+// progress. Do not insert, reorder or delete a row here, and do not add rows: they would shift every later
+// file's ids. New words go at the end of vocabExam.ts (the last file merged). Check: npm run check:vocab.
 // Extra vocabulary, letters F-O. Original example sentences. Converted to VocabWord in vocabulary.ts.
-type Tier = "easy" | "medium" | "hard" | "native";
-type Cat = "verb" | "adjective" | "noun" | "other";
+import type { VocabRow } from "./vocabulary";
 
-export const vocabMoreB: [string, string, string, Tier, Cat][] = [
+export const vocabMoreB: VocabRow[] = [
   ["fabric", "בד, אריג", "The curtains were made of a thick blue fabric.", "easy", "noun"],
   ["faint", "חלש, קלוש", "We heard a faint noise coming from the attic.", "medium", "adjective"],
   ["flaw", "פגם, ליקוי", "The engineer found a serious flaw in the design.", "medium", "noun"],

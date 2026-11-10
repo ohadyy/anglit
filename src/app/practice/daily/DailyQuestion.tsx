@@ -5,14 +5,10 @@ import { useEffect, useState } from "react";
 import type { Question } from "@/content/questions";
 import { QuestionView } from "@/components/QuestionView";
 import { ExamCountdown } from "@/components/ExamCountdown";
+import { localDay } from "@/lib/formatDate";
+import { STORAGE_KEYS } from "@/lib/storageKeys";
+import { CARD } from "@/lib/ui";
 import { useStored } from "@/lib/useStored";
-
-// Local calendar date as YYYY-MM-DD, offset by whole days
-function localDay(offset = 0) {
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  return d.toLocaleDateString("en-CA");
-}
 
 // Same question for everyone on the same date; cycles through the pool
 function dayIndex(day: string, size: number) {
@@ -21,7 +17,7 @@ function dayIndex(day: string, size: number) {
 
 /** `embedded` drops the page chrome (title block, countdown, links) so it can sit inside /practice */
 export function DailyQuestion({ pool, embedded = false }: { pool: Question[]; embedded?: boolean }) {
-  const [state, setState] = useStored("anglit-daily", { day: "", picked: -1, streak: 0, best: 0 });
+  const [state, setState] = useStored(STORAGE_KEYS.daily, { day: "", picked: -1, streak: 0, best: 0 });
   // The date is only known in the browser, so nothing renders until after mount
   const [today, setToday] = useState("");
   // eslint-disable-next-line react-hooks/set-state-in-effect -- read the device date once
@@ -58,7 +54,7 @@ export function DailyQuestion({ pool, embedded = false }: { pool: Question[]; em
     </>
   );
   const card = (
-    <div className="rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-6">
+    <div className={CARD}>
       <QuestionView q={q} selected={answeredToday ? state.picked : null} revealed={answeredToday} onSelect={pick} />
     </div>
   );

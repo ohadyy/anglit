@@ -4,9 +4,11 @@
 // psychometric exam to Amirnet. Update `asOf` when they change. Facts about the exam only, no
 // teaching method: that stays in the course.
 
+import { COST_PER_COURSE, COST_PER_COURSE_TEXT, NITE_FACTS, NITE_URLS, SCORE_MAX, SCORE_MIN } from "./facts";
+
 export const guideAsOf = "16.10.2026";
-export const NITE_AMIRNET_URL = "https://www.nite.org.il/other-tests/amirnet/";
-export const NITE_ACCOMMODATIONS_URL = "https://www.nite.org.il/other-tests/amirnet/special-test-accommodations";
+export const NITE_AMIRNET_URL = NITE_URLS.home;
+export const NITE_ACCOMMODATIONS_URL = NITE_URLS.accommodations;
 
 export const calculatorCopy = {
   eyebrow: "מחשבון ציון",
@@ -16,8 +18,8 @@ export const calculatorCopy = {
   coursesLabel: "קורסי אנגלית לפני הפטור",
   exemptText: "בלי קורסי רמה. נשארים בדרך כלל רק קורסי תוכן באנגלית, לפי המוסד.",
   // Same average the sprint page uses (sprintCopy.ts). An estimate, and labelled as one.
-  costPerCourse: 2000,
-  costLabel: "הערכת עלות, לפי ממוצע של כ-2,000 ₪ לקורס",
+  costPerCourse: COST_PER_COURSE,
+  costLabel: `הערכת עלות, לפי ממוצע של ${COST_PER_COURSE_TEXT} לקורס`,
   costPitch: "חבל להפסיד את כל הכסף הזה, נכון? תנו לי לעזור לכם.",
   costCta: "להרשמה לסמינר",
   disclaimer:
@@ -37,7 +39,7 @@ export const guideCopy = {
 
   aboutTitle: "מה זה אמירנט",
   about:
-    "אמירנט הוא מבחן אנגלית ממוחשב של המרכז הארצי לבחינות ולהערכה (מאל״ו). הוא בודק קריאה ואוצר מילים, והציון קובע קודם כל אם תצטרכו קורסי אנגלית לפני התואר, ובאיזו רמה. בחלק מהמוסדות ובחלק מהמסלולים האמירנט הוא גם תנאי קבלה בפני עצמו, ולא רק קביעת רמה — שווה לבדוק את זה מול המוסד הספציפי. החל ממועד החורף (דצמבר) 2026 הפסיכומטרי כבר לא כולל פרק אנגלית, ורמת האנגלית נבדקת רק באמירנט; השינוי צפוי להשפיע על הקבלה החל משנת הלימודים תשפ״ח. הציון ניתן בסולם של 50 עד 150.",
+    `אמירנט הוא מבחן אנגלית ממוחשב של המרכז הארצי לבחינות ולהערכה (מאל״ו). הוא בודק קריאה ואוצר מילים, והציון קובע קודם כל אם תצטרכו קורסי אנגלית לפני התואר, ובאיזו רמה. בחלק מהמוסדות ובחלק מהמסלולים האמירנט הוא גם תנאי קבלה בפני עצמו, ולא רק קביעת רמה — שווה לבדוק את זה מול המוסד הספציפי. החל ממועד החורף (דצמבר) 2026 הפסיכומטרי כבר לא כולל פרק אנגלית, ורמת האנגלית נבדקת רק באמירנט; השינוי צפוי להשפיע על הקבלה החל משנת הלימודים תשפ״ח. הציון ניתן בסולם של ${SCORE_MIN} עד ${SCORE_MAX}.`,
 
   structureTitle: "איך המבחן בנוי",
   structure:
@@ -54,8 +56,8 @@ export const guideCopy = {
   registerTitle: "הרשמה ומחיר",
   register: [
     "נרשמים באתר מאל״ו: ממלאים פרטים, בוחרים מועד ומרכז בחינה, ומשלמים.",
-    "דמי הרשמה: 315 ₪. שינוי מועד: 142 ₪.",
-    "בין מבחן למבחן צריך לעבור לפחות 35 יום. הספירה מתחילה ביום שאחרי המבחן.",
+    `דמי הרשמה: ${NITE_FACTS.registrationFeeIls} ₪. שינוי מועד: ${NITE_FACTS.rescheduleFeeIls} ₪.`,
+    `בין מבחן למבחן צריך לעבור לפחות ${NITE_FACTS.minDaysBetweenTests} יום. הספירה מתחילה ביום שאחרי המבחן.`,
     "המבחן מתקיים במרכזי הבחינה של מאל״ו, ולפעמים גם במוסדות אקדמיים. מי שנרשם דרך מוסד פונה אליו ישירות.",
   ],
   registerCta: "למועדים הפנויים",

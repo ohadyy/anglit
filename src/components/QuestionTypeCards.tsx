@@ -1,3 +1,4 @@
+import { Stem } from "./Stem";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { homeQuestionTypes } from "@/content/copy";
@@ -10,11 +11,10 @@ function Opt({ children, on }: { children: ReactNode; on?: boolean }) {
   return <div className={`rounded-lg border px-3 py-1.5 text-sm ${on ? "border-mint bg-mint/25 font-semibold" : "border-line bg-white"}`}>{children}</div>;
 }
 
-// A shrunk-down version of each question's real shape, so the card shows what you will be answering
 const PREVIEWS: Record<string, ReactNode> = {
   sentence: (
     <>
-      <p className="text-sm font-semibold">She ____ to school.</p>
+      <p className="text-sm font-semibold"><Stem text="She ____ to school." revealed={false} /></p>
       <div className="mt-2 grid gap-1.5">
         <Opt on>goes</Opt>
         <Opt>go</Opt>
@@ -44,7 +44,6 @@ const PREVIEWS: Record<string, ReactNode> = {
   ),
 };
 
-// Each card opens a free practice set of that question type
 export function QuestionTypeCards() {
   return (
     <div className="mt-10 grid gap-4 sm:grid-cols-3">

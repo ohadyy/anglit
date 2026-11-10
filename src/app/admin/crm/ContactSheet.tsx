@@ -3,13 +3,16 @@
 import { useState, useTransition } from "react";
 import { BottomSheet } from "@/components/BottomSheet";
 import { Badge } from "./Badge";
-import { addNote, deleteLead, deleteNote, setFollowUp, setStatus, type ActionResult } from "./actions";
+import { addNote, deleteLead, deleteNote, setFollowUp, setStatus } from "./actions";
+import type { ActionResult } from "../_shared";
+import { waLink } from "@/lib/phoneAuth";
+import { formatShortDateTime } from "@/lib/formatDate";
 import { StatusSelect } from "./StatusSelect";
-import { NOTE_LABEL, PRODUCT_LABEL, SOURCE_LABEL, waLink, type Contact, type NoteType } from "./labels";
+import { PRODUCT_LABEL } from "@/lib/enums";
+import { NOTE_LABEL, SOURCE_LABEL, type Contact, type NoteType } from "./labels";
 
 const field =
   "w-full rounded-2xl border border-line bg-white px-4 py-3 text-base outline-none focus:border-fg focus:ring-2 focus:ring-fg/15";
-const dateTimeFmt = new Intl.DateTimeFormat("he-IL", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jerusalem" });
 
 const addDays = (day: string, days: number) => new Date(new Date(`${day}T12:00:00Z`).getTime() + days * 86_400_000).toISOString().slice(0, 10);
 
@@ -163,7 +166,7 @@ export function ContactSheet({ contact: c, today, onClose }: { contact: Contact;
                 <li key={n.id} className="flex items-start gap-3 rounded-2xl border border-line bg-white p-3">
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold opacity-70">
-                      {NOTE_LABEL[n.type]} · {dateTimeFmt.format(n.createdAt)}
+                      {NOTE_LABEL[n.type]} · {formatShortDateTime(n.createdAt)}
                     </p>
                     {n.body && <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed">{n.body}</p>}
                   </div>

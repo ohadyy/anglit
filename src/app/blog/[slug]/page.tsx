@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { blogAuthor, blogPosts, getBlogPost } from "@/content/blog";
 import { BlogCover } from "@/components/BlogCover";
 import { site } from "@/lib/site";
+import { ArticleCta } from "@/components/ArticleCta";
 
 export function generateStaticParams() {
   return blogPosts.map((post) => ({ slug: post.slug }));
@@ -32,7 +33,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-// Renders "[label](/href)" markdown-style links as real Next links; plain text otherwise.
 function renderParagraph(text: string): ReactNode {
   const parts = text.split(/(\[[^\]]+\]\([^)]+\))/g);
   return parts.map((part, i) => {
@@ -74,9 +74,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       name: blogAuthor.name,
       jobTitle: blogAuthor.jobTitle,
       description: blogAuthor.description,
-      worksFor: { "@type": "EducationalOrganization", name: "Anglit", url: site.url },
+      worksFor: { "@type": "EducationalOrganization", name: site.name, url: site.url },
     },
-    publisher: { "@type": "Organization", name: "Anglit", url: site.url },
+    publisher: { "@type": "Organization", name: site.name, url: site.url },
   };
 
   return (
@@ -118,7 +118,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             <li key={p.slug}>
               <Link
                 href={`/blog/${p.slug}`}
-                className="block overflow-hidden rounded-2xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] transition-colors hover:bg-fg/5"
+                className="block overflow-hidden rounded-2xl border border-line bg-white shadow-card transition-colors hover:bg-fg/5"
               >
                 <BlogCover post={p} className="aspect-[16/9] w-full" />
                 <p className="p-4 text-sm font-semibold leading-snug">{p.title}</p>
@@ -128,18 +128,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </ul>
       </section>
 
-      <div data-invert="" className="mt-10 rounded-3xl p-6 sm:p-8">
-        <h2 className="text-2xl font-bold">רוצים להתחיל?</h2>
-        <p className="mt-2 opacity-80">שבוע אחד בקבוצה קטנה עם מורה אמיתי, ותרגול יומי עם הסבר לכל שאלה.</p>
-        <div className="mt-5 flex flex-wrap items-center gap-4">
-          <Link href="/pricing" className="inline-flex rounded-full bg-fg px-6 py-3.5 font-semibold text-bg">
-            לכל המסלולים והמחירים
-          </Link>
-          <Link href="/practice" className="inline-flex min-h-11 items-center text-sm underline underline-offset-4 opacity-80">
-            לתרגול חינם
-          </Link>
-        </div>
-      </div>
+      <ArticleCta title="רוצים להתחיל?" className="mt-10" />
     </main>
   );
 }

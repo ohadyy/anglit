@@ -2,8 +2,10 @@
 // Update them regularly and change `asOf` each time. Nothing here is registration: the
 // link sends people to the official site.
 
+import { NITE_URLS } from "./facts";
+
 export const examDatesAsOf = "19.10.2026";
-export const NITE_REGISTRATION_URL = "https://niteop.nite.org.il/#/net-registration/J,2";
+export const NITE_REGISTRATION_URL = NITE_URLS.registration;
 
 export type CenterId = "beersheba" | "haifa" | "jerusalem" | "telaviv" | "ramatgan";
 

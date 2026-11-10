@@ -13,7 +13,6 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       title={next}
       className={`grid size-11 place-items-center rounded-full border border-line hover:bg-fg/5 ${className}`}
     >
-      {/* Half-filled circle: the two themes side by side */}
       <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
         <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" strokeWidth="2" />
         <path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" />

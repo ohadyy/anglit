@@ -31,3 +31,8 @@ export async function notify(title: string, lines: string[], tags = "rotating_li
     if (attempt < ATTEMPTS) await new Promise((r) => setTimeout(r, attempt * 1000));
   }
 }
+
+export const contactLines = (name: string | null | undefined, phone: string | null | undefined) => [
+  `שם: ${name ?? "לא ידוע"}`,
+  `טלפון: ${phone ?? "לא ידוע"}`,
+];

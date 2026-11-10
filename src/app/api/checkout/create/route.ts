@@ -2,13 +2,13 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { createLowProfile } from "@/lib/cardcom";
-import { upcomingCourseOffer } from "@/lib/cohorts";
 import { db } from "@/db";
 import { paidProducts } from "@/lib/access";
 import { orders } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { notify } from "@/lib/ntfy";
-import { getProduct, loyaltyPrice } from "@/content/pricingCopy";
+import { contactLines, notify } from "@/lib/ntfy";
+import { getProduct } from "@/content/pricingCopy";
+import { priceFor } from "@/lib/pricing";
 import { couponAgorot } from "@/lib/coupons";
 
 export async function POST(request: Request) {
@@ -31,13 +31,9 @@ export async function POST(request: Request) {
     return NextResponse.redirect(new URL(`/checkout?product=${product.id}`, request.url), { status: 303 });
   }
 
-  // The course costs the cohort price while the next cohort is open; the order is tied to that cohort
-  const offer = product.id === "course" ? await upcomingCourseOffer() : null;
-  const listIls = offer ? offer.priceIls : Number(product.price);
   // Existing customers (paid for anything but the course) get the loyalty price on the course
   const owned = product.id === "course" ? await paidProducts(session.user.id) : [];
-  const loyal = owned.length > 0 && !owned.includes("course");
-  const baseIls = loyal ? loyaltyPrice(listIls) : listIls;
+  const { listIls, priceIls: baseIls } = priceFor(product, owned);
 
   const couponCode = form.get("coupon")?.toString().trim();
   // Coupons apply to the seminar only, and never stack with the loyalty price: the buyer gets the lower of the two
@@ -56,19 +52,18 @@ export async function POST(request: Request) {
       userId: session.user.id,
       amountAgorot,
       product: product.id,
-      cohortId: offer?.cohortId ?? null,
       termsAcceptedAt: new Date(),
     })
     .returning();
 
   // The buyer is about to enter a card: if they drop there, this is the number to call
-  await notify("Checkout started - Anglit", [`שם: ${session.user.name}`, `טלפון: ${(session.user as { phone?: string }).phone ?? "לא ידוע"}`, `סכום: ${amountIls} ₪`], "shopping_cart");
+  await notify("Checkout started - Anglit", [...contactLines(session.user.name, session.user.phone), `סכום: ${amountIls} ₪`], "shopping_cart");
 
   try {
     const result = await createLowProfile({
       returnValue: order.id,
       amountIls,
-      successRedirectUrl: `${origin}/checkout/success?product=${product.id}&order=${order.id}`,
+      successRedirectUrl: `${origin}/checkout/success?order=${order.id}`,
       failedRedirectUrl: `${origin}/checkout/failed?order=${order.id}`,
       webHookUrl: `${origin}/api/webhooks/cardcom`,
     });

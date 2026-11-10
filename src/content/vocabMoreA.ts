@@ -1,6 +1,9 @@
+// FROZEN: ids (vw-N) come from the position in the merged list (vocabulary.ts) and are saved in student
+// progress. Do not insert, reorder or delete a row here, and do not add rows: they would shift every later
+// file's ids. New words go at the end of vocabExam.ts (the last file merged). Check: npm run check:vocab.
 // Extra vocabulary, letters A-E. Tuple: [word, translation, example, tier, category]. Original examples.
-export const vocabMoreA: [string, string, string, "easy" | "medium" | "hard" | "native", "verb" | "adjective" | "noun" | "other"][] = [
-  // easy
+import type { VocabRow } from "./vocabulary";
+export const vocabMoreA: VocabRow[] = [
   ["accept", "לקבל, להסכים", "She decided to accept the job offer in Haifa.", "easy", "verb"],
   ["add", "להוסיף", "Add a little salt to the soup before serving.", "easy", "verb"],
   ["allow", "לאפשר, להתיר", "The school does not allow phones in the exam room.", "easy", "verb"],
@@ -27,7 +30,6 @@ export const vocabMoreA: [string, string, string, "easy" | "medium" | "hard" | "
   ["entire", "שלם, כולו", "She read the entire book in a single night.", "easy", "adjective"],
   ["error", "טעות, שגיאה", "The teacher found an error in the final calculation.", "easy", "noun"],
   ["event", "אירוע", "The school holds a big event at the end of every year.", "easy", "noun"],
-  // medium
   ["accompany", "ללוות", "A nurse will accompany the patient to the hospital.", "medium", "verb"],
   ["acquire", "לרכוש, להשיג", "Children acquire language remarkably fast.", "medium", "verb"],
   ["adapt", "להסתגל, להתאים", "Animals must adapt to survive in a changing climate.", "medium", "verb"],
@@ -85,7 +87,6 @@ export const vocabMoreA: [string, string, string, "easy" | "medium" | "hard" | "
   ["exceed", "לעלות על, לחרוג", "Costs must not exceed the approved budget.", "medium", "verb"],
   ["expose", "לחשוף", "Long hours in the sun expose your skin to damage.", "medium", "verb"],
   ["extent", "מידה, היקף", "No one knew the full extent of the damage.", "medium", "noun"],
-  // hard
   ["abide", "לציית, לעמוד ב", "All players must abide by the rules of the tournament.", "hard", "verb"],
   ["abolish", "לבטל, לחסל", "Parliament voted to abolish the old tax.", "hard", "verb"],
   ["abrupt", "פתאומי, חד", "The meeting came to an abrupt end when the power failed.", "hard", "adjective"],
@@ -157,7 +158,6 @@ export const vocabMoreA: [string, string, string, "easy" | "medium" | "hard" | "
   ["expedite", "להאיץ, לזרז", "The office promised to expedite my request.", "hard", "verb"],
   ["extinct", "נכחד", "Dinosaurs became extinct millions of years ago.", "hard", "adjective"],
   ["extravagant", "מופרז, בזבזני", "They held an extravagant party for their anniversary.", "hard", "adjective"],
-  // native
   ["abhor", "לתעב", "She abhors cruelty to animals in any form.", "native", "verb"],
   ["acquiesce", "להסכים בשתיקה, להיכנע", "After a long argument, he acquiesced to their demands.", "native", "verb"],
   ["admonish", "לנזוף, להזהיר", "The coach admonished the players for arriving late.", "native", "verb"],

@@ -1,12 +1,13 @@
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { isStaffPhone, paidProducts } from "@/lib/access";
-import type { ProductId } from "@/content/pricingCopy";
+import type { ProductId } from "@/lib/enums";
+import { isLoyalCustomer } from "@/lib/pricing";
 
 // Who is looking at a public page, so the page can change with what they already have:
 // guest (not signed in), free (signed in, paid nothing), access (paid for site access or
 // private lessons), course (paid for the seminar, which includes site access).
-export const TIERS = ["guest", "free", "access", "course"] as const;
+const TIERS = ["guest", "free", "access", "course"] as const;
 export type Tier = (typeof TIERS)[number];
 
 export type Viewer = {
@@ -35,5 +36,4 @@ export async function getViewer(previewAs?: string): Promise<Viewer> {
   return { tier, name: session.user.name, owned, staff };
 }
 
-/** True when the course should be offered at the loyalty price */
-export const isLoyal = (v: Viewer) => v.owned.length > 0 && !v.owned.includes("course");
+export const isLoyal = (v: Viewer) => isLoyalCustomer(v.owned);

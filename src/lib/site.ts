@@ -1,9 +1,11 @@
+import { businessDetails } from "@/content/legal";
+
+const handle = businessDetails.instagram.replace(/^@/, "");
+
 export const site = {
-  name: "Anglit",
-  handle: "anglitpro",
+  name: businessDetails.name,
+  handle,
   url: "https://anglitpro.co.il",
-  instagramUrl: "https://instagram.com/anglitpro",
+  instagramUrl: `https://instagram.com/${handle}`,
   googleBusinessUrl: "https://share.google/dED0ymh15ilxz3jXb",
-  /** Questions a visitor can answer before being asked to sign up */
-  freeLimit: 5,
 };

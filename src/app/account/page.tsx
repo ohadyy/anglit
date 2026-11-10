@@ -7,8 +7,9 @@ import { desc, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { examAttempts } from "@/db/schema";
-import { scoreLevel } from "@/lib/examScore";
-import { hasCourse, hasPaidAccess } from "@/lib/access";
+import { scoreLevel } from "@/lib/scoreLevels";
+import { FREE_QUESTION_COUNT } from "@/content/practiceFacts";
+import { isStaffPhone, paidProducts } from "@/lib/access";
 import { cohortOptionsFor } from "@/lib/cohorts";
 import { MiniTile, PREVIEWS } from "@/components/MiniPreviews";
 import { copy } from "@/content/copy";
@@ -22,23 +23,22 @@ export default async function AccountPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/sign-in?next=/account");
 
-  const [attempts, paid, course] = await Promise.all([
+  const [attempts, owned] = await Promise.all([
     db
       .select()
       .from(examAttempts)
       .where(eq(examAttempts.userId, session.user.id))
       .orderBy(desc(examAttempts.completedAt)),
-    hasPaidAccess(session.user.id),
-    hasCourse(session.user.id),
+    paidProducts(session.user.id),
   ]);
+  // Staff phones see everything, like a paying member (same rule as hasPaidAccess)
+  const paid = isStaffPhone(session.user.phone) || owned.length > 0;
+  const course = owned.includes("course");
 
   const closeTest = attempts.find((a) => a.kind === "close");
-  // Platinum attempts are a harder series, so they never count toward the opening-to-latest progress
-  const regular = attempts.filter((a) => !a.testNumber?.startsWith("P"));
   // attempts are newest first, so the last open test is the first one taken: the baseline
-  const openRegular = regular.findLast((a) => a.kind === "open");
-  const openTest = openRegular;
-  const latestTest = regular[0] && regular[0].id !== openRegular?.id ? regular[0] : undefined;
+  const openTest = attempts.findLast((a) => a.kind === "open");
+  const latestTest = attempts[0] && attempts[0].id !== openTest?.id ? attempts[0] : undefined;
   const cohort = course ? await cohortOptionsFor(session.user.id) : null;
 
   return (
@@ -55,7 +55,7 @@ export default async function AccountPage() {
       </header>
 
       {!paid && (
-        <div className="account-enter mt-8 rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-5" style={delayStyle(60)}>
+        <div className="account-enter mt-8 rounded-3xl border border-line bg-white shadow-card p-5" style={delayStyle(60)}>
           <p className="font-semibold">{copy.accountUnpaidBannerTitle}</p>
           <p className="mt-1 text-sm opacity-70">{copy.accountUnpaidBannerText}</p>
           <Link
@@ -69,13 +69,13 @@ export default async function AccountPage() {
 
       {paid && (
         <div className="account-enter" style={delayStyle(60)}>
-          <ProgressCard open={openRegular?.estimatedScore ?? null} latest={latestTest?.estimatedScore ?? null} />
+          <ProgressCard open={openTest?.estimatedScore ?? null} latest={latestTest?.estimatedScore ?? null} />
         </div>
       )}
 
       <nav className="mt-8 grid grid-cols-2 gap-3" aria-label="אזורי הלימוד">
         <Tile delay={120} href={paid ? "/exam" : "/pricing"} title="מבחנים" text={paid ? "מבחן חדש בכל פעם" : copy.accountLockedLabel} badge={paid && attempts.length > 0 ? `${attempts.length} ניסיונות` : undefined} locked={!paid} preview={PREVIEWS.exams} />
-        <Tile delay={180} href="/practice" title="תרגול חופשי" text={paid ? "כל סוגי השאלות, עם הסבר" : "5 שאלות חינם לדוגמה"} badge={paid ? undefined : "חינם"} locked={false} preview={PREVIEWS.sentence} />
+        <Tile delay={180} href="/practice" title="תרגול חופשי" text={paid ? "כל סוגי השאלות, עם הסבר" : `${FREE_QUESTION_COUNT} שאלות חינם לדוגמה`} badge={paid ? undefined : "חינם"} locked={false} preview={PREVIEWS.sentence} />
         <Tile delay={240} href={paid ? "/vocabulary" : "/pricing"} title="אוצר מילים" text={paid ? "לפי רמת השליטה שלכם" : copy.accountLockedLabel} locked={!paid} preview={PREVIEWS.vocab} />
         <Tile
           delay={300}
@@ -158,7 +158,6 @@ function Tile({
   );
 }
 
-// Each entrance step is delayed a little more than the one before it (stagger)
 function delayStyle(ms: number): CSSProperties {
   return { "--delay": `${ms}ms` } as CSSProperties;
 }
@@ -166,7 +165,7 @@ function delayStyle(ms: number): CSSProperties {
 function ResultCard({ title, attempt }: { title: string; attempt: typeof examAttempts.$inferSelect }) {
   const level = scoreLevel(attempt.estimatedScore);
   return (
-    <div className="rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-5">
+    <div className="rounded-3xl border border-line bg-white shadow-card p-5">
       <div className="flex items-center justify-between">
         <p className="font-semibold">{title}</p>
         <p className="text-2xl font-bold tabular-nums">{attempt.estimatedScore}</p>
@@ -174,6 +173,9 @@ function ResultCard({ title, attempt }: { title: string; attempt: typeof examAtt
       <p className="mt-1 text-sm opacity-70">
         {level.label} · {attempt.rawCorrect}/{attempt.totalQuestions} נכונות
       </p>
+      <Link href={`/exam/review/${attempt.id}`} className="mt-1 flex min-h-11 items-center text-sm font-semibold underline underline-offset-4">
+        ראה טעויות
+      </Link>
     </div>
   );
 }

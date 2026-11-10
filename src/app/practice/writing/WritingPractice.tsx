@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ExtraTimePicker, useExtraTime, withExtraTime } from "@/components/ExtraTimePicker";
-import { WRITING_MIN_WORDS, WRITING_MINUTES, writingChecklist, writingTasks, writingTips } from "@/content/writingTasks";
-
-const clock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-const wordCount = (text: string) => text.trim().split(/\s+/).filter(Boolean).length;
+import { countWords, WRITING_MIN_WORDS, WRITING_MINUTES } from "@/content/practiceFacts";
+import { writingChecklist, writingTasks, writingTips } from "@/content/writingTasks";
+import { formatClock } from "@/lib/formatClock";
 
 type Phase = "intro" | "writing" | "done";
 
@@ -20,7 +19,7 @@ export function WritingPractice() {
 
   const task = writingTasks[taskIndex];
   const total = withExtraTime(WRITING_MINUTES * 60, extraPct);
-  const words = wordCount(text);
+  const words = countWords(text);
 
   // Each screen starts at the top (the results page is long and the button sits at the bottom)
   useEffect(() => {
@@ -56,7 +55,7 @@ export function WritingPractice() {
       <div className="mx-auto flex flex-1 max-w-md flex-col px-4 py-12">
         <h1 className="font-display text-3xl font-bold">מטלת כתיבה</h1>
         <p className="mt-3 leading-relaxed opacity-80">
-          במבחן האמיתי חלק מהנבחנים מקבלים מטלת כתיבה אחת, בת 12 דקות, במקום שני פרקי הניסיון. מקלידים טקסט באנגלית על נושא נתון,
+          במבחן האמיתי חלק מהנבחנים מקבלים מטלת כתיבה אחת, בת {WRITING_MINUTES} דקות, במקום שני פרקי הניסיון. מקלידים טקסט באנגלית על נושא נתון,
           והבדיקה אוטומטית. המשקל שלה בציון קטן מאוד, אבל כדאי להכיר את הפורמט כדי שלא תיבהלו.
         </p>
         <p className="mt-3 leading-relaxed">
@@ -83,7 +82,7 @@ export function WritingPractice() {
           onClick={start}
           className="mt-6 flex min-h-12 w-full touch-manipulation items-center justify-center rounded-full bg-fg px-6 py-4 font-semibold text-bg"
         >
-          מתחילים: {clock(total)} דקות
+          מתחילים: {formatClock(total)} דקות
         </button>
         <Link href="/practice" className="mt-4 text-center text-sm opacity-70 underline">
           חזרה לתרגול
@@ -97,7 +96,7 @@ export function WritingPractice() {
       <div className="mx-auto flex flex-1 max-w-md flex-col px-4 py-6">
         <div className="flex items-center justify-between">
           <span className={`rounded-full px-3 py-1 text-sm font-bold tabular-nums ${left <= 60 ? "bg-coral text-ink-deep" : "bg-ink text-mist"}`}>
-            {clock(left)}
+            {formatClock(left)}
           </span>
           <span className={`text-sm tabular-nums ${words >= WRITING_MIN_WORDS ? "font-semibold text-ok" : "opacity-70"}`}>
             <bdi dir="ltr">{words} / {WRITING_MIN_WORDS}</bdi> מילים

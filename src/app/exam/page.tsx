@@ -3,32 +3,29 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { hasPaidAccess, isStaff } from "@/lib/access";
+import { hasPaidAccess } from "@/lib/access";
 import { db } from "@/db";
 import { examAttempts } from "@/db/schema";
 import { examTests, findExamTest } from "@/content/examTests";
-import { PlatinumEntry } from "./PlatinumEntry";
 import { TactileLink } from "@/components/TactileButton";
 import Image from "next/image";
 import { copy } from "@/content/copy";
+import { formatHebrewDate } from "@/lib/formatDate";
+import { SCORE_MAX } from "@/content/facts";
 
 export const metadata: Metadata = {
   title: copy.examTitle,
   robots: { index: false },
 };
 
-const dateFormat = new Intl.DateTimeFormat("he-IL", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jerusalem" });
-
 export default async function ExamListPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   const paid = session ? await hasPaidAccess(session.user.id) : false;
-  const staff = session ? await isStaff(session.user.id) : false;
 
-  // This student's finished practice tests, newest first. Platinum and the staff test have their own pages.
   const attempts = session
     ? (
         await db
-          .select({ testNumber: examAttempts.testNumber, estimatedScore: examAttempts.estimatedScore, completedAt: examAttempts.completedAt })
+          .select({ id: examAttempts.id, testNumber: examAttempts.testNumber, estimatedScore: examAttempts.estimatedScore, completedAt: examAttempts.completedAt })
           .from(examAttempts)
           .where(eq(examAttempts.userId, session.user.id))
           .orderBy(desc(examAttempts.completedAt))
@@ -47,7 +44,6 @@ export default async function ExamListPage() {
       <h1 className="font-display text-4xl font-bold leading-tight sm:text-5xl"><mark className="pink">{copy.examTitle}</mark></h1>
       <p className="mt-2 leading-relaxed opacity-80">{copy.examSub}</p>
 
-      {/* The one thing on this page: a big card around the start button */}
       <div className="mt-8 flex flex-col items-center gap-4 rounded-[2rem] border border-line bg-white p-6 shadow-[0_30px_60px_-24px_rgb(14_8_82/0.25)]">
         <Image src="/winning.svg" alt="" width={2825} height={1910} priority className="h-auto w-56" />
         {startHref ? (
@@ -77,33 +73,31 @@ export default async function ExamListPage() {
           <ul className="mt-3 divide-y divide-line rounded-2xl border border-line bg-white">
             {/* Numbered by order taken (newest first), so the list reads as a series of different exams */}
             {attempts.map((a, i) => (
-              <li key={i} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                <span>
-                  <span className="font-semibold">מבחן {attempts.length - i}</span>
-                  <span className="opacity-70"> · {dateFormat.format(a.completedAt)}</span>
-                </span>
-                <span className="font-semibold tabular-nums">
-                  {a.estimatedScore}
-                  <span className="ms-1 text-xs font-normal opacity-60">מתוך 150</span>
-                </span>
+              <li key={a.id} className="px-4 py-3 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <span>
+                    <span className="font-semibold">מבחן {attempts.length - i}</span>
+                    <span className="opacity-70"> · {formatHebrewDate(a.completedAt)}</span>
+                  </span>
+                  <span className="font-semibold tabular-nums">
+                    {a.estimatedScore}
+                    <span className="ms-1 text-xs font-normal opacity-60">מתוך {SCORE_MAX}</span>
+                  </span>
+                </div>
+                {paid && (
+                  <Link href={`/exam/review/${a.id}`} className="flex min-h-11 items-center font-semibold underline underline-offset-4">
+                    ראה טעויות
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
         </section>
       )}
 
-      <div className="mt-12">
-        <PlatinumEntry />
-      </div>
-
-      {staff && (
-        <Link href="/exam/easy" className="mt-6 rounded-3xl border border-dashed border-line p-5 text-center font-semibold">
-          מבחן קל (מנהל בלבד): מרמה בסיסית לרמת המבחנים
-        </Link>
-      )}
-
-      <Link href="/account" className="mt-10 self-start text-sm underline opacity-70">
-        חזרה לאזור האישי
+      {/* A visitor without an account has no personal area to go back to */}
+      <Link href={session ? "/account" : "/"} className="mt-10 flex min-h-11 items-center self-start text-sm underline opacity-70">
+        {session ? "חזרה לאזור האישי" : "חזרה לדף הבית"}
       </Link>
     </div>
   );

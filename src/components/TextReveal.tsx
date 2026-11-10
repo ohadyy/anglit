@@ -2,14 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// Word-by-word reveal: each word slides up from behind a mask as the
-// paragraph scrolls into view, matching the downloaded GSAP SplitText demo's
-// look. Reimplemented with plain CSS (no GSAP/ScrollTrigger/SplitText,
-// libraries this project doesn't otherwise use) — an IntersectionObserver
-// triggers the reveal once, then ordinary animation-delay staggers the words
-// (safe here since, unlike a scroll-linked timeline, time-based delay doesn't
-// fight a fixed scroll range).
-export function TextReveal({ text, className = "" }: { text: string; className?: string }) {
+export function TextReveal({ text }: { text: string }) {
   const ref = useRef<HTMLParagraphElement>(null);
   const [revealed, setRevealed] = useState(false);
 
@@ -33,7 +26,7 @@ export function TextReveal({ text, className = "" }: { text: string; className?:
 
   const words = text.split(" ");
   return (
-    <p ref={ref} className={className} style={{ visibility: revealed ? "visible" : "hidden" }}>
+    <p ref={ref} style={{ visibility: revealed ? "visible" : "hidden" }}>
       {words.map((word, i) => (
         <span key={i}>
           <span className="word-mask">

@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { upcomingCourseOffer } from "@/lib/cohorts";
 import { paidProducts } from "@/lib/access";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { checkoutCopy, getProduct, loyaltyLabel, loyaltyPrice } from "@/content/pricingCopy";
-import { OfferToast } from "./OfferToast";
+import { checkoutCopy, getProduct, loyaltyLabel } from "@/content/pricingCopy";
+import { priceFor } from "@/lib/pricing";
 import { CheckoutSummaryBar } from "@/components/CheckoutSummaryBar";
 
 export const metadata: Metadata = {
@@ -26,29 +25,20 @@ export default async function CheckoutPage({
   if (!product) redirect("/pricing");
 
   const next = `/checkout?product=${product.id}`;
-  const offer = product.id === "course" ? await upcomingCourseOffer() : null;
   const owned = session ? await paidProducts(session.user.id) : [];
   // Never charge twice: the course owner goes to their cohort, and anyone who paid already has site access
   if (product.id === "course" && owned.includes("course")) redirect("/account#cohort");
   if (product.id === "access" && owned.length > 0) redirect("/account");
-  const joiningCohort = !!session && product.id === "course" && !!offer;
-  // Same rule as /api/checkout/create, which charges this price
-  const loyal = product.id === "course" && owned.length > 0;
-  const listIls = offer ? offer.priceIls : Number(product.price);
-  const priceIls = loyal ? loyaltyPrice(listIls) : listIls;
+  // Same function as /api/checkout/create, which charges this price
+  const { listIls, priceIls, loyal } = priceFor(product, owned);
 
   return (
     <div className="flex min-h-dvh flex-col">
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 pb-32 pt-4 sm:px-6 lg:pb-16">
         <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">{checkoutCopy.title}</h1>
-        {joiningCohort && (
-          <p className="mt-3 text-lg leading-relaxed opacity-80">
-            לא שילמתם על המחזור הקרוב. רוצים להצטרף?
-          </p>
-        )}
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
-          <aside className="hidden rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-6 sm:p-8 lg:block">
+          <aside className="hidden rounded-3xl border border-line bg-white shadow-card p-6 sm:p-8 lg:block">
             <p className="text-sm font-semibold opacity-70">{checkoutCopy.summaryTitle}</p>
             <p className="mt-2 text-xl font-bold">{product.name}</p>
 
@@ -59,18 +49,8 @@ export default async function CheckoutPage({
                     <s className="text-warn">{listIls} ₪</s> · {loyaltyLabel}
                   </p>
                 )}
-                {offer ? (
-                  <>
-                    <p className="mt-1 text-5xl font-bold tracking-tight">{priceIls} ₪</p>
-                    <p className="mt-1 text-sm opacity-70">למחזור {offer.label} בלבד · חוזר למחיר מלא למחזור הבא</p>
-                    <p className="mt-1 text-sm opacity-70">מחיר הסמינר: {product.price} ₪</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="mt-1 text-5xl font-bold tracking-tight">{priceIls} ₪</p>
-                    {product.id !== "course" && <p className="mt-1 text-sm opacity-70">{product.priceUnit}</p>}
-                  </>
-                )}
+                <p className="mt-1 text-5xl font-bold tracking-tight">{priceIls} ₪</p>
+                {product.id !== "course" && <p className="mt-1 text-sm opacity-70">{product.priceUnit}</p>}
               </div>
             </div>
 
@@ -105,7 +85,7 @@ export default async function CheckoutPage({
           </aside>
 
           <div className="flex flex-col gap-4">
-            <section className="rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-6 sm:p-8">
+            <section className="rounded-3xl border border-line bg-white shadow-card p-6 sm:p-8">
               <div className="flex items-center gap-3">
                 <span
                   className={`flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
@@ -148,7 +128,7 @@ export default async function CheckoutPage({
             </section>
 
             {session && (
-              <section className="rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-6 sm:p-8">
+              <section className="rounded-3xl border border-line bg-white shadow-card p-6 sm:p-8">
                 <div className="flex items-center gap-3">
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-fg text-sm font-bold text-bg">
                     2
@@ -205,14 +185,11 @@ export default async function CheckoutPage({
 
       <CheckoutSummaryBar
         name={product.name}
-        price={String(priceIls)}
-        note={[loyal && loyaltyLabel, offer ? `למחזור ${offer.label} בלבד · חוזר למחיר מלא למחזור הבא` : product.priceUnit].filter(Boolean).join(" · ")}
+        price={priceIls}
+        note={[loyal && loyaltyLabel, product.priceUnit].filter(Boolean).join(" · ")}
         included={product.included}
         excluded={product.excluded}
       />
-
-      {offer && <OfferToast priceIls={priceIls} regularPrice={product.price} />}
-
     </div>
   );
 }

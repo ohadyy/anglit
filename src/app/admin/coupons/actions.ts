@@ -1,26 +1,18 @@
 "use server";
 
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
-import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { coupons } from "@/db/schema";
-import { isStaff } from "@/lib/access";
-
-export type ActionResult = { ok: true } | { ok: false; error: string };
-
-async function requireStaff() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !(await isStaff(session.user.id))) throw new Error("forbidden");
-}
+import { requireStaff } from "@/lib/access";
+import { BAD_REQUEST, type ActionResult } from "../_shared";
 
 // kind "percent": value is the percent taken off. kind "price": value is the final price in ILS.
 export async function createCoupon(rawCode: string, kind: "percent" | "price", value: number): Promise<ActionResult> {
   await requireStaff();
   const code = typeof rawCode === "string" ? rawCode.trim().toUpperCase() : "";
   if (!/^[A-Z0-9]{2,20}$/.test(code)) return { ok: false, error: "הקוד יכול להכיל רק אותיות באנגלית ומספרים, 2 עד 20 תווים." };
-  if (kind !== "percent" && kind !== "price") return { ok: false, error: "משהו השתבש. כדאי לרענן את הדף ולנסות שוב." };
+  if (kind !== "percent" && kind !== "price") return BAD_REQUEST;
   if (!Number.isInteger(value)) return { ok: false, error: "צריך להזין מספר שלם." };
   // 100% off would send Cardcom a zero charge, which it rejects
   if (kind === "percent" && (value < 1 || value > 99)) return { ok: false, error: "אחוז ההנחה צריך להיות בין 1 ל-99." };
@@ -39,7 +31,7 @@ export async function createCoupon(rawCode: string, kind: "percent" | "price", v
 
 export async function deleteCoupon(code: string): Promise<ActionResult> {
   await requireStaff();
-  if (typeof code !== "string" || !code) return { ok: false, error: "משהו השתבש. כדאי לרענן את הדף ולנסות שוב." };
+  if (typeof code !== "string" || !code) return BAD_REQUEST;
 
   await db.delete(coupons).where(eq(coupons.code, code));
   revalidatePath("/admin/coupons");

@@ -5,9 +5,11 @@ import { Badge, Dot, StageBadge } from "./Badge";
 import { ContactSheet } from "./ContactSheet";
 import { StatusSelect } from "./StatusSelect";
 import { setStatusMany } from "./actions";
-import { NOTE_LABEL, PRODUCT_LABEL, SOURCE_LABEL, STAGE_LABEL, STATUS_LABEL, waLink, type Contact, type CrmStatus, type Stage } from "./labels";
+import { waLink } from "@/lib/phoneAuth";
+import { formatShortDate } from "@/lib/formatDate";
+import { PRODUCT_LABEL } from "@/lib/enums";
+import { NOTE_LABEL, SOURCE_LABEL, STAGE_LABEL, STATUS_LABEL, type Contact, type CrmStatus, type Stage } from "./labels";
 
-const dateFmt = new Intl.DateTimeFormat("he-IL", { day: "2-digit", month: "2-digit", year: "2-digit", timeZone: "Asia/Jerusalem" });
 const dayFmt = new Intl.DateTimeFormat("he-IL", { day: "numeric", month: "long", timeZone: "Asia/Jerusalem" });
 
 type Filter = "all" | Stage;
@@ -210,7 +212,7 @@ function ContactCard({
             <StageBadge stage={c.paid ? "paid" : c.status} />
           </span>
           <span className="mt-0.5 block text-xs opacity-60">
-            <bdi dir="ltr">{c.phone ?? c.email ?? "—"}</bdi> · {SOURCE_LABEL[c.source] ?? c.source} · {dateFmt.format(c.createdAt)}
+            <bdi dir="ltr">{c.phone ?? c.email ?? "—"}</bdi> · {SOURCE_LABEL[c.source] ?? c.source} · {formatShortDate(c.createdAt)}
           </span>
           {(c.followUp || c.manual || c.products.length > 0) && (
             <span className="mt-2 flex flex-wrap gap-1.5">

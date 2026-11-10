@@ -1,9 +1,5 @@
-import type { Metadata } from "next";
-import { headers } from "next/headers";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
 import { desc, eq, ne } from "drizzle-orm";
-import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import {
   cohorts,
@@ -14,27 +10,21 @@ import {
   user,
   vocabProgress,
 } from "@/db/schema";
-import { isStaff, isStaffPhone } from "@/lib/access";
+import { isStaffPhone, MANUAL_PROVIDER, requireStaffSession } from "@/lib/access";
 import { questionType } from "@/lib/examScore";
 import { countUncontactedLeads } from "@/lib/uncontactedLeads";
 import { TYPE_LABELS } from "@/content/questionLabels";
-import { Wordmark } from "@/components/Logo";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { AdminTable, type Row } from "./AdminTable";
+import { AdminShell, adminMetadata } from "./AdminShell";
 
-export const metadata: Metadata = {
-  title: "פאנל ניהול",
-  robots: { index: false, follow: false },
-};
+export const metadata = adminMetadata("פאנל ניהול");
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 // Gated the same way /studio is: only phones listed in STAFF_PHONES may open it,
 // and anyone else gets a plain 404 rather than a redirect that reveals the page exists.
 export default async function AdminPage() {
-  const authed = await auth.api.getSession({ headers: await headers() });
-  if (!authed) redirect("/sign-in?next=/admin");
-  if (!(await isStaff(authed.user.id))) notFound();
+  const authed = await requireStaffSession("/admin");
 
   const [users, paidOrders, enrollmentRows, attemptRows, vocabRows, sessionRows, cohortRows, waitingLeads] = await Promise.all([
     db.select({ id: user.id, name: user.name, phone: user.phone, createdAt: user.createdAt }).from(user).orderBy(desc(user.createdAt)),
@@ -65,7 +55,7 @@ export default async function AdminPage() {
     if (o.product) paidMap.get(o.userId)!.add(o.product);
   }
 
-  const manualIds = new Set(paidOrders.filter((o) => o.provider === "manual").map((o) => o.userId));
+  const manualIds = new Set(paidOrders.filter((o) => o.provider === MANUAL_PROVIDER).map((o) => o.userId));
 
   const enrollmentMap = new Map<string, { status: string; cohortStart: Date; cohortId: string }>();
   for (const e of enrollmentRows) enrollmentMap.set(e.userId, { status: e.status, cohortStart: e.cohortStart, cohortId: e.cohortId });
@@ -147,25 +137,26 @@ export default async function AdminPage() {
   };
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full min-w-0 max-w-6xl flex-col px-4 py-10 sm:px-6">
-      <header className="flex items-center justify-between gap-3">
-        <Link href="/" aria-label="לעמוד הבית">
-          <Wordmark className="h-6 w-auto" />
-        </Link>
-        <ThemeToggle />
-      </header>
-
-      <h1 className="font-display mt-8 text-3xl font-bold sm:text-4xl">פאנל ניהול</h1>
-      <p className="mt-2 leading-relaxed opacity-70">כל מי שנרשם לאתר, ההתקדמות והציונים שלהם. אפשר לתת או לבטל גישה מלאה בלי תשלום, ישר מהשורה. הכפתור &quot;ניהול&quot; פותח עריכת פרטים, שיבוץ למחזור ומחיקת חשבון.</p>
+    <AdminShell
+      title="פאנל ניהול"
+      intro={<>כל מי שנרשם לאתר, ההתקדמות והציונים שלהם. אפשר לתת או לבטל גישה מלאה בלי תשלום, ישר מהשורה. הכפתור &quot;ניהול&quot; פותח עריכת פרטים, שיבוץ למחזור ומחיקת חשבון.</>}
+      width="max-w-6xl"
+      back={false}
+    >
 
       <Link href="/admin/crm" className="mt-5 inline-flex min-h-11 w-fit items-center rounded-full bg-fg px-5 text-sm font-bold text-bg">
         לידים ושיחות
         {waitingLeads > 0 && <span className="ms-2 rounded-full bg-coral px-2.5 py-0.5 text-xs tabular-nums text-white">{waitingLeads} מחכים</span>}
       </Link>
 
-      <Link href="/admin/coupons" className="mt-3 inline-flex min-h-11 w-fit items-center rounded-full border border-line bg-white px-5 text-sm font-bold">
-        קופונים
-      </Link>
+      <div className="mt-3 flex flex-wrap gap-3">
+        <Link href="/admin/cohorts" className="inline-flex min-h-11 w-fit items-center rounded-full border border-line bg-white px-5 text-sm font-bold">
+          מחזורים
+        </Link>
+        <Link href="/admin/coupons" className="inline-flex min-h-11 w-fit items-center rounded-full border border-line bg-white px-5 text-sm font-bold">
+          קופונים
+        </Link>
+      </div>
 
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatPill label="נרשמו" value={stats.total} tone="dark" />
@@ -189,8 +180,7 @@ export default async function AdminPage() {
           }))}
         />
       )}
-      <div className="pb-10" />
-    </div>
+    </AdminShell>
   );
 }
 

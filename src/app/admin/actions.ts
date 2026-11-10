@@ -1,32 +1,18 @@
 "use server";
 
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { and, eq, ne } from "drizzle-orm";
-import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { cohorts, crmNotes, crmState, enrollments, orders, user } from "@/db/schema";
-import { isStaff, isStaffPhone } from "@/lib/access";
-import { normalizePhone } from "@/lib/phoneAuth";
+import { cohorts, crmNotes, crmState, enrollments, user } from "@/db/schema";
+import { grantManualAccess, hasCardPayment, isStaffPhone, requireStaff, revokeManualAccess } from "@/lib/access";
+import { isValidIlPhone, normalizePhone } from "@/lib/phoneAuth";
+import type { ActionResult } from "./_shared";
 
-export type ActionResult = { ok: true } | { ok: false; error: string };
-
-async function requireStaff() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !(await isStaff(session.user.id))) throw new Error("forbidden");
-  return session;
-}
-
-// Manual access = a zero-agorot "paid" course order with provider "manual". Everything that
-// checks hasPaidAccess/hasCourse picks it up, and no cohort enrollment is created.
 export async function setManualAccess(userId: string, grant: boolean) {
   await requireStaff();
 
-  if (grant) {
-    await db.insert(orders).values({ userId, amountAgorot: 0, product: "course", provider: "manual", status: "paid", paidAt: new Date() });
-  } else {
-    await db.delete(orders).where(and(eq(orders.userId, userId), eq(orders.provider, "manual")));
-  }
+  if (grant) await grantManualAccess(userId);
+  else await revokeManualAccess(userId);
   revalidatePath("/admin");
 }
 
@@ -55,7 +41,7 @@ export async function updateDetails(userId: string, name: string, rawPhone: stri
   const cleanName = name.trim();
   const phone = normalizePhone(rawPhone);
   if (!cleanName) return { ok: false, error: "צריך להזין שם." };
-  if (!/^0\d{8,9}$/.test(phone)) return { ok: false, error: "מספר הטלפון לא תקין." };
+  if (!isValidIlPhone(phone)) return { ok: false, error: "מספר הטלפון לא תקין." };
 
   const [taken] = await db.select({ id: user.id }).from(user).where(and(eq(user.phone, phone), ne(user.id, userId))).limit(1);
   if (taken) return { ok: false, error: "המספר הזה כבר שייך למשתמש אחר." };
@@ -75,12 +61,7 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
   if (!target) return { ok: false, error: "המשתמש לא נמצא." };
   if (isStaffPhone(target.phone)) return { ok: false, error: "זה חשבון צוות. מסירים אותו קודם מרשימת הצוות." };
 
-  const [cardOrder] = await db
-    .select({ id: orders.id })
-    .from(orders)
-    .where(and(eq(orders.userId, userId), ne(orders.provider, "manual"), eq(orders.status, "paid")))
-    .limit(1);
-  if (cardOrder) return { ok: false, error: "למשתמש הזה יש תשלום בכרטיס אשראי, ולכן לא מוחקים אותו מכאן. אפשר לבטל לו את הגישה במקום." };
+  if (await hasCardPayment(userId)) return { ok: false, error: "למשתמש הזה יש תשלום בכרטיס אשראי, ולכן לא מוחקים אותו מכאן. אפשר לבטל לו את הגישה במקום." };
 
   // The CRM tables have no foreign key to user, so their rows are removed here
   await db.delete(crmNotes).where(and(eq(crmNotes.kind, "user"), eq(crmNotes.refId, userId)));

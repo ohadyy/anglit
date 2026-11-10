@@ -4,12 +4,8 @@ import { leads } from "@/db/schema";
 import { sendTemplate } from "@/lib/whatsapp";
 import { notify } from "@/lib/ntfy";
 import { sendCapi } from "@/lib/meta";
-
-const SOURCE_LABEL: Record<"pricing" | "sign-up" | "ads", string> = {
-  pricing: "דף המחירים",
-  "sign-up": "דף ההרשמה",
-  ads: "דף הקמפיין",
-};
+import { isLeadSource, LEAD_SOURCE_LABEL } from "@/lib/enums";
+import { looksLikePhone } from "@/lib/phoneAuth";
 
 function notifyNewLead(lead: { name: string; contact: string; message: string | null; source: string }) {
   return notify("New lead - Anglit", [
@@ -42,9 +38,8 @@ export async function POST(request: Request) {
     typeof name === "string" &&
     typeof contact === "string" &&
     (message === undefined || message === null || typeof message === "string");
-  const contactDigits = typeof contact === "string" ? contact.replace(/\D/g, "") : "";
-  // Either a phone number (9 to 12 digits) or an email address
-  const validContact = contactDigits.length >= 9 && contactDigits.length <= 12 || (typeof contact === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact));
+  const isPhone = typeof contact === "string" && looksLikePhone(contact);
+  const validContact = isPhone || (typeof contact === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact));
   if (
     !validText ||
     !name.trim() ||
@@ -54,16 +49,16 @@ export async function POST(request: Request) {
     !validContact ||
     (typeof message === "string" && message.length > MAX_MESSAGE) ||
     consent !== true ||
-    (source !== "pricing" && source !== "sign-up" && source !== "ads")
+    !isLeadSource(source)
   ) {
     return NextResponse.json({ error: "invalid request" }, { status: 400 });
   }
 
   const [lead] = await db.insert(leads).values({ name, contact, message: message || null, source, consent: true }).returning({ id: leads.id });
-  await notifyNewLead({ name, contact, message: message || null, source: SOURCE_LABEL[source] });
+  await notifyNewLead({ name, contact, message: message || null, source: LEAD_SOURCE_LABEL[source] });
   if (process.env.WHATSAPP_OWNER_PHONE) {
     try {
-      await sendTemplate(process.env.WHATSAPP_OWNER_PHONE, process.env.WHATSAPP_TEMPLATE_LEAD ?? "new_lead", [name, contact, SOURCE_LABEL[source]]);
+      await sendTemplate(process.env.WHATSAPP_OWNER_PHONE, process.env.WHATSAPP_TEMPLATE_LEAD ?? "new_lead", [name, contact, LEAD_SOURCE_LABEL[source]]);
     } catch (err) {
       console.error("[leads] owner WhatsApp failed:", err);
     }
@@ -71,7 +66,7 @@ export async function POST(request: Request) {
 
   // Same id as the browser pixel event, so Meta counts one Lead
   const fbclid = typeof (body as { fbclid?: unknown }).fbclid === "string" && /^[\w-]{10,300}$/.test((body as { fbclid: string }).fbclid) ? (body as { fbclid: string }).fbclid : undefined;
-  await sendCapi({ name: "Lead", eventId: lead.id, phone: contactDigits.length >= 9 && contactDigits.length <= 12 ? contact : undefined, request, fbclid });
+  await sendCapi({ name: "Lead", eventId: lead.id, phone: isPhone ? contact : undefined, request, fbclid });
 
   return NextResponse.json({ ok: true, id: lead.id });
 }

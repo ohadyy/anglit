@@ -9,34 +9,24 @@
 
 import { type ReactNode, type PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Drawer } from "vaul";
+import { prefersReducedMotion } from "@/lib/useReducedMotion";
 
-export interface SmoothDrawerProps {
+interface SmoothDrawerProps {
   title: string;
-  /** Line under the title, e.g. what the order is for. */
   description?: string;
-  /** The price, already formatted, shown top end of the sheet. */
   total: string;
-  totalLabel?: string;
   included: string[];
   excluded?: string[];
-  /** Small line under the lists, e.g. "back to full price next cohort". */
-  note?: string;
-  /** The element that opens the sheet. */
   trigger: ReactNode;
   confirmLabel: string;
   detailsLabel: string;
   hideDetailsLabel: string;
   closeLabel: string;
-  /** Called when the main button is pressed; the sheet closes afterwards. */
-  onConfirm?: () => void;
-  /** Controlled open state, for opening the sheet from outside (e.g. a swipe on the bar). */
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-/** Visible height of the sheet at its first snap point. */
 const PEEK_HEIGHT = 200;
-/** Tallest the sheet gets, and the gap it keeps from the top of the screen. */
 const MAX_SHEET_HEIGHT = 680;
 const TOP_GAP = 24;
 
@@ -46,21 +36,16 @@ export default function SmoothDrawer({
   title,
   description,
   total,
-  totalLabel = "סך הכול",
   included,
   excluded = [],
-  note,
   trigger,
   confirmLabel,
   detailsLabel,
   hideDetailsLabel,
   closeLabel,
-  onConfirm,
   open,
   onOpenChange,
 }: SmoothDrawerProps) {
-  const [internalOpen, setInternalOpen] = useState(false);
-  const isOpen = open ?? internalOpen;
   const [expanded, setExpanded] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(0);
   const detailsRef = useRef<HTMLDivElement>(null);
@@ -82,13 +67,10 @@ export default function SmoothDrawer({
   );
 
   const handleOpenChange = (next: boolean) => {
-    if (open === undefined) {
-      setInternalOpen(next);
-    }
     if (next) {
       setExpanded(false);
     }
-    onOpenChange?.(next);
+    onOpenChange(next);
   };
 
   const clearDragStyles = useCallback(() => {
@@ -101,13 +83,11 @@ export default function SmoothDrawer({
     }
   }, []);
 
-  // Hand the details back to their class-driven transition.
   const setSnap = (next: boolean) => {
     clearDragStyles();
     setExpanded(next);
   };
 
-  // While Vaul drags the sheet, the details track its position directly.
   const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
     const sheet = event.currentTarget;
     cancelAnimationFrame(frame.current);
@@ -122,14 +102,9 @@ export default function SmoothDrawer({
       const progress = clamp01((peekTop - top) / (peekTop - fullTop || 1));
       details.style.transition = "none";
       details.style.opacity = String(progress);
-      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const reduceMotion = prefersReducedMotion();
       details.style.translate = reduceMotion ? "" : `0 ${Math.round((1 - progress) * 12)}px`;
     });
-  };
-
-  const handleConfirm = () => {
-    onConfirm?.();
-    handleOpenChange(false);
   };
 
   return (
@@ -137,15 +112,15 @@ export default function SmoothDrawer({
       activeSnapPoint={snapPoints[expanded ? 1 : 0]}
       fadeFromIndex={0}
       onOpenChange={handleOpenChange}
-      open={isOpen}
+      open={open}
       setActiveSnapPoint={(point) => setSnap(point === 1)}
       snapPoints={snapPoints}
     >
       <Drawer.Trigger asChild>{trigger}</Drawer.Trigger>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-40 bg-fg/40" />
+        <Drawer.Overlay className="fixed inset-0 z-(--z-modal) bg-fg/40" />
         <Drawer.Content
-          className="fixed inset-x-0 bottom-0 z-50 mx-auto flex w-full max-w-[420px] flex-col rounded-t-3xl border border-b-0 border-line bg-bg text-fg outline-none"
+          className="fixed inset-x-0 bottom-0 z-(--z-overlay) mx-auto flex w-full max-w-[420px] flex-col rounded-t-3xl border border-b-0 border-line bg-bg text-fg outline-none"
           onPointerCancel={clearDragStyles}
           onPointerMove={handlePointerMove}
           onPointerUp={clearDragStyles}
@@ -163,14 +138,14 @@ export default function SmoothDrawer({
                   <Drawer.Description className="mt-0.5 text-[13px] opacity-70">{description ?? title}</Drawer.Description>
                 </div>
                 <div className="shrink-0 text-end">
-                  <p className="text-[13px] opacity-70">{totalLabel}</p>
+                  <p className="text-[13px] opacity-70">סך הכול</p>
                   <p className="mt-0.5 text-xl font-bold leading-6 tabular-nums">{total}</p>
                 </div>
               </div>
 
               <button
                 className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-fg font-semibold text-bg outline-none transition-colors duration-150 ease-out hover:bg-ink-deep focus-visible:ring-2 focus-visible:ring-fg focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-                onClick={handleConfirm}
+                onClick={() => handleOpenChange(false)}
                 type="button"
               >
                 {confirmLabel}
@@ -187,7 +162,7 @@ export default function SmoothDrawer({
                   aria-hidden="true"
                   viewBox="0 0 20 20"
                   fill="none"
-                  className={`size-3.5 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none ${expanded ? "rotate-180" : ""}`}
+                  className={`size-3.5 transition-transform duration-300 ease-sheet motion-reduce:transition-none ${expanded ? "rotate-180" : ""}`}
                 >
                   <path d="M5 12.5l5-5 5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -195,7 +170,7 @@ export default function SmoothDrawer({
             </div>
 
             <div
-              className={`min-h-0 flex-1 px-5 pb-6 transition-[opacity,translate] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:translate-y-0 ${
+              className={`min-h-0 flex-1 px-5 pb-6 transition-[opacity,translate] duration-300 ease-sheet motion-reduce:translate-y-0 ${
                 expanded ? "translate-y-0 touch-pan-y overflow-y-auto opacity-100" : "translate-y-3 touch-none overflow-hidden opacity-0"
               }`}
               inert={!expanded}
@@ -219,7 +194,6 @@ export default function SmoothDrawer({
                   </li>
                 ))}
               </ul>
-              {note && <p className="mt-4 text-[13px] opacity-70">{note}</p>}
               <Drawer.Close className="mt-5 flex min-h-11 w-full items-center justify-center text-sm underline underline-offset-4 opacity-70">
                 {closeLabel}
               </Drawer.Close>

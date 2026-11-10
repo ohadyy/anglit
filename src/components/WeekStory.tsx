@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { homeWeekStory as t } from "@/content/copy";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 
 const LAST = t.steps.length - 1;
 const START = t.scores[0];
@@ -16,19 +17,10 @@ function Check() {
   );
 }
 
-const REDUCED = "(prefers-reduced-motion: reduce)";
-const subscribeReduced = (cb: () => void) => {
-  const mq = window.matchMedia(REDUCED);
-  mq.addEventListener("change", cb);
-  return () => mq.removeEventListener("change", cb);
-};
-
-// The week, step by step: each step lights up and the score climbs with it. One extra beat holds the payoff, then it resets.
 export function WeekStory() {
   const [step, setStep] = useState(0);
   const [animatedScore, setScore] = useState(START);
-  const reduced = useSyncExternalStore(subscribeReduced, () => window.matchMedia(REDUCED).matches, () => false);
-  // With reduced motion the story rests on its payoff instead of playing
+  const reduced = useReducedMotion();
   const active = reduced ? LAST : step;
   const score = reduced ? t.scores[LAST] : animatedScore;
   const target = t.scores[Math.min(active, LAST)];
@@ -39,7 +31,6 @@ export function WeekStory() {
     return () => clearInterval(id);
   }, [reduced]);
 
-  // Climbs one point at a time; a lower target (the loop reset) snaps down
   useEffect(() => {
     const id = setInterval(() => setScore((s) => (s > target ? target : Math.min(s + 1, target))), 120);
     return () => clearInterval(id);

@@ -3,8 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 import { getInstitution, institutions } from "@/content/institutions";
+import { NITE_FACTS } from "@/content/facts";
+import { CARD } from "@/lib/ui";
+import { ArticleCta } from "@/components/ArticleCta";
 
-const CARD = "rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-6";
 
 export function generateStaticParams() {
   return institutions.map((i) => ({ slug: i.slug }));
@@ -87,23 +89,12 @@ export default async function InstitutionPage({ params }: { params: Promise<{ sl
         <h2 className="text-2xl font-bold">ומה הציון שלכם?</h2>
         <p className="mt-3 leading-relaxed opacity-80">
           הזיזו את הסמן ב<Link href="/score" className="underline underline-offset-4">מחשבון הציון</Link> ותראו לאיזו רמה תשובצו, או בדקו{" "}
-          <Link href="/exam-dates" className="underline underline-offset-4">מתי יש מבחן פנוי</Link>. בין מבחן למבחן צריך לעבור 35 יום, ולכן
+          <Link href="/exam-dates" className="underline underline-offset-4">מתי יש מבחן פנוי</Link>. בין מבחן למבחן צריך לעבור {NITE_FACTS.minDaysBetweenTests} יום, ולכן
           כדאי לתכנן מראש.
         </p>
       </section>
 
-      <div data-invert="" className="mt-12 rounded-3xl p-6 sm:p-8">
-        <h2 className="text-2xl font-bold">רוצים להגיע למבחן מוכנים?</h2>
-        <p className="mt-2 opacity-80">שבוע אחד בקבוצה קטנה עם מורה אמיתי, ותרגול יומי עם הסבר לכל שאלה.</p>
-        <div className="mt-5 flex flex-wrap items-center gap-4">
-          <Link href="/pricing" className="inline-flex rounded-full bg-fg px-6 py-3.5 font-semibold text-bg">
-            לכל המסלולים והמחירים
-          </Link>
-          <Link href="/practice" className="inline-flex min-h-11 items-center text-sm underline underline-offset-4 opacity-80">
-            לתרגול חינם
-          </Link>
-        </div>
-      </div>
+      <ArticleCta title="רוצים להגיע למבחן מוכנים?" className="mt-12" />
 
       <section className="mt-12">
         <h2 className="text-lg font-bold">מוסדות אחרים</h2>

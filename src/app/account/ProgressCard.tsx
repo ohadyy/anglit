@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { accountProgress as t } from "@/content/copy";
-import { scoreLevel } from "@/lib/examScore";
+import { scoreLevel } from "@/lib/scoreLevels";
 
 // The result leads the page: the opening score, the latest score, how far it moved, and one short line about it.
 // `latest` is the most recent regular test (null when there is only the opening one).

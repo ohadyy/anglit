@@ -4,14 +4,12 @@
 // A question without notes still shows in the review, just without this part.
 
 export type QuestionNote = {
-  /** The question (or sentence) in Hebrew */
   stemHe: string;
   /** Per option, in the same order as `options`: Hebrew meaning, then why it fits or not */
   options: [string, string, string, string];
 };
 
 export const questionNotes: Record<string, QuestionNote> = {
-  // ── Sentence completion ──
   "sc-01": {
     stemHe: "למרות המאמצים ה____ של הצוות, הפרויקט הושלם באיחור של שלושה חודשים.",
     options: [
@@ -157,7 +155,6 @@ export const questionNotes: Record<string, QuestionNote> = {
     ],
   },
 
-  // ── Restatement ──
   "rs-01": {
     stemHe: "כמעט אף אחד לא ציפה שהסטארטאפ הקטן יצליח יותר ממתחריו הוותיקים.",
     options: [
@@ -267,7 +264,6 @@ export const questionNotes: Record<string, QuestionNote> = {
     ],
   },
 
-  // ── Reading: heat ──
   "rc-heat-1": {
     stemHe: "המטרה העיקרית של הטקסט היא:",
     options: [
@@ -314,7 +310,6 @@ export const questionNotes: Record<string, QuestionNote> = {
     ],
   },
 
-  // ── Reading: multitask ──
   "rc-mt-1": {
     stemHe: "לפי פסקה 1, מה בעצם קורה כשאנשים ״עושים כמה דברים במקביל״?",
     options: [
@@ -361,7 +356,6 @@ export const questionNotes: Record<string, QuestionNote> = {
     ],
   },
 
-  // ── Grammar (first set) ──
   "gr-01": {
     stemHe: "אילו ____ מוקדם יותר, היינו מספיקים לרכבת.",
     options: [
@@ -398,7 +392,6 @@ export const questionNotes: Record<string, QuestionNote> = {
       "attend (צורת בסיס). מתאים: suggest that + צורת הבסיס.",
     ],
   },
-  // ── Sentence completion (extra bank) ──
   "sx-01": {
     stemHe: "האגף החדש של המוזיאון ____ כל כך, שמבקרים בפעם הראשונה הולכים בו לאיבוד לעיתים קרובות.",
     options: [
@@ -669,7 +662,6 @@ export const questionNotes: Record<string, QuestionNote> = {
       "להשלים. לא מתאים: בלי מימון אי אפשר להשלים.",
     ],
   },
-  // ── Restatement (extra bank) ──
   "rx-01": {
     stemHe: "אף אחד לא הזהיר את המטיילים מפני הסערה, ולכן הם לא היו מוכנים כשהיא הגיעה.",
     options: [
@@ -887,7 +879,6 @@ export const questionNotes: Record<string, QuestionNote> = {
     ],
   },
 
-  // ── Reading: kelp ──
   "rc-kelp-1": {
     stemHe: "לפי פסקה 1, מה אצות קלפ יכולות לעשות בתנאים אידיאליים?",
     options: [
@@ -934,7 +925,6 @@ export const questionNotes: Record<string, QuestionNote> = {
     ],
   },
 
-  // ── Reading: letters ──
   "rc-let-1": {
     stemHe: "לפי פסקה 1, מה אנשים רבים מגלים כשהם כותבים מכתב?",
     options: [
@@ -980,7 +970,6 @@ export const questionNotes: Record<string, QuestionNote> = {
       "שהיא גורמת למכתבים להגיע מהר יותר. לא מתאים: לא קשור.",
     ],
   },
-  // ── Grammar in context (grammar bank) ──
   "g2-1": {
     stemHe: "עד שהאורחים הגיעו, הטבח כבר ____ ארוחת ערב.",
     options: [

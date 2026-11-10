@@ -1,5 +1,7 @@
 // Text of the connectors lesson at /learn/connectors. Original writing for Anglit.
 
+import { connectorQuestions } from "./connectorsBank";
+
 export const connectorsLesson = {
   seoTitle: "מילות קישור באמירנט: שיעור קצר ותרגול",
   seoDescription:
@@ -70,7 +72,7 @@ export const connectorsLesson = {
   tryTitle: "נסו בעצמכם",
   tryText: "שתי שאלות מהתרגול, עם הסבר אחרי כל תשובה.",
 
-  ctaTitle: "30 שאלות על מילות קישור",
+  ctaTitle: `${connectorQuestions.length} שאלות על מילות קישור`,
   ctaText: "תרגול ממוקד בהשלמת משפטים ובניסוח מחדש, עם הסבר לכל תשובה. הטעויות נשמרות ב\"הטעויות שלי\" עד שעונים נכון.",
   ctaButton: "לתרגול המלא",
   ctaNote: "התרגול המלא במסלול בתשלום.",

@@ -4,7 +4,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { account, rateLimit, user } from "@/db/schema";
-import { normalizePhone } from "@/lib/phoneAuth";
+import { isValidIlPhone, normalizePhone } from "@/lib/phoneAuth";
 
 const WINDOW_MS = 15 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   const body = (await request.json()) as { phone?: unknown; birthDate?: unknown; terms?: unknown; marketing?: unknown };
   const phone = typeof body.phone === "string" ? normalizePhone(body.phone) : "";
   const birthDate = typeof body.birthDate === "string" ? body.birthDate : "";
-  if (!/^0\d{8,9}$/.test(phone) || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate) || body.terms !== true) {
+  if (!isValidIlPhone(phone) || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate) || body.terms !== true) {
     return NextResponse.json({ error: "invalid" }, { status: 400 });
   }
 

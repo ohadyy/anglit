@@ -1,14 +1,14 @@
 "use client";
 
-import Link from "next/link";
+import { Stem } from "@/components/Stem";
 import { THOUGHTS } from "@/content/calm";
 import { ELIMINATE } from "@/content/eliminate";
 import { SCENARIOS } from "@/content/blackout";
 import { SESSIONS } from "@/content/calmSessions";
 import { LtrWords } from "@/components/LtrWords";
 import { FeedbackBar } from "@/components/FeedbackBar";
-import { Wordmark } from "@/components/Logo";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { InternalHeader } from "@/components/InternalHeader";
+import { STORAGE_KEYS } from "@/lib/storageKeys";
 import { useStored } from "@/lib/useStored";
 
 type Verdict = "ok" | "fix";
@@ -37,7 +37,7 @@ const SECTIONS: { title: string; items: Item[] }[] = [
       label: q.stem,
       body: (
         <>
-          <p dir="ltr" className="text-left text-lg font-medium leading-snug">{q.stem}</p>
+          <p dir="ltr" className="text-left text-lg font-medium leading-snug"><Stem text={q.stem} revealed={false} /></p>
           <p className="mt-3 text-sm font-semibold opacity-70">נשארות בלי פסילה (הראשונה היא התשובה הנכונה):</p>
           <p dir="ltr" className="mt-1 flex flex-wrap gap-2 text-left">
             {q.keep.map((o) => (
@@ -94,11 +94,10 @@ const SECTIONS: { title: string; items: Item[] }[] = [
 const ALL = SECTIONS.flatMap((s) => s.items);
 
 export function CalmReviewClient() {
-  const [st, setSt, reset] = useStored("anglit-calm-review", INITIAL);
+  const [st, setSt, reset] = useStored(STORAGE_KEYS.calmReview, INITIAL);
   const ok = ALL.filter((i) => st.marks[i.id] === "ok").length;
   const fix = ALL.filter((i) => st.marks[i.id] === "fix").length;
 
-  // Tapping the active verdict again clears it
   const mark = (id: string, v: Verdict) =>
     setSt((s) => {
       const marks = { ...s.marks };
@@ -124,12 +123,7 @@ export function CalmReviewClient() {
 
   return (
     <div className="flex min-h-dvh flex-col pb-40">
-      <header className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
-        <Link href="/" aria-label="לעמוד הבית">
-          <Wordmark className="h-6 w-auto" />
-        </Link>
-        <ThemeToggle />
-      </header>
+      <InternalHeader className="max-w-3xl" />
 
       <main className="mx-auto w-full max-w-3xl px-4 sm:px-6">
         <h1 className="font-display text-3xl font-bold">בדיקת אזור אנג&apos;לה</h1>

@@ -2,25 +2,28 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { hasPaidAccess } from "@/lib/access";
-import { buildAffixes, buildConnectors, buildDailyPool, buildFreeSet, buildSet, isQuestionType } from "@/lib/practice";
+import { hasPaidAccess, isStaffPhone, paidProducts } from "@/lib/access";
+import { buildAffixes, buildConnectors, buildFreeSet, buildSet, buildSingleStemPool, filterByLevel, levelCounts } from "@/lib/practice";
 import { passages, type Passage, type Question, type QuestionType } from "@/content/questions";
-import { ALL_TYPES } from "@/content/questionLabels";
+import { ALL_TYPES, isQuestionType } from "@/content/questionLabels";
+import { FREE_QUESTION_COUNT, isLevelGroup } from "@/content/practiceFacts";
 import { PracticeClient, type PracticeMode } from "./PracticeClient";
 import { ReadAloud } from "@/components/ReadAloud";
 import { questionNotes } from "@/content/questionNotes";
 
 export const metadata: Metadata = {
   title: "תרגול חינם",
-  description: "5 שאלות אמירנט לדוגמה בחינם, עם הסבר מלא לכל תשובה. תרגול מלא בכל הסוגים במסלול בתשלום.",
+  description: `${FREE_QUESTION_COUNT} שאלות אמירנט לדוגמה בחינם, עם הסבר מלא לכל תשובה. תרגול מלא בכל הסוגים במסלול בתשלום.`,
   // Guests (and Googlebot) are redirected to /start, which is the indexable page
   robots: { index: false },
 };
 
 export default async function PracticePage({ searchParams }: PageProps<"/practice">) {
-  const { type } = await searchParams;
+  const { type, level } = await searchParams;
   const session = await auth.api.getSession({ headers: await headers() });
   const paid = session ? await hasPaidAccess(session.user.id) : false;
+  // Answers from Ohad on WhatsApp are part of the seminar, not of the site-access product (staff can test it)
+  const canAsk = !!session && (isStaffPhone(session.user.phone) || (await paidProducts(session.user.id)).includes("course"));
   const mode: PracticeMode | undefined =
     type === "free" || type === "mistakes" || type === "connectors" || type === "affixes" ? type : isQuestionType(type) ? type : undefined;
 
@@ -29,7 +32,6 @@ export default async function PracticePage({ searchParams }: PageProps<"/practic
   // The mistakes page stays open too, so a free visitor sees how many mistakes wait for them.
   if (!paid && mode !== "free" && mode !== "mistakes") redirect("/start");
 
-  // Only what this visitor may see is read from the bank and sent to the browser
   const free = buildFreeSet();
   // Mistakes live on the device, so a paid member gets the whole bank and the browser picks them out
   const set: Question[] =
@@ -43,7 +45,13 @@ export default async function PracticePage({ searchParams }: PageProps<"/practic
             ? buildAffixes()
             : buildSet(mode);
 
-  const shown = [...free, ...set];
+  // The level picker exists only for the types whose questions are rated (sentence, restatement, reading)
+  const all = mode && mode !== "free" && mode !== "mistakes" ? levelCounts(set) : null;
+  const levelGroup = all && isLevelGroup(level) && all[level] > 0 ? level : undefined;
+  const hasLevels = all !== null && Object.values(all).some((n) => n > 0);
+  const picked = levelGroup ? filterByLevel(set, levelGroup) : set;
+
+  const shown = [...free, ...picked];
   const usedPassages: Passage[] = passages.filter((p) => shown.some((q) => "passageId" in q && q.passageId === p.id));
   const counts = Object.fromEntries(ALL_TYPES.map((t) => [t, paid ? buildSet(t).length : 0])) as Record<QuestionType, number>;
 
@@ -52,7 +60,7 @@ export default async function PracticePage({ searchParams }: PageProps<"/practic
       <ReadAloud />
       <PracticeClient
         mode={mode}
-        data={{ paid, free, set, counts, dailyPool: !mode ? buildDailyPool() : [], passages: usedPassages, notes: questionNotes }}
+        data={{ paid, canAsk, free, set: picked, levelPicker: all && hasLevels ? { active: levelGroup, counts: all } : null, counts, dailyPool: !mode ? buildSingleStemPool() : [], passages: usedPassages, notes: questionNotes, lessonCounts: { connectors: buildConnectors().length, affixes: buildAffixes().length } }}
       />
     </>
   );

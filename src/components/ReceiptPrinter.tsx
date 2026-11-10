@@ -8,6 +8,7 @@
 
 import { type PointerEvent, useCallback, useEffect, useRef, useState } from "react";
 import { receiptCopy } from "@/content/copy";
+import { prefersReducedMotion } from "@/lib/useReducedMotion";
 
 const cn = (...parts: (string | false | undefined | null)[]) => parts.filter(Boolean).join(" ");
 
@@ -34,18 +35,17 @@ const REST_EPSILON = 0.02;
 
 type Phase = "idle" | "printing" | "hanging" | "held" | "falling";
 
-export interface ReceiptItem {
+interface ReceiptItem {
   name: string;
   quantity: number;
   price: number;
 }
 
-export interface ReceiptPrinterProps {
+interface ReceiptPrinterProps {
   merchant?: string;
   order: string;
   date: string;
   items: ReceiptItem[];
-  /** Print as soon as the printer scrolls into view. */
   autoPrint?: boolean;
   className?: string;
 }
@@ -65,7 +65,6 @@ function haptic(ms = 8) {
   }
 }
 
-/** Local point p on a sheet turned by `angle`, relative to its corner. */
 function turn(px: number, py: number, angle: number) {
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
@@ -150,7 +149,6 @@ export default function ReceiptPrinter({ merchant = "Anglit", order, date, items
     hidden: 0,
     feedTarget: 0,
     pause: 0,
-    // Dragging.
     pointerId: -1,
     grabX: 0,
     grabY: 0,
@@ -274,7 +272,6 @@ export default function ReceiptPrinter({ merchant = "Anglit", order, date, items
     s.cy += vy + GRAVITY * STEP * STEP;
     s.angle += s.spin * STEP;
     s.spin *= 0.995;
-    // Off the bottom of the card: done.
     const card = cardRef.current;
     const floor = (card?.clientHeight ?? 400) + Math.hypot(s.width, s.height) / 2;
     return s.cy > floor ? 0 : 1;
@@ -388,14 +385,13 @@ export default function ReceiptPrinter({ merchant = "Anglit", order, date, items
     [setPhaseBoth, wake],
   );
 
-  // Print once it scrolls into view; pause the loop when it's offscreen.
   useEffect(() => {
     const s = sim.current;
     const card = cardRef.current;
     if (!card) {
       return;
     }
-    s.reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    s.reduceMotion = prefersReducedMotion();
     measure();
     placeAtSlot(-s.height);
     draw();
@@ -437,7 +433,6 @@ export default function ReceiptPrinter({ merchant = "Anglit", order, date, items
     return rect ? { x: event.clientX - rect.left, y: event.clientY - rect.top } : { x: 0, y: 0 };
   };
 
-  // A world point to where it sits on the sheet.
   const toSheet = (x: number, y: number) => {
     const s = sim.current;
     const [ox, oy] = turn(s.width / 2, s.height / 2, s.angle);
@@ -570,7 +565,6 @@ export default function ReceiptPrinter({ merchant = "Anglit", order, date, items
       className={cn("relative h-[30rem] w-72 select-none overflow-hidden rounded-3xl border border-line bg-white/60", className)}
       ref={cardRef}
     >
-      {/* The sheet, clipped at the slot until it's torn free. */}
       <div className={cn("absolute inset-x-0 bottom-0", torn ? "overflow-visible" : "overflow-hidden")} style={{ top: SLOT_Y }}>
         <div
           aria-label={`${receiptCopy.title}, ${merchant}, ${receiptCopy.orderLabel} ${order}`}
@@ -596,13 +590,11 @@ export default function ReceiptPrinter({ merchant = "Anglit", order, date, items
             touchAction: "none",
           }}
         >
-          {/* Perforation along the slot, where the sheet tears off. */}
           {!torn && <span aria-hidden="true" className="absolute inset-x-1 top-1 border-t-2 border-dotted border-ink/25" />}
           <Receipt date={date} items={items} merchant={merchant} order={order} />
         </div>
       </div>
 
-      {/* The printer housing, in front of the paper's top edge. */}
       <div className="absolute inset-x-0 top-0 h-16 border-b border-line bg-ink text-mist" ref={printerRef}>
         <div className="flex items-center justify-between px-5 pt-4 text-xs">
           <span className="font-medium">{merchant}</span>

@@ -2,23 +2,25 @@
 
 import { useEffect, useState } from "react";
 import { testimonials } from "@/content/testimonials";
-import { randomOrder } from "@/lib/shuffle";
+import { randomOrder } from "@/lib/random";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 
 const SHOW_MS = 5000;
 const TYPING_MS = 900;
 
-// A WhatsApp-style bubble that swaps to the next student message every few seconds,
-// with three typing dots in between
 export function TestimonialBubble() {
   // Shuffled on the client only, so the server and first render never disagree; empty until then
   const [list, setList] = useState<typeof testimonials | null>(null);
   const [i, setI] = useState(0);
   const [typing, setTyping] = useState(false);
+  const reduced = useReducedMotion();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- shuffle after mount so server and client agree on first paint
     setList(randomOrder(testimonials));
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }, []);
+
+  useEffect(() => {
     let inner: ReturnType<typeof setTimeout>;
     const outer = setInterval(() => {
       if (reduced) return setI((n) => (n + 1) % testimonials.length);
@@ -32,7 +34,7 @@ export function TestimonialBubble() {
       clearInterval(outer);
       clearTimeout(inner);
     };
-  }, []);
+  }, [reduced]);
 
   const t = list?.[i];
 

@@ -1,5 +1,7 @@
 // Type-only imports: this file is used by client components, which must not pull in the db client.
 import type { crmNotes, crmState } from "@/db/schema";
+import { LEAD_SOURCE_LABEL } from "@/lib/enums";
+
 
 export type CrmKind = (typeof crmState.$inferSelect)["kind"];
 export type CrmStatus = (typeof crmState.$inferSelect)["status"];
@@ -17,7 +19,6 @@ export const STATUS_LABEL: Record<CrmStatus, string> = {
 
 export const STAGE_LABEL: Record<Stage, string> = { ...STATUS_LABEL, paid: "שילם" };
 
-// The colored dot next to each stage, from the site's own palette
 export const STAGE_DOT: Record<Stage, string> = {
   new: "bg-coral",
   no_answer: "bg-warn",
@@ -29,14 +30,7 @@ export const STAGE_DOT: Record<Stage, string> = {
 
 export const NOTE_LABEL: Record<NoteType, string> = { call: "שיחה", whatsapp: "וואטסאפ", note: "הערה" };
 
-export const SOURCE_LABEL: Record<string, string> = {
-  pricing: "דף המחירים",
-  "sign-up": "דף ההרשמה",
-  ads: "דף הקמפיין",
-  account: "נרשם באתר",
-};
-
-export const PRODUCT_LABEL: Record<string, string> = { course: "קורס מלא", access: "גישה", private: "פרטי" };
+export const SOURCE_LABEL: Record<string, string> = { ...LEAD_SOURCE_LABEL, account: "נרשם באתר" };
 
 export type Note = { id: string; type: NoteType; body: string; createdAt: Date };
 
@@ -61,9 +55,3 @@ export type Contact = {
   registered: boolean;
   notes: Note[];
 };
-
-// Israeli local numbers (05x-xxxxxxx) to the international form wa.me expects
-export function waLink(phone: string) {
-  const digits = phone.replace(/\D/g, "");
-  return `https://wa.me/${digits.startsWith("0") ? `972${digits.slice(1)}` : digits}`;
-}

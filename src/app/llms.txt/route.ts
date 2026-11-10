@@ -1,19 +1,21 @@
 import { businessDetails } from "@/content/legal";
 import { copy } from "@/content/copy";
-import { products } from "@/content/pricingCopy";
+import { getProduct } from "@/content/pricingCopy";
 import { blogPosts } from "@/content/blog";
 import { institutions } from "@/content/institutions";
+import { GROUP_SIZE_TEXT } from "@/content/facts";
+import { INDEXED_PAGES } from "@/lib/nav";
 import { site } from "@/lib/site";
 
 // llms.txt (llmstxt.org convention): a short, plain-text index for AI crawlers.
-// Kept in sync with /llm-information, which has the full structured version.
+// The page list is lib/nav.ts, the same one /llm-information and the sitemap use.
 export function GET() {
-  const coursePrice = products.find((p) => p.id === "course")?.price;
-  const body = `# Anglit
+  const coursePrice = getProduct("course")?.priceIls;
+  const body = `# ${site.name}
 
 > ${copy.seoDescription}
 
-Anglit הוא קורס הכנה היברידי של שבוע למבחן אמירנט: מפגשי זום בקבוצה קטנה של עד 6 אנשים, תרגול יומי באתר בין המפגשים, ומבחן פתיחה ומבחן סיום שמודד שיפור. מחיר הסמינר: ${coursePrice} ₪, תשלום חד פעמי.
+${site.name} הוא קורס הכנה היברידי של שבוע למבחן אמירנט: מפגשי זום בקבוצה קטנה של ${GROUP_SIZE_TEXT}, תרגול יומי באתר בין המפגשים, ומבחן פתיחה ומבחן סיום שמודד שיפור. מחיר הסמינר: ${coursePrice} ₪, תשלום חד פעמי.
 
 ${copy.footerDisclaimer}
 
@@ -21,17 +23,7 @@ Contact: ${businessDetails.email} · WhatsApp ${businessDetails.phone} · Instag
 
 ## Pages
 
-- [מידע מובנה ל-AI](${site.url}/llm-information): כל העובדות על Anglit במקום אחד, לציטוט
-- [דף הבית](${site.url}/): ההצעה, ההתחייבות, שלושת סוגי השאלות
-- [תרגול חינם](${site.url}/start): שאלת היום, שאלות לדוגמה, סימולציה מלאה ומשחקי מילים, בלי תשלום
-- [מבחן אמירנט לדוגמה](${site.url}/sample-test): 5 שאלות מקוריות עם תשובות והסבר, ומבנה המבחן
-- [אוצר מילים לאמירנט](${site.url}/amirnet-words): מילים חשובות עם תרגום ומשפט לדוגמה
-- [מועדי אמירנט](${site.url}/exam-dates): המועדים הפנויים לפי מרכז בחינה
-- [מה צריך לדעת על אמירנט](${site.url}/amirnet): מבנה המבחן, ציון, הרשמה ומחיר
-- [מחשבון ציון](${site.url}/score): ציון אמירנט ← רמת שיבוץ
-- [מחירים](${site.url}/pricing): המסלולים ומה כלול בכל אחד
-- [מורה פרטי לאמירנט](${site.url}/private-tutor): מורה אמיתי, לא אפליקציה - איך זה עובד
-- [בלוג](${site.url}/blog): מאמרים מקוריים על הכנה לאמירנט
+${INDEXED_PAGES.map((p) => `- [${p.title}](${site.url}${p.path}): ${p.description}`).join("\n")}
 
 ## איזה ציון אמירנט צריך בכל מוסד
 

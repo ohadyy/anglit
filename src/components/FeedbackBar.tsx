@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { waLink } from "@/lib/phoneAuth";
 
 /**
  * Sticky bottom bar for the feedback pages: sends the summary over WhatsApp,
@@ -26,9 +27,7 @@ export function FeedbackBar({
   const send = () => {
     const s = summary();
     setText(s);
-    const digits = to?.replace(/\D/g, "");
-    const target = digits ? (digits.startsWith("0") ? `972${digits.slice(1)}` : digits) : "";
-    window.open(`https://wa.me/${target}?text=${encodeURIComponent(s)}`, "_blank", "noopener");
+    window.open(waLink(to, s), "_blank", "noopener");
   };
 
   const copy = async () => {

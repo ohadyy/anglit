@@ -16,29 +16,27 @@ import { copy, homeFaqGroups, homeFeatures, homeHowSteps, homeQuestionTypes } fr
 import { examDatesCopy } from "@/content/examDates";
 import { calculatorCopy, guideCopy } from "@/content/examGuide";
 import { ScoreCalculator } from "@/components/ScoreCalculator";
-import { upcomingCourseOffer } from "@/lib/cohorts";
 import { getViewer, isLoyal } from "@/lib/viewer";
 import { TierPreview } from "@/components/TierPreview";
 import { organizationJsonLd } from "@/lib/organizationJsonLd";
-import { products } from "@/content/pricingCopy";
+import { getProduct } from "@/content/pricingCopy";
 import { site } from "@/lib/site";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
-// Course + FAQ + WebSite structured data, built from the same copy the page shows
 const homeJsonLd = {
   "@context": "https://schema.org",
   "@graph": [
-    { "@type": "WebSite", name: "Anglit", url: site.url, inLanguage: "he" },
+    { "@type": "WebSite", name: site.name, url: site.url, inLanguage: "he" },
     {
       "@type": "Course",
-      name: "7 ימים לאמירנט",
+      name: getProduct("course")?.name,
       description: copy.seoDescription,
       inLanguage: "he",
-      provider: { "@type": "EducationalOrganization", name: "Anglit", url: site.url },
+      provider: { "@type": "EducationalOrganization", name: site.name, url: site.url },
       hasCourseInstance: { "@type": "CourseInstance", courseMode: "online", courseWorkload: "P7D" },
-      offers: { "@type": "Offer", priceCurrency: "ILS", price: products.find((p) => p.id === "course")?.price, category: "Paid" },
+      offers: { "@type": "Offer", priceCurrency: "ILS", price: String(getProduct("course")?.priceIls), category: "Paid" },
     },
     {
       "@type": "FAQPage",
@@ -49,12 +47,12 @@ const homeJsonLd = {
   ],
 };
 
-// Shows the live cohort offer (price, seats left), so this page cannot be cached at build time
+// The page depends on who is signed in, so it cannot be cached at build time
 export const dynamic = "force-dynamic";
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ as?: string }> }) {
   const { as } = await searchParams;
-  const [offer, viewer] = await Promise.all([upcomingCourseOffer(), getViewer(as)]);
+  const viewer = await getViewer(as);
   // A seminar student has already bought everything this page sells: their home is the account.
   // Staff keep the home page (it is where they work on the site) unless they preview as a student.
   if (viewer.tier === "course" && (!viewer.staff || as === "course")) redirect("/account");
@@ -111,7 +109,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ a
       </div>
 
       <main className="flex-1">
-        {/* What you get: three rows, each one point with room to breathe */}
         <section className="border-t border-line">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
             <h2 className="reveal text-center text-4xl font-bold text-balance sm:text-6xl">
@@ -122,7 +119,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ a
                 f.image ? (
                   <div key={f.title} className="flex flex-col items-center gap-8 lg:flex-row lg:gap-12">
                     {f.image.endsWith(".svg") ? (
-                      // Transparent vector art: no card frame, it sits directly on the page
                       // eslint-disable-next-line @next/next/no-img-element -- static vector art; next/image needs dangerouslyAllowSVG for this
                       <img
                         src={f.image}
@@ -133,7 +129,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ a
                       />
                     ) : (
                       <div
-                        className={`mx-auto w-[24.5rem] max-w-full overflow-hidden rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] lg:w-[42rem] lg:shrink-0 ${i % 2 ? "lg:order-2" : ""}`}
+                        className={`mx-auto w-[24.5rem] max-w-full overflow-hidden rounded-3xl border border-line bg-white shadow-card lg:w-[42rem] lg:shrink-0 ${i % 2 ? "lg:order-2" : ""}`}
                       >
                         <Image src={f.image} alt={f.alt ?? ""} width={f.imageWidth} height={f.imageHeight} className="h-auto w-full object-cover" />
                       </div>
@@ -161,7 +157,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ a
         </section>
 
 
-        {/* The three question types, each opening a free practice set */}
         <section className="border-t border-line">
           <div className="mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 sm:py-20">
             <h2 className="reveal text-3xl font-bold text-balance sm:text-4xl">{homeQuestionTypes.title}</h2>
@@ -206,10 +201,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ a
         <section className="border-t border-line">
           <div className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 sm:py-20">
             <p className="font-hand text-2xl opacity-70">{copy.homePricingTitle}</p>
-            {/* Side by side on wider screens: the price on one side, the guarantee that removes the risk on the other */}
             <div className="mx-auto mt-6 grid max-w-md gap-4 md:max-w-none md:grid-cols-2 md:gap-6">
-              <div className="flex flex-col justify-center rounded-3xl border border-line bg-white p-8 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-10">
-                <CourseOfferPrice offer={offer} big loyal={isLoyal(viewer)} />
+              <div className="flex flex-col justify-center rounded-3xl border border-line bg-white p-8 shadow-card sm:p-10">
+                <CourseOfferPrice big loyal={isLoyal(viewer)} />
                 <CourseOfferCta className="mt-10 w-full">{copy.heroCta2}</CourseOfferCta>
                 <Link href="/pricing" className="mx-auto mt-5 inline-flex min-h-11 items-center text-sm underline underline-offset-4 opacity-70 transition-opacity hover:opacity-100">
                   {copy.homePricingCta}
@@ -248,7 +242,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ a
           </div>
         </section>
 
-        {/* FAQ */}
         <section className="border-t border-line">
           <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
             <h2 className="reveal-fade text-center text-3xl font-bold sm:text-4xl">{copy.homeFaqTitle}</h2>

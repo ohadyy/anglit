@@ -4,12 +4,11 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { examAttempts } from "@/db/schema";
 import { scoreExam } from "@/lib/examScore";
-import { EASY_TEST, findExamTest, findPlatinumTest } from "@/content/examTests";
-import { buildExam } from "@/lib/examStructure";
-import { poolLevels } from "@/content/examPool";
-import { buildPlatinumExam } from "@/lib/platinumExam";
+import { findExamTest } from "@/content/examTests";
+import { buildExam, planFor } from "@/lib/examStructure";
+import { isPoolId } from "@/content/examPool";
 import { isCorrectAnswer } from "@/content/questions";
-import { hasPaidAccess, isStaff } from "@/lib/access";
+import { hasPaidAccess } from "@/lib/access";
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -35,13 +34,8 @@ export async function POST(request: Request) {
   }
 
   // Tests are fixed in the catalog, so the number only has to match one of them
-  const easy = body.testNumber === EASY_TEST;
-  const platinum = findPlatinumTest(body.testNumber) || easy;
-  if (!platinum && !findExamTest(body.testNumber)) {
+  if (!findExamTest(body.testNumber)) {
     return NextResponse.json({ error: "invalid test number" }, { status: 400 });
-  }
-  if (easy && !(await isStaff(session.user.id))) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
   // The score is worked out here from the real answer key, never from what the browser says
@@ -49,10 +43,8 @@ export async function POST(request: Request) {
   // An adaptive test is rebuilt from the answers and the seen list, so its chapters match what
   // was shown. The seen list only steers which questions were picked; the score still comes
   // from the answer key here, so a tampered list cannot raise it.
-  const seen = Array.isArray(body.seen) ? body.seen.filter((id): id is string => typeof id === "string" && id in poolLevels).slice(0, 2000) : [];
-  const asked = (platinum ? buildPlatinumExam(body.testNumber) : buildExam(body.testNumber, answers, seen))
-    .filter((part) => body.includePilot || !part.section.pilot)
-    .flatMap((part) => part.questions);
+  const seen = Array.isArray(body.seen) ? body.seen.filter((id): id is string => typeof id === "string" && isPoolId(id)).slice(0, 2000) : [];
+  const asked = planFor(buildExam(body.testNumber, answers, seen), body.includePilot).flatMap((part) => part.questions);
   const correctness: Record<string, boolean> = {};
   for (const question of asked) {
     correctness[question.id] = isCorrectAnswer(question, answers[question.id]);
@@ -64,8 +56,9 @@ export async function POST(request: Request) {
     .values({
       userId: session.user.id,
       kind: body.kind,
-      // Only answers to questions that were actually part of this test are stored
-      answers: Object.fromEntries(asked.filter((q) => q.id in answers).map((q) => [q.id, answers[q.id]])),
+      // Only questions that were actually part of this test are stored. A question left blank
+      // is stored as null, so the review can still show it (and it counts as met for `seen`).
+      answers: Object.fromEntries(asked.map((q) => [q.id, answers[q.id] ?? null])),
       rawCorrect: score.rawCorrect,
       totalQuestions: score.totalQuestions,
       estimatedScore: score.estimatedScore,

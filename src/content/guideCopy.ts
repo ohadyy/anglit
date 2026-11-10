@@ -1,5 +1,4 @@
-// Copy for /guide, the landing page that hands out the short Amirnet PDF.
-export const guideCopy = {
+export const downloadGuideCopy = {
   seoTitle: "מדריך קצר לאמירנט להורדה בחינם",
   seoDescription: "חמישה טיפים מעשיים לפני שנכנסים למבחן אמירנט, בקובץ קצר שאפשר לקרוא בטלפון. בחינם, בלי הרשמה.",
   title: "חמישה טיפים לפני שניגשים לאמירנט",

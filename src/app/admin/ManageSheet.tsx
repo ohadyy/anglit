@@ -2,11 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { BottomSheet } from "@/components/BottomSheet";
-import { deleteUser, setCohort, updateDetails, type ActionResult } from "./actions";
+import { deleteUser, setCohort, updateDetails } from "./actions";
+import type { ActionResult } from "./_shared";
+import { formatCohortDate } from "@/lib/jerusalemTime";
 import type { CohortOption, Row } from "./AdminTable";
-
-// Same reason as in AdminTable: @/lib/cohorts pulls the db client into the client bundle.
-const dateFmt = new Intl.DateTimeFormat("he-IL", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jerusalem" });
 
 const field =
   "w-full rounded-2xl border border-line bg-white px-4 py-3 text-base outline-none focus:border-fg focus:ring-2 focus:ring-fg/15";
@@ -73,7 +72,7 @@ export function ManageSheet({
             <option value="">לא משובץ</option>
             {cohorts.map((c) => (
               <option key={c.id} value={c.id}>
-                {dateFmt.format(c.start)} ({c.taken}/{c.capacity})
+                {formatCohortDate(c.start)} ({c.taken}/{c.capacity})
               </option>
             ))}
           </select>

@@ -1,6 +1,4 @@
-// Vocabulary bank. Students only see words with status "approved".
-// To publish a word, read it, check the translation and example, then change its
-// status from "draft" to "approved". Example sentences must be original.
+// Example sentences must be original.
 
 import { vocabMoreA } from "./vocabMoreA";
 import { vocabMoreB } from "./vocabMoreB";
@@ -10,11 +8,14 @@ import { vocabExam } from "./vocabExam";
 export type VocabTier = "easy" | "medium" | "hard" | "native";
 export type VocabCategory = "verb" | "adjective" | "noun" | "other";
 
-export const vocabTiers: { id: VocabTier; label: string; hint: string }[] = [
-  { id: "easy", label: "קל", hint: "מילים נפוצות ופשוטות" },
-  { id: "medium", label: "בינוני", hint: "אוצר מילים אקדמי בסיסי" },
-  { id: "hard", label: "קשה", hint: "מילים שמופיעות ברמות הגבוהות" },
-  { id: "native", label: "שפת אם", hint: "מילים שדוברי אנגלית משכילים מכירים" },
+/** A compact row of the vocabMore*.ts banks: word, translation, example, tier, category */
+export type VocabRow = [string, string, string, VocabTier, VocabCategory];
+
+export const vocabTiers: { id: VocabTier; label: string }[] = [
+  { id: "easy", label: "קל" },
+  { id: "medium", label: "בינוני" },
+  { id: "hard", label: "קשה" },
+  { id: "native", label: "שפת אם" },
 ];
 
 export const vocabCategories: { id: VocabCategory; label: string }[] = [
@@ -509,6 +510,9 @@ export const vocabulary: VocabWord[] = [
 ];
 
 // Words added later live in vocabMore*.ts as compact tuples; ids continue from vw-467.
+// APPEND ONLY: a word's id is its 1-based position in `vocabulary`, and vocabProgress.wordId stores it. Inserting,
+// reordering or deleting a word in this list or in any vocabMore*/vocabExam file moves every later word's
+// progress onto a different word. Add new words only at the end of vocabExam.ts. Check: npm run check:vocab.
 // Tier decides the level (hard and native are level 2). Duplicates of an earlier word are skipped.
 const seenWords = new Set(vocabulary.map((v) => v.word.toLowerCase()));
 for (const [word, translation, example, tier, category] of [...vocabMoreA, ...vocabMoreB, ...vocabMoreC, ...vocabExam]) {
@@ -532,13 +536,11 @@ export const vocabCopy = {
   reveal: "הציגו את התרגום",
   knew: "ידעתי",
   didntKnow: "לא ידעתי",
-  flipHint: "רווח להפיכת הכרטיסייה",
   progress: "נשארו",
   roundDone: "סיימתם את הסבב",
   roundDoneText: "המילים שלא ידעתם יחזרו בסבב הבא, בתדירות גבוהה יותר.",
   nextRound: "סבב נוסף",
   empty: "אין עדיין מילים מאושרות. בקרוב.",
-  boxLabel: "שלב",
   knownLabel: "מילים שכבר יודעים",
   filterLabel: "סינון",
   pickTier: "רמת קושי",
@@ -546,5 +548,4 @@ export const vocabCopy = {
   pickCategory: "קטגוריה",
   allCategories: "הכול",
   lockedTier: "בתשלום",
-  wordsCount: "מילים",
 };

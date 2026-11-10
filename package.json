@@ -2,11 +2,21 @@
   "name": "anglit",
   "version": "0.1.0",
   "private": true,
+  "browserslist": [
+    "chrome 111",
+    "edge 111",
+    "firefox 111",
+    "safari >= 15",
+    "ios_saf >= 15"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check:exams": "tsx scripts/check-exams.ts",
+    "check:vocab": "tsx scripts/check-vocab-ids.ts",
+    "check:jerusalem": "tsx scripts/check-jerusalem-time.ts"
   },
   "dependencies": {
     "@blobatar/react": "^2.7.0",

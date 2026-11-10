@@ -2,9 +2,6 @@
 // The task is typed, 12 minutes. The minimum length is the rule of this practice (the owner's
 // decision); NITE does not publish one, so never present it as NITE's rule.
 
-export const WRITING_MINUTES = 12;
-export const WRITING_MIN_WORDS = 150;
-
 export type WritingTask = {
   id: string;
   prompt: string;
@@ -51,7 +48,6 @@ export const writingTasks: WritingTask[] = [
   },
 ];
 
-/** What to check in your own text before time runs out. Hebrew, since the page is in Hebrew. */
 export const writingChecklist = [
   "עניתי על השאלה עצמה, ולא על נושא קרוב.",
   "כתבתי את הדעה שלי כבר בהתחלה, במשפט אחד ברור.",

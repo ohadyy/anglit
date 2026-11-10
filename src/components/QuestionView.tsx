@@ -1,10 +1,12 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useRef } from "react";
 import type { Question, QuestionType, WordFormationQuestion } from "@/content/questions";
 import { TYPE_LABELS } from "@/content/questionLabels";
 import type { QuestionNote } from "@/content/questionNotes";
 import { usePassage } from "@/components/PassageContext";
+import { askOhadLink } from "@/lib/askOhad";
 import { highlight, Stem } from "./Stem";
 
 type Size = "app" | "stage";
@@ -49,6 +51,7 @@ export function QuestionView({
   showExplanation = true,
   showPassage = true,
   note,
+  askOhad = false,
 }: {
   q: Question;
   selected: number | null;
@@ -58,12 +61,36 @@ export function QuestionView({
   showExplanation?: boolean;
   showPassage?: boolean;
   note?: QuestionNote;
+  /** Seminar students: under the explanation, a WhatsApp link to Ohad with this question already typed in */
+  askOhad?: boolean;
 }) {
   const s = S[size];
   const isSentence = q.type === "sentence";
+  const explainRef = useRef<HTMLDivElement>(null);
+  const wasRevealed = useRef(revealed);
+
+  // The explanation sits below the options; when an answer is revealed, bring it into view
+  // (only on the reveal itself, not when a review page mounts already revealed).
+  useEffect(() => {
+    if (revealed && !wasRevealed.current && size === "app" && showExplanation) {
+      const el = explainRef.current;
+      if (el) {
+        const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const delta = el.getBoundingClientRect().top - window.innerHeight * 0.5;
+        if (delta > 0) window.scrollBy({ top: delta, behavior: reduce ? "auto" : "smooth" });
+      }
+    }
+    wasRevealed.current = revealed;
+  }, [revealed, size, showExplanation]);
 
   return (
     <div className={`flex flex-col ${s.gap}`}>
+      {/* Screen readers hear the result: the colour change alone is silent */}
+      {revealed && selected !== null && (
+        <p role="status" className="sr-only">
+          {selected === q.answer ? "תשובה נכונה" : "תשובה שגויה"}
+        </p>
+      )}
       {q.type === "reading" && showPassage && (
         <PassageBlock q={q} size={size} revealed={revealed} />
       )}
@@ -85,7 +112,8 @@ export function QuestionView({
           // bg-white is literal white even inside an inverted (dark) card, so its text needs a
           // fixed dark color here — it cannot inherit text-fg, which flips to light on that card
           let state = "border-line bg-white text-ink active:scale-[0.99] hover:border-fg/30";
-          if (!revealed && isPicked) state = "border-fg bg-white text-ink ring-1 ring-fg";
+          // A picked answer must read at a glance in a timed exam: filled, not just outlined
+          if (!revealed && isPicked) state = "border-ink bg-ink text-white ring-1 ring-fg";
           if (revealed && isAnswer) state = "border-mint bg-mint text-ink-deep";
           if (revealed && isPicked && !isAnswer) state = "border-coral bg-coral text-ink-deep";
           if (revealed && !isAnswer && !isPicked) state = "border-line bg-transparent opacity-70";
@@ -101,7 +129,7 @@ export function QuestionView({
               >
                 <span
                   className={`grid shrink-0 place-items-center rounded-full font-semibold tabular-nums ${s.badge} ${
-                    revealed && (isAnswer || isPicked) ? "bg-ink-deep/15" : "bg-fg/10"
+                    revealed && (isAnswer || isPicked) ? "bg-ink-deep/15" : !revealed && isPicked ? "bg-white/20" : "bg-fg/10"
                   }`}
                 >
                   {i + 1}
@@ -116,7 +144,7 @@ export function QuestionView({
       </ol>
 
       {revealed && showExplanation && (
-        <div className={`rise bg-white text-ink ${s.card}`}>
+        <div ref={explainRef} className={`rise bg-white text-ink ${s.card}`}>
           <p className={s.explain}>{q.explanation}</p>
           {q.trick && (
             <p className={`mt-3 font-semibold ${s.explain}`}>
@@ -148,6 +176,16 @@ export function QuestionView({
                 })}
               </ul>
             </div>
+          )}
+          {askOhad && (
+            <a
+              href={askOhadLink(q, selected)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-5 inline-flex min-h-11 items-center rounded-full border border-ink/25 px-4 text-sm font-semibold active:scale-[0.99]"
+            >
+              לא הבנתם? שאלו את אהד בוואטסאפ
+            </a>
           )}
         </div>
       )}
@@ -221,7 +259,6 @@ function PassageBlock({
   );
 }
 
-/** Typed answer for word formation: the base word, the sentence with a blank, and one input */
 export function WordFormationView({
   q,
   value,
@@ -239,7 +276,7 @@ export function WordFormationView({
       <div className="rounded-3xl bg-sunk p-5">
         <p className="text-sm opacity-70">מילת הבסיס</p>
         <p dir="ltr" className="mt-1 text-left text-xl font-bold">{q.baseWord}</p>
-        <p dir="ltr" className="mt-4 text-left text-xl font-medium leading-snug text-balance sm:text-2xl">{q.stem}</p>
+        <p dir="ltr" className="mt-4 text-left text-xl font-medium leading-snug text-balance sm:text-2xl"><Stem text={q.stem} revealed={false} /></p>
       </div>
       <input
         dir="ltr"

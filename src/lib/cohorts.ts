@@ -1,24 +1,17 @@
 import { count, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { cohorts, enrollments } from "@/db/schema";
+import { COHORT_SESSIONS } from "@/content/cohortSchedule";
+import { formatCohortDate, formatCohortDay } from "@/lib/jerusalemTime";
 
-// The sessions every cohort follows. Shown to the student in the confirmation message.
-export { COHORT_SESSIONS } from "@/content/cohortSchedule";
-
-const dateFormat = new Intl.DateTimeFormat("he-IL", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-  timeZone: "Asia/Jerusalem",
-});
-
-export function formatCohortDate(date: Date) {
-  return dateFormat.format(date);
+/** Cohorts open for registration (status "upcoming"), earliest first */
+function openCohorts() {
+  return db.select().from(cohorts).where(eq(cohorts.status, "upcoming")).orderBy(cohorts.startDate);
 }
 
 /** Open cohorts with the number of free seats, and the cohort this student already joined */
 export async function cohortOptionsFor(userId: string) {
-  const open = await db.select().from(cohorts).where(eq(cohorts.status, "upcoming")).orderBy(cohorts.startDate);
+  const open = await openCohorts();
 
   const taken = await db
     .select({ cohortId: enrollments.cohortId, n: count() })
@@ -39,62 +32,17 @@ export async function cohortOptionsFor(userId: string) {
       id: c.id,
       label: formatCohortDate(c.startDate),
       seatsLeft: Math.max(0, c.capacity - (takenById.get(c.id) ?? 0)),
+      sessions: c.sessions ?? COHORT_SESSIONS,
     })),
     joinedLabel: joined[0] ? formatCohortDate(joined[0].startDate) : null,
   };
 }
 
-/** The first open cohort that still has a free seat, and whether it's the very next cohort
- * overall (true) or a later one reached because earlier ones are already full (false).
- * Null if every open cohort is full. Used by /diploactjoin to reserve a seat right away
- * instead of leaving that for the account-page cohort picker. */
-export async function cohortWithRoom(): Promise<{ id: string; label: string; isPrimary: boolean } | null> {
-  const open = await db.select().from(cohorts).where(eq(cohorts.status, "upcoming")).orderBy(cohorts.startDate);
-  for (let i = 0; i < open.length; i++) {
-    const c = open[i];
-    const [taken] = await db.select({ n: count() }).from(enrollments).where(eq(enrollments.cohortId, c.id));
-    if (Number(taken?.n ?? 0) < c.capacity) {
-      return { id: c.id, label: formatCohortDate(c.startDate), isPrimary: i === 0 };
-    }
-  }
-  return null;
-}
-
-/** Seats left in the earliest open cohort — the one /diploactjoin's free path targets —
- * for urgency messaging. Null if there's no open cohort at all. */
-export async function primarySeatsLeft(): Promise<number | null> {
-  const [primary] = await db.select().from(cohorts).where(eq(cohorts.status, "upcoming")).orderBy(cohorts.startDate).limit(1);
-  if (!primary) return null;
-  const [taken] = await db.select({ n: count() }).from(enrollments).where(eq(enrollments.cohortId, primary.id));
-  return Math.max(0, primary.capacity - Number(taken?.n ?? 0));
-}
-
 /** The earliest upcoming cohort that is still open for registration, as a date label ("25 באוקטובר") plus its size */
 export async function nextCohortInfo(): Promise<{ label: string; capacity: number } | null> {
-  const open = await db.select().from(cohorts).where(eq(cohorts.status, "upcoming")).orderBy(cohorts.startDate);
+  const open = await openCohorts();
   // Registration for a cohort is closed the day before it starts
   const next = open.find((c) => c.startDate.getTime() > Date.now() + 24 * 60 * 60 * 1000);
   if (!next) return null;
-  const label = new Intl.DateTimeFormat("he-IL", { day: "numeric", month: "long", timeZone: "Asia/Jerusalem" }).format(next.startDate);
-  return { label, capacity: next.capacity };
-}
-
-// Course prices. 347 is the regular price. 49 applies only to the next cohort that has
-// not started yet, while it still has seats, and it ends when that cohort starts.
-export const COURSE_PRICE_ILS = 347;
-export const UPCOMING_COHORT_PRICE_ILS = 49;
-
-export type CourseOffer = {
-  cohortId: string;
-  label: string;
-  seatsLeft: number;
-  priceIls: number;
-};
-
-// Disabled 2026-10-15: the open cohort is already committed (paid orders exist for it,
-// even though not everyone has finished picking their seat in `enrollments` yet), so the
-// site always shows the regular price now, regardless of what the enrollments count says.
-// To re-enable for a future cohort, restore the DB-driven check this used to do.
-export async function upcomingCourseOffer(): Promise<CourseOffer | null> {
-  return null;
+  return { label: formatCohortDay(next.startDate), capacity: next.capacity };
 }

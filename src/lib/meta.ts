@@ -1,10 +1,9 @@
 import { createHash } from "node:crypto";
-import { normalizePhone } from "@/lib/phoneAuth";
+import { GRAPH_API } from "@/lib/graph";
+import { toInternational } from "@/lib/phoneAuth";
+import { STORAGE_KEYS } from "@/lib/storageKeys";
 
 const hash = (v: string) => createHash("sha256").update(v).digest("hex");
-
-// Israeli local number (05x...) to the international digits Meta expects (9725x...)
-const phoneForMeta = (raw: string) => "972" + normalizePhone(raw).replace(/^0/, "");
 
 // Meta Conversions API, server side. Sent with the same event_id as the browser pixel so Meta
 // counts one event, not two. Does nothing until META_PIXEL_ID and META_CAPI_TOKEN are set.
@@ -24,9 +23,9 @@ export async function sendCapi(opts: {
   const cookie = (n: string) => cookies.match(new RegExp(`(?:^|; )${n}=([^;]+)`))?.[1];
   const h = opts.request?.headers;
   // The event itself always goes, so every lead is counted and priced. The phone number goes only with the visitor's "yes" in the banner (an order has no banner, and is covered by the privacy policy).
-  const sendPhone = !opts.request || cookie("anglit-consent") === "yes";
+  const sendPhone = !opts.request || cookie(STORAGE_KEYS.consent) === "yes";
   try {
-    await fetch(`https://graph.facebook.com/v21.0/${pixelId}/events?access_token=${token}`, {
+    await fetch(`${GRAPH_API}/${pixelId}/events?access_token=${token}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -38,7 +37,7 @@ export async function sendCapi(opts: {
             action_source: "website",
             event_source_url: h?.get("referer") ?? undefined,
             user_data: {
-              ph: opts.phone && sendPhone ? [hash(phoneForMeta(opts.phone))] : undefined,
+              ph: opts.phone && sendPhone ? [hash(toInternational(opts.phone))] : undefined,
               fbp: cookie("_fbp"),
               fbc: cookie("_fbc") ?? (opts.fbclid ? `fb.1.${Date.now()}.${opts.fbclid}` : undefined),
               client_ip_address: h?.get("x-forwarded-for")?.split(",")[0].trim(),

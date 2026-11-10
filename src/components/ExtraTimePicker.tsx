@@ -1,12 +1,13 @@
 "use client";
 
+import { STORAGE_KEYS } from "@/lib/storageKeys";
 import { useStored } from "@/lib/useStored";
 
 // Extra time for students with approved accommodations, as a percent of each timer
 const OPTIONS = [0, 25, 50];
 
 export function useExtraTime() {
-  const [stored, setStored] = useStored("anglit-extra-time", { pct: 0 });
+  const [stored, setStored] = useStored(STORAGE_KEYS.extraTime, { pct: 0 });
   const pct = OPTIONS.includes(stored.pct) ? stored.pct : 0;
   return [pct, (next: number) => setStored({ pct: next })] as const;
 }

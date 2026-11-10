@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { hasPaidAccess } from "@/lib/access";
-import { approvedWords, FREE_WORD_LIMIT, nextBox } from "@/lib/vocab";
+import { freeWords, nextBox } from "@/lib/vocab";
 import { vocabulary } from "@/content/vocabulary";
 import { db } from "@/db";
 import { vocabProgress } from "@/db/schema";
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid" }, { status: 400 });
   }
   // Free visitors may only record progress for the words they were actually shown
-  if (!paid && !approvedWords().slice(0, FREE_WORD_LIMIT).some((w) => w.id === wordId)) {
+  if (!paid && !freeWords().some((w) => w.id === wordId)) {
     return NextResponse.json({ error: "locked" }, { status: 403 });
   }
 

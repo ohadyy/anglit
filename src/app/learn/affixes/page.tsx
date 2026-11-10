@@ -3,6 +3,7 @@ import Link from "next/link";
 import { affixesLesson as a } from "@/content/affixesLesson";
 import { affixQuestions } from "@/content/affixesBank";
 import { TryIt } from "@/components/TryIt";
+import { CARD } from "@/lib/ui";
 
 export const metadata: Metadata = {
   title: a.seoTitle,
@@ -10,7 +11,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/learn/affixes" },
 };
 
-const CARD = "rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-6";
 
 // One word-form question and one guess-the-meaning question
 const SAMPLE_IDS = ["af-04", "af-11"];

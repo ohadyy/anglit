@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { trackMeta } from "@/components/MetaPixel";
+import type { LeadSource } from "@/lib/enums";
 
 export function LeadForm({
   source,
@@ -10,7 +11,7 @@ export function LeadForm({
   sub = "השאירו פרטים ונחזור אליכם.",
   sentText = "קיבלנו! נחזור אליכם בקרוב.",
 }: {
-  source: "pricing" | "sign-up" | "ads";
+  source: LeadSource;
   title?: string;
   sub?: string;
   sentText?: string;
@@ -40,14 +41,14 @@ export function LeadForm({
 
   if (status === "sent") {
     return (
-      <div role="status" className="rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-6 text-center">
+      <div role="status" className="rounded-3xl border border-line bg-white shadow-card p-6 text-center">
         <p className="font-semibold">{sentText}</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-6">
+    <div className="rounded-3xl border border-line bg-white shadow-card p-6">
       <p className="font-semibold">{title}</p>
       <p className="mt-1 text-sm opacity-70">{sub}</p>
       <form onSubmit={onSubmit} className="mt-4 flex flex-col gap-3">

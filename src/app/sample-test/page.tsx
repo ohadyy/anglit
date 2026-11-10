@@ -6,6 +6,7 @@ import { LtrWords } from "@/components/LtrWords";
 import { passages, type Question } from "@/content/questions";
 import { NITE_PRACTICE_TEST_URL, sampleTestCopy as t } from "@/content/seoPages";
 import { buildFreeSet } from "@/lib/practice";
+import { CARD } from "@/lib/ui";
 
 export const metadata: Metadata = {
   title: t.metaTitle,
@@ -13,7 +14,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/sample-test" },
 };
 
-const CARD = "rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-6";
 const LETTERS = ["A", "B", "C", "D"];
 
 // Server-rendered on purpose: the answer sits in a <details>, so it works without JS and search engines read it

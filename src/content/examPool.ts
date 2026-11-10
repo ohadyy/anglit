@@ -1,6 +1,27 @@
 import type { Passage, Question } from "./questions";
-import type { Level } from "./difficulty";
-import { toQuestion } from "./platinum/build";
+import { makePool, pad, parseLevels, type PoolItem } from "./hardBank/build";
+import { meridian } from "./hardBank/t1";
+import { obsidian } from "./hardBank/t2";
+import { sovereign } from "./hardBank/t3";
+import { vanguard } from "./hardBank/t4";
+import { zenith } from "./hardBank/t5";
+
+// The five hand-written tests of the retired Anglit Platinum series (removed 2026-11-09, once the
+// adaptive tests matched the real exam's difficulty). Their 115 questions live on in this pool with
+// their original ids (pl1-sc-01 …), so answers stored by students who took them still match.
+const retired = [meridian, obsidian, sovereign, vanguard, zenith];
+const retiredLevels = `
+pl1-sc-01:3 pl1-sc-02:2 pl1-sc-03:4 pl1-sc-04:2 pl1-sc-05:3 pl1-sc-06:3 pl1-sc-07:3 pl1-sc-08:2 pl1-sc-09:3 pl1-sc-10:3 pl1-sc-11:4 pl1-sc-12:4
+pl1-rc-01:3 pl1-rc-02:3 pl1-rc-03:4 pl1-rc-04:4 pl1-rc-05:4 pl1-rs-01:3 pl1-rs-02:3 pl1-rs-03:3 pl1-rs-04:4 pl1-rs-05:3 pl1-rs-06:3
+pl2-sc-01:3 pl2-sc-02:3 pl2-sc-03:3 pl2-sc-04:3 pl2-sc-05:3 pl2-sc-06:3 pl2-sc-07:3 pl2-sc-08:4 pl2-sc-09:2 pl2-sc-10:3 pl2-sc-11:2 pl2-sc-12:3
+pl2-rc-01:4 pl2-rc-02:4 pl2-rc-03:4 pl2-rc-04:4 pl2-rc-05:4 pl2-rs-01:3 pl2-rs-02:4 pl2-rs-03:3 pl2-rs-04:3 pl2-rs-05:3 pl2-rs-06:4
+pl3-sc-01:3 pl3-sc-02:3 pl3-sc-03:3 pl3-sc-04:3 pl3-sc-05:3 pl3-sc-06:3 pl3-sc-07:3 pl3-sc-08:3 pl3-sc-09:3 pl3-sc-10:2 pl3-sc-11:2 pl3-sc-12:3
+pl3-rc-01:3 pl3-rc-02:3 pl3-rc-03:4 pl3-rc-04:4 pl3-rc-05:4 pl3-rs-01:3 pl3-rs-02:3 pl3-rs-03:4 pl3-rs-04:3 pl3-rs-05:3 pl3-rs-06:3
+pl4-sc-01:3 pl4-sc-02:3 pl4-sc-03:3 pl4-sc-04:2 pl4-sc-05:2 pl4-sc-06:3 pl4-sc-07:2 pl4-sc-08:3 pl4-sc-09:2 pl4-sc-10:2 pl4-sc-11:3 pl4-sc-12:3
+pl4-rc-01:3 pl4-rc-02:4 pl4-rc-03:4 pl4-rc-04:4 pl4-rc-05:4 pl4-rs-01:3 pl4-rs-02:3 pl4-rs-03:3 pl4-rs-04:3 pl4-rs-05:4 pl4-rs-06:4
+pl5-sc-01:3 pl5-sc-02:2 pl5-sc-03:2 pl5-sc-04:3 pl5-sc-05:2 pl5-sc-06:2 pl5-sc-07:2 pl5-sc-08:3 pl5-sc-09:3 pl5-sc-10:3 pl5-sc-11:4 pl5-sc-12:2
+pl5-rc-01:4 pl5-rc-02:4 pl5-rc-03:4 pl5-rc-04:4 pl5-rc-05:4 pl5-rs-01:3 pl5-rs-02:3 pl5-rs-03:3 pl5-rs-04:4 pl5-rs-05:3 pl5-rs-06:4
+`;
 
 // The exam-only pool behind the adaptive tests (lib/examStructure.ts). These items are
 // never shown in /practice, the daily question or the studio, so a student meets them
@@ -8,10 +29,7 @@ import { toQuestion } from "./platinum/build";
 // (content/difficulty.ts). The correct option is written first; toQuestion() shuffles
 // the options by id. Original writing for Anglit, 2026-11-04.
 
-type PoolItem = [level: Level, stem: string, correct: string, wrong: [string, string, string], why: string, paragraph?: number];
-
 const sentence: PoolItem[] = [
-  // Level 2
   [2, "The museum was forced to ____ its opening hours after the city cut its funding by nearly half.", "shorten", ["extend", "admire", "decorate"], "קיצוץ של חצי מהתקציב מכריח לצמצם. shorten = לקצר."],
   [2, "Although the instructions were written in simple language, many users still found the device difficult to ____.", "operate", ["purchase", "notice", "lift"], "Although: ההוראות פשוטות, ובכל זאת קשה להפעיל את המכשיר. operate = להפעיל."],
   [2, "The two scientists worked ____ for years, sharing data and publishing many of their papers together.", "closely", ["separately", "rarely", "briefly"], "שיתפו נתונים ופרסמו יחד, כלומר עבדו בצמוד. closely = בשיתוף הדוק."],
@@ -23,7 +41,6 @@ const sentence: PoolItem[] = [
   [2, "Many students find it difficult to ____ on their studies when their phones are within reach.", "concentrate", ["insist", "consist", "approve"], "concentrate on = להתרכז ב־. הטלפון ליד מפריע להתרכז."],
   [2, "Because the evidence against him was so ____, the police were able to charge the suspect within hours.", "strong", ["weak", "missing", "ancient"], "הגישו כתב אישום תוך שעות, כי הראיות היו חזקות. strong = חזק."],
 
-  // Level 3
   [3, "The negotiations were ____ by both sides' refusal to make even minor concessions.", "hindered", ["accelerated", "celebrated", "simplified"], "סירוב לוויתורים מעכב משא ומתן. hinder = לעכב, להפריע."],
   [3, "Despite repeated warnings from experts, the government remained ____ to the risks of the new dam.", "indifferent", ["alert", "sensitive", "opposed"], "Despite: היו אזהרות, ובכל זאת הממשלה לא התייחסה. indifferent to = אדיש ל־."],
   [3, "Scientists hope that the vaccine will provide ____ protection, so that people need not be vaccinated every year.", "lasting", ["temporary", "partial", "occasional"], "כדי שלא יצטרכו חיסון כל שנה, ההגנה צריכה להחזיק לאורך זמן. lasting = מתמשך."],
@@ -41,7 +58,6 @@ const sentence: PoolItem[] = [
   [3, "She was ____ to accept the job offer at first, but the generous salary eventually persuaded her.", "reluctant", ["eager", "quick", "delighted"], "but … eventually persuaded: בהתחלה היא לא רצתה. reluctant = מסרב, לא ששה."],
   [3, "The theory, once widely accepted, has been largely ____ by new discoveries in genetics.", "discredited", ["confirmed", "inspired", "popularized"], "once accepted = פעם התקבלה, כלומר היום כבר לא. discredit = להפריך, לערער אמינות."],
 
-  // Level 4
   [4, "The author's latest novel has been dismissed as ____, since it borrows heavily from the plots of several well-known classics.", "derivative", ["groundbreaking", "autobiographical", "provocative"], "שואב עלילות מספרים מוכרים = לא מקורי. derivative = חיקויי, נגזר."],
   [4, "The two accounts of the battle are difficult to ____, as they disagree on almost every detail, from the date to the number of casualties.", "reconcile", ["distinguish", "fabricate", "abbreviate"], "כשהגרסאות סותרות בכל פרט, קשה ליישב ביניהן. reconcile = ליישב. distinguish דווקא קל כאן."],
   [4, "Rather than ____ the controversy, the spokesperson's clumsy statement only intensified public anger.", "defusing", ["inflaming", "prolonging", "provoking"], "Rather than = במקום. ההצהרה הגבירה את הכעס במקום להרגיע. defuse = לנטרל, להרגיע."],
@@ -59,21 +75,19 @@ const sentence: PoolItem[] = [
   [4, "Her ____ refusal to compromise, admirable to her supporters, struck her opponents as mere stubbornness.", "steadfast", ["hesitant", "sporadic", "tactful"], "התומכים ראו נחישות, המתנגדים עקשנות: סירוב יציב ובלתי מתפשר. steadfast = נחוש, איתן."],
   [4, "The findings run ____ to decades of research suggesting that the drug is safe for children.", "counter", ["parallel", "adjacent", "prior"], "run counter to = עומד בסתירה ל־. צירוף קבוע."],
 
-  // Level 5
-  [5, "The new law, ____ designed to protect consumers, was in reality drafted by lobbyists for the very corporations it claimed to regulate.", "ostensibly", ["scarcely", "inadvertently", "rarely"], "in reality … claimed: המטרה המוצהרת לא הייתה האמיתית. ostensibly = לכאורה, למראית עין."],
-  [5, "The species, once ____ throughout the continent, is now confined to a few isolated valleys.", "ubiquitous", ["elusive", "scarce", "dormant"], "once … now confined: פעם בכל מקום, היום רק בכמה עמקים. ubiquitous = נפוץ בכל מקום."],
+  [5, "The new law, ____ designed to protect consumers, was in reality drafted by lobbyists for the very corporations it claimed to regulate.", "supposedly", ["scarcely", "inadvertently", "rarely"], "in reality … claimed: המטרה המוצהרת לא הייתה האמיתית. supposedly = כביכול, לפי מה שאומרים."],
+  [5, "The species, once ____ throughout the continent, is now confined to a few isolated valleys.", "widespread", ["elusive", "scarce", "dormant"], "once … now confined: פעם בכל מקום, היום רק בכמה עמקים. widespread = נפוץ, פזור בכל מקום."],
   [5, "The senator's speech was a masterpiece of ____: it lasted an hour, yet committed him to nothing.", "evasion", ["candor", "brevity", "conviction"], "שעה שלמה בלי להתחייב לשום דבר = התחמקות. evasion = התחמקות. brevity נפסל כי הנאום ארוך."],
-  [5, "Rather than ____ the tensions between the two communities, the new borders only served to exacerbate them.", "assuaging", ["aggravating", "perpetuating", "intensifying"], "exacerbate = להחריף. Rather than = במקום, אז צריך את ההפך: assuage = להרגיע, לשכך."],
-  [5, "The biography is anything but ____: its author dwells on her subject's cruelty as much as on his genius.", "adulatory", ["unflattering", "critical", "balanced"], "anything but = בכלל לא. היא כותבת גם על האכזריות, אז הספר בכלל לא מתרפס. adulatory = מהלל, חנפני. balanced דווקא מתאר אותה."],
+  [5, "Rather than ____ the tensions between the two communities, the new borders only served to exacerbate them.", "easing", ["aggravating", "perpetuating", "intensifying"], "exacerbate = להחריף. Rather than = במקום, אז צריך את ההפך: ease = להרגיע, להקל."],
+  [5, "The biography is anything but ____: its author dwells on her subject's cruelty as much as on his genius.", "flattering", ["unflattering", "critical", "balanced"], "anything but = בכלל לא. היא כותבת גם על האכזריות, אז הספר בכלל לא מחמיא. flattering = מחמיא. balanced דווקא מתאר אותו, ולכן ״anything but balanced״ לא מתאים."],
   [5, "The committee's report, ____ in its criticism of the agency, recommended that the director be dismissed at once.", "scathing", ["tepid", "muted", "ambivalent"], "המלצה לפטר מיד = ביקורת חריפה. scathing = חריף, קוטל."],
-  [5, "The ruler's motives remain ____: none of his letters survive, and his advisers' memoirs contradict one another.", "inscrutable", ["transparent", "self-evident", "documented"], "אין מכתבים והעדויות סותרות = אי אפשר לפענח. inscrutable = בלתי ניתן לפענוח."],
+  [5, "The ruler's motives remain ____: none of his letters survive, and his advisers' memoirs contradict one another.", "obscure", ["transparent", "self-evident", "documented"], "אין מכתבים והעדויות סותרות = המניעים לא ברורים. obscure = לא ברור, מוסתר."],
   [5, "The new findings ____ the long-held assumption that the two languages share a common ancestor; if anything, they suggest the opposite.", "undermine", ["corroborate", "reinforce", "substantiate"], "if anything, they suggest the opposite: הממצאים מערערים את ההנחה. undermine = לערער. שלוש האחרות = לחזק."],
-  [5, "The chief executive's apology was widely regarded as ____, coming only after the company's share price had collapsed.", "disingenuous", ["heartfelt", "spontaneous", "magnanimous"], "התנצלות שמגיעה רק אחרי קריסת המניה נראית לא כנה. disingenuous = לא כן, מתחסד."],
+  [5, "The chief executive's apology was widely regarded as ____, coming only after the company's share price had collapsed.", "calculated", ["heartfelt", "spontaneous", "genuine"], "התנצלות שמגיעה רק אחרי קריסת המניה נראית כמו מהלך מחושב ולא כמו רגש אמיתי. calculated = מחושב, מתוך אינטרס."],
   [5, "The pianist's technique was ____, but critics complained that her playing lacked warmth.", "impeccable", ["deficient", "rudimentary", "erratic"], "but: הטכניקה הייתה מצוינת, והחיסרון היה החום. impeccable = ללא רבב."],
-  [5, "Far from being an ____ event, the drought was the predictable result of decades of poor water management.", "anomalous", ["anticipated", "foreseeable", "habitual"], "Far from = ההפך מ־. הבצורת הייתה צפויה, ולכן היא לא חריגה. anomalous = חריג."],
+  [5, "Far from being ____, the drought was the predictable result of decades of poor water management.", "unusual", ["anticipated", "foreseeable", "habitual"], "Far from = ההפך מ־. הבצורת הייתה תוצאה צפויה, ולכן היא לא חריגה. unusual = חריג, יוצא דופן."],
   [5, "The negotiators' optimism proved ____: within a week the ceasefire had collapsed.", "premature", ["justified", "warranted", "prophetic"], "תוך שבוע הכול קרס, אז האופטימיות הייתה מוקדמת מדי. premature = מוקדם מדי."],
 
-  // Second batch, 2026-11-04
   [3, "The town's water supply became ____ after heavy rains washed farm chemicals into the reservoir.", "contaminated", ["abundant", "purified", "frozen"], "כימיקלים שנשטפו למאגר מזהמים את המים. contaminated = מזוהם."],
   [3, "The author's second novel was eagerly ____ by readers who had loved her first.", "anticipated", ["rejected", "forgotten", "criticized"], "מי שאהב את הספר הראשון מחכה בקוצר רוח לשני. anticipate = לצפות, לחכות ל־."],
   [3, "Because the job requires constant travel, it is ____ for people with young children.", "unsuitable", ["ideal", "essential", "convenient"], "נסיעות כל הזמן לא מתאימות להורים לילדים קטנים. unsuitable = לא מתאים."],
@@ -95,17 +109,16 @@ const sentence: PoolItem[] = [
   [4, "Her ____ of the evidence was so thorough that the defense could find no detail she had overlooked.", "scrutiny", ["neglect", "disregard", "avoidance"], "בדיקה כל כך יסודית שלא פספסה כלום. scrutiny = בחינה מדוקדקת."],
   [5, "The senator's ____ reply, neither a yes nor a no, left reporters unsure of his position.", "equivocal", ["unequivocal", "categorical", "emphatic"], "neither a yes nor a no = תשובה דו משמעית. equivocal = דו משמעי. unequivocal הוא ההפך המדויק."],
   [5, "The old trading town fell into ____ after the railway bypassed it, and today only a few hundred people live there.", "obscurity", ["prominence", "prosperity", "notoriety"], "הרכבת עקפה אותה ונשארו כמה מאות תושבים: העיר נשכחה. obscurity = אלמוניות, שכחה."],
-  [5, "The professor's ____ style, full of long sentences, rare words and endless footnotes, made her books difficult even for specialists.", "abstruse", ["lucid", "accessible", "colloquial"], "קשה אפילו למומחים = סגנון סתום. abstruse = סתום, קשה להבנה."],
-  [5, "The regime tried to ____ all dissent, banning newspapers and imprisoning critics.", "quash", ["encourage", "tolerate", "foster"], "סגירת עיתונים וכליאת מבקרים = דיכוי. quash = לדכא, למחוץ."],
-  [5, "Despite their ____ beginnings in a tiny garage, the two founders built one of the largest companies in the country.", "inauspicious", ["auspicious", "glamorous", "promising"], "Despite + מוסך קטן = התחלה לא מבטיחה. inauspicious = לא מבשר טובות. auspicious הוא ההפך."],
+  [5, "The professor's ____ style, full of long sentences, rare words and endless footnotes, made her books difficult even for specialists.", "dense", ["lucid", "accessible", "colloquial"], "משפטים ארוכים, מילים נדירות והערות שוליים, קשה אפילו למומחים = סגנון דחוס וכבד. dense = דחוס, קשה לקריאה."],
+  [5, "The regime tried to ____ all dissent, banning newspapers and imprisoning critics.", "suppress", ["encourage", "tolerate", "foster"], "סגירת עיתונים וכליאת מבקרים = דיכוי. suppress = לדכא, להשתיק."],
+  [5, "Despite their ____ beginnings in a tiny garage, the two founders built one of the largest companies in the country.", "humble", ["glamorous", "promising", "impressive"], "Despite + מוסך קטן = התחלה צנועה. humble = צנוע, פשוט. שלוש האחרות לא מתאימות ל־Despite, כי הן כבר מבשרות הצלחה."],
   [5, "The new evidence ____ the defendant, proving that he had been in another city at the time of the crime.", "exonerated", ["incriminated", "implicated", "indicted"], "הוכיח שהיה בעיר אחרת = ניקה אותו מאשמה. exonerate = לנקות מאשמה. שלוש האחרות = להפליל."],
   [5, "The minister's ____ remarks about the disaster, made while families were still searching for survivors, caused widespread outrage.", "flippant", ["solemn", "compassionate", "somber"], "הערות שעוררו זעם בזמן חיפוש ניצולים = קלות דעת. flippant = מזלזל, קליל מדי."],
   [5, "The theory was ____ by a single experiment that produced results it could not explain.", "invalidated", ["vindicated", "corroborated", "bolstered"], "ניסוי שהתיאוריה לא מסבירה = הפרכה. invalidate = לבטל תוקף. שלוש האחרות = לחזק."],
-  [5, "The general's ____ for risk alarmed his more cautious advisers.", "penchant", ["aversion", "distaste", "disdain"], "יועצים זהירים נבהלו, אז הוא נמשך לסיכונים. penchant for = נטייה ל־."],
+  [5, "The general's ____ for risk alarmed his more cautious advisers.", "fondness", ["aversion", "distaste", "disdain"], "יועצים זהירים נבהלו, אז הוא נמשך לסיכונים. fondness for = חיבה ל־."],
   [5, "The two historians' accounts are ____: one describes the treaty as a triumph, the other as a betrayal.", "irreconcilable", ["complementary", "interchangeable", "identical"], "ניצחון מול בגידה = אי אפשר ליישב ביניהם. irreconcilable = בלתי ניתן ליישוב."],
-  [5, "Rather than ____ the crisis, the government's delay allowed it to spread to neighboring regions.", "forestalling", ["precipitating", "aggravating", "prolonging"], "Rather than = במקום. העיכוב נתן למשבר להתפשט במקום למנוע אותו מראש. forestall = למנוע מראש."],
+  [5, "Rather than ____ the crisis, the government's delay allowed it to spread to neighboring regions.", "containing", ["precipitating", "aggravating", "prolonging"], "Rather than = במקום. העיכוב נתן למשבר להתפשט במקום לבלום אותו. contain = לבלום, להכיל."],
 
-  // Third batch, 2026-11-04
   [2, "The teacher asked the students to ____ their phones before the exam began.", "switch off", ["pick up", "look up", "take after"], "לפני מבחן מכבים טלפונים. switch off = לכבות."],
   [2, "The new shopping center has ____ hundreds of jobs for local residents.", "created", ["removed", "borrowed", "ignored"], "מרכז קניות חדש יוצר מקומות עבודה. create = ליצור."],
   [2, "She was so ____ by the film that she cried at the end.", "moved", ["bored", "annoyed", "confused"], "בכתה בסוף הסרט = התרגשה. moved = נרגש, נגע ללבו."],
@@ -142,20 +155,19 @@ const sentence: PoolItem[] = [
   [4, "The candidate's ____ answers to simple questions raised doubts about her preparation.", "hesitant", ["confident", "prompt", "assured"], "תשובות שעוררו ספק בהכנה = מהססות. hesitant = מהסס."],
   [4, "The novel ____ the reader's attention from the very first page.", "captures", ["loses", "wastes", "avoids"], "from the very first page = מהעמוד הראשון. capture attention = לשבות תשומת לב."],
   [4, "Although the factory was profitable, its owners decided to ____ production to a cheaper country.", "relocate", ["celebrate", "inherit", "restore"], "to a cheaper country = מעבירים לארץ אחרת. relocate = להעתיק, להעביר."],
-  [5, "The scientist's ____ claims, unsupported by any published data, were dismissed by her colleagues.", "spurious", ["rigorous", "substantiated", "verified"], "unsupported by any data = טענות לא מבוססות. spurious = מפוקפק, כוזב."],
+  [5, "The scientist's ____ claims, unsupported by any published data, were dismissed by her colleagues.", "unfounded", ["rigorous", "substantiated", "verified"], "unsupported by any data = טענות לא מבוססות. unfounded = חסר בסיס."],
   [5, "The diplomat's ____ silence on the issue was widely interpreted as quiet approval.", "conspicuous", ["emphatic", "vocal", "eloquent"], "שתיקה שכולם שמו לב אליה. conspicuous = בולט, מושך תשומת לב."],
   [5, "The chief executive's ____ lifestyle, paid for with company funds, outraged shareholders during a year of layoffs.", "extravagant", ["frugal", "austere", "modest"], "זעם בשנת פיטורים = בזבזנות. extravagant = בזבזני, ראוותני."],
-  [5, "The minister's ____, even in the face of new data, frustrated advisers who hoped he would change course.", "intransigence", ["flexibility", "pragmatism", "open-mindedness"], "לא שינה כיוון גם מול נתונים חדשים = עקשנות. intransigence = עקשנות, סירוב להתפשר."],
-  [5, "The report's ____ language, full of hedges and qualifications, made it impossible to tell what the authors actually believed.", "noncommittal", ["forthright", "unequivocal", "blunt"], "הסתייגויות בלי סוף = לא מתחייב. noncommittal = מתחמק מעמדה."],
+  [5, "The minister's ____, even in the face of new data, frustrated advisers who hoped he would change course.", "stubbornness", ["flexibility", "pragmatism", "open-mindedness"], "לא שינה כיוון גם מול נתונים חדשים = עקשנות. stubbornness = עקשנות."],
+  [5, "The report's ____ language, full of hedges and qualifications, made it impossible to tell what the authors actually believed.", "evasive", ["direct", "explicit", "blunt"], "הסתייגויות בלי סוף ואי אפשר לדעת מה הם חושבים = שפה מתחמקת. evasive = מתחמק, לא עונה ישירות."],
   [5, "The editor's ____ cuts reduced the manuscript by half without losing anything essential.", "judicious", ["careless", "arbitrary", "haphazard"], "חצי מהטקסט ירד ושום דבר חשוב לא אבד = קיצוץ נבון. judicious = שקול, נבון."],
   [5, "The reforms were meant to ____ the power of the central bank, not to abolish it.", "curtail", ["expand", "consolidate", "augment"], "not to abolish = לא לבטל, רק להגביל. curtail = לצמצם, להגביל."],
-  [5, "Far from being ____, the professor's warnings proved accurate within a year.", "alarmist", ["prescient", "well-founded", "prophetic"], "Far from = ההפך מ־. האזהרות התבררו כנכונות, כלומר הן לא היו מבהילות לשווא. alarmist = מבהיל, מפחיד בלי סיבה."],
+  [5, "Far from being ____, the professor's warnings proved accurate within a year.", "exaggerated", ["justified", "well-founded", "sound"], "Far from = ההפך מ־. האזהרות התבררו כנכונות, כלומר הן לא היו מוגזמות. exaggerated = מוגזם."],
   [5, "The poet's later work is marked by a ____ tone, reflecting the grief of her final years.", "melancholy", ["jubilant", "exuberant", "buoyant"], "grief = אבל, צער. melancholy = עצוב, מלנכולי. שלוש האחרות = עליז."],
-  [5, "The proposal received only ____ support from the committee: members praised it in public but voted against it in private.", "nominal", ["unanimous", "wholehearted", "enthusiastic"], "שבחים בפומבי והצבעה נגד = תמיכה רק להלכה. nominal = סמלי, להלכה בלבד."],
+  [5, "The proposal received only ____ support from the committee: members praised it in public but voted against it in private.", "token", ["unanimous", "wholehearted", "enthusiastic"], "שבחים בפומבי והצבעה נגד = תמיכה רק להצגה. token support = תמיכה סמלית, בלי ממש."],
 ];
 
 const restatement: PoolItem[] = [
-  // Level 2
   [2, "The library will remain closed until the renovation work has been completed.", "The library will not reopen before the renovation work is finished.", ["The library closed after the renovation work was completed.", "The renovation work will begin once the library has closed.", "The library is open while the renovation work continues."], "remain closed until = סגור עד ש־. לא ייפתח לפני סוף השיפוץ."],
   [2, "Most of the tickets were sold within an hour of going on sale.", "Within an hour of being offered, the majority of the tickets had been sold.", ["Only a few tickets were sold during the first hour.", "All the tickets were sold before they went on sale.", "It took more than an hour to sell any tickets."], "Most = רובם. the majority = הרוב. שימו לב: לא all."],
   [2, "The experiment failed because the samples had been stored at the wrong temperature.", "Storing the samples at an incorrect temperature caused the experiment to fail.", ["The samples were stored at the wrong temperature after the experiment failed.", "The experiment succeeded although the samples were stored badly.", "The temperature changed because the experiment failed."], "הסיבה: טמפרטורה שגויה. התוצאה: כישלון. רק בתשובה הנכונה הסדר נשמר."],
@@ -163,7 +175,6 @@ const restatement: PoolItem[] = [
   [2, "The bridge is too narrow for trucks to cross safely.", "Trucks cannot cross the bridge safely because it is not wide enough.", ["Trucks have made the bridge narrower over the years.", "The bridge is wide enough for trucks to cross safely.", "Only trucks are allowed to cross the bridge."], "too narrow for = צר מדי בשביל. כלומר משאיות לא יכולות לעבור בבטחה."],
   [2, "Hardly any of the original paintings survived the fire.", "Almost all of the original paintings were destroyed in the fire.", ["Most of the original paintings survived the fire.", "The fire damaged the paintings only slightly.", "None of the paintings were in the building during the fire."], "Hardly any = כמעט אף אחד. כמעט כולם נשרפו."],
 
-  // Level 3
   [3, "It was only after the experiment had been repeated that the researchers accepted the surprising result.", "The researchers did not accept the surprising result until the experiment was repeated.", ["The researchers accepted the result before repeating the experiment.", "The experiment was repeated because the researchers had already accepted the result.", "The researchers rejected the result even after the experiment was repeated."], "only after = רק אחרי. not until = לא עד ש־. אותה משמעות."],
   [3, "Were the factory to close, hundreds of local families would lose their main source of income.", "If the factory closed, many local families would be left without their main income.", ["Because the factory closed, hundreds of families lost their income.", "The factory will close unless local families find another source of income.", "Hundreds of families would earn more if the factory closed."], "Were the factory to close = If the factory closed. תנאי היפותטי, המפעל עוד לא נסגר."],
   [3, "The new policy, while popular with voters, has done little to reduce unemployment.", "Although voters like the new policy, it has not significantly lowered unemployment.", ["The new policy has reduced unemployment, which is why voters like it.", "Voters dislike the new policy because it has not reduced unemployment.", "The new policy is unpopular, but it has greatly reduced unemployment."], "while = למרות ש. done little = כמעט לא השפיע."],
@@ -175,7 +186,6 @@ const restatement: PoolItem[] = [
   [3, "The museum owes much of its fame to a single painting donated by an anonymous collector.", "A painting given by an unnamed collector is largely responsible for the museum's fame.", ["The museum became famous after buying a painting from a well-known collector.", "An anonymous collector owes the museum a great deal of money.", "The museum is famous for its many paintings by anonymous artists."], "owes its fame to = חב את פרסומו ל־. anonymous = unnamed. נתרם, לא נקנה."],
   [3, "The longer the negotiations continued, the less likely an agreement seemed.", "As the negotiations dragged on, an agreement appeared increasingly unlikely.", ["The negotiations continued because an agreement seemed likely.", "An agreement became more likely as the negotiations went on.", "The negotiations ended quickly once an agreement seemed unlikely."], "The longer … the less = ככל ש… כך פחות. ככל שנמשך, הסיכוי ירד."],
 
-  // Level 4
   [4, "Contrary to what many economists had predicted, the rise in interest rates did not slow consumer spending.", "Consumer spending was not reduced by the higher interest rates, although many economists had expected it to be.", ["As many economists had predicted, consumer spending slowed after interest rates rose.", "Economists predicted that interest rates would rise because consumer spending had slowed.", "Interest rates rose unexpectedly, and spending fell as a result."], "Contrary to = בניגוד ל־. הכלכלנים צפו ירידה, והיא לא קרתה."],
   [4, "The theory is not so much wrong as incomplete.", "The theory is less incorrect than it is lacking in some respects.", ["The theory is both wrong and incomplete.", "The theory is complete, but it is wrong.", "The theory is so incomplete that it must be wrong."], "not so much X as Y = לא כל כך X אלא יותר Y. הבעיה העיקרית: חסרה, לא שגויה."],
   [4, "Few of the claims made in the report can be verified, and fewer still are supported by independent sources.", "Only a small number of the report's claims can be checked, and an even smaller number are backed by independent sources.", ["Most of the report's claims can be verified, though few have independent support.", "The report's claims are supported by independent sources, but they cannot be verified.", "None of the claims in the report can be verified or supported."], "Few = מעט. fewer still = עוד פחות. לא None."],
@@ -187,7 +197,6 @@ const restatement: PoolItem[] = [
   [4, "The reforms, far from reducing bureaucracy, added two new layers of approval to every application.", "Instead of cutting bureaucracy, the reforms made every application go through two more stages of approval.", ["The reforms reduced bureaucracy by removing two layers of approval.", "Two new layers of approval were added, and as a result bureaucracy was reduced.", "The reforms had no effect on the approval process."], "far from reducing = רחוק מלהקטין, ההפך. הרפורמות הוסיפו בירוקרטיה."],
   [4, "It is doubtful whether the ancient city was ever as large as some early historians claimed.", "The ancient city was probably smaller than some early historians said it was.", ["Early historians doubted that the ancient city had ever existed.", "The ancient city was certainly as large as early historians claimed.", "Some early historians claimed that the city was smaller than it really was."], "It is doubtful = מוטל בספק. כנראה העיר הייתה קטנה ממה שטענו."],
 
-  // Level 5
   [5, "Insofar as the novel has a message at all, it is that certainty is more dangerous than doubt.", "To the extent that the novel conveys any message, it suggests that being certain is more hazardous than doubting.", ["The novel clearly argues that doubt is more dangerous than certainty.", "The novel has no message, although it deals with certainty and doubt.", "The novel's message is that doubt and certainty are equally dangerous."], "Insofar as = במידה ש־. the novel has a message at all: אם יש מסר, הוא שוודאות מסוכנת יותר."],
   [5, "Not until the archives were opened, decades later, did it become apparent how little the government had known at the time.", "Only when the archives became available, many years afterward, did it become clear how poorly informed the government had been.", ["The government opened the archives decades later because it had known so little.", "When the archives were opened, it turned out that the government had known a great deal.", "It was clear at the time how little the government knew, but the archives were opened decades later."], "Not until = רק כאשר. how little had known = כמה מעט ידעו. שני הפרטים נשמרים רק בתשובה הנכונה."],
   [5, "The critic's praise was all the more significant for being so rarely given.", "Because the critic seldom praised anything, his praise carried extra weight.", ["The critic praised works often, which made his praise significant.", "The critic's praise was rare and therefore not very significant.", "The critic gave significant praise to every work that was rare."], "all the more … for being = משמעותי עוד יותר בגלל. הנדירות היא מה שנתן לשבח משקל."],
@@ -195,7 +204,6 @@ const restatement: PoolItem[] = [
   [5, "That the treaty was signed at all is remarkable, given how deeply the two sides distrusted each other.", "Considering the deep mistrust between the two sides, it is surprising that the treaty was signed.", ["The treaty was signed because the two sides trusted each other deeply.", "Given their distrust, it is not surprising that the two sides never signed the treaty.", "The treaty was remarkable because it ended the distrust between the two sides."], "That … at all is remarkable = עצם החתימה מפתיעה. ההסכם כן נחתם, למרות חוסר האמון."],
   [5, "The data, though suggestive, fall well short of establishing that the policy caused the decline in crime.", "The data hint that the policy may have reduced crime, but they are far from proving it.", ["The data prove conclusively that the policy reduced crime.", "The data suggest that crime fell despite the policy.", "The data show that the policy had no connection to the fall in crime."], "suggestive = מרמז. fall well short of establishing = רחוק מלהוכיח. יש רמז, אין הוכחה."],
 
-  // Second batch, 2026-11-04
   [3, "The museum attracts more visitors in winter than in summer.", "Fewer people visit the museum in summer than in winter.", ["The museum is busiest in summer.", "The museum is closed in summer.", "The museum attracts the same number of visitors all year."], "יותר בחורף = פחות בקיץ. השוואה הפוכה עם אותה משמעות."],
   [3, "Unless it rains soon, the crops will fail.", "The crops will fail if there is no rain soon.", ["The crops will fail because it will rain.", "If it rains, the crops will fail.", "The crops failed even though it rained."], "Unless = if not. אם לא ירד גשם בקרוב, היבול ייכשל."],
   [3, "The tickets were so expensive that few students could afford them.", "Because the tickets cost so much, not many students were able to buy them.", ["The tickets were cheap, so many students bought them.", "Few students wanted the tickets, so they became expensive.", "Most students could afford the expensive tickets."], "so expensive that few = כל כך יקרים שמעטים. few = not many."],
@@ -215,7 +223,6 @@ const restatement: PoolItem[] = [
   [5, "There is little to suggest that the decline was anything other than temporary.", "The evidence indicates that the decline was most likely only temporary.", ["There is strong evidence that the decline is permanent.", "Little is known about the cause of the temporary decline.", "The decline was too small to be noticed."], "little to suggest … anything other than temporary = כמעט שום דבר לא מרמז שזה לא זמני. כלומר כנראה זמני."],
   [5, "The museum's decision to close, however regrettable, was hardly surprising given its losses.", "Considering its financial losses, it was not surprising that the museum closed, though this was unfortunate.", ["The museum's closure was surprising, since it was making a profit.", "The museum regretted its losses, but it did not close.", "Nobody regretted the museum's decision to close."], "however regrettable = מצער ככל שיהיה. hardly surprising = לא מפתיע. given its losses = לאור ההפסדים."],
 
-  // Third batch, 2026-11-04
   [2, "The shop closes at eight o'clock on weekdays.", "On weekdays the shop is open until eight.", ["The shop opens at eight on weekdays.", "The shop is closed on weekdays.", "The shop closes earlier on weekdays than at weekends."], "closes at eight = פתוח עד שמונה. האפשרות האחרונה מוסיפה השוואה שלא נאמרה."],
   [2, "My brother is two years older than I am.", "I am two years younger than my brother.", ["My brother is two years younger than I am.", "My brother and I are the same age.", "I am two years older than my brother."], "הוא מבוגר ממני = אני צעיר ממנו. אותו פער, מהצד השני."],
   [2, "The film was more interesting than the book.", "The book was less interesting than the film.", ["The book was more interesting than the film.", "The film and the book were equally interesting.", "Neither the film nor the book was interesting."], "הסרט מעניין יותר = הספר מעניין פחות."],
@@ -347,7 +354,6 @@ const passageItems: PoolPassage[] = [
     ],
   },
 
-  // Second batch, 2026-11-04
   {
     id: "xp7",
     title: "Bees on the Rooftops",
@@ -445,7 +451,6 @@ const passageItems: PoolPassage[] = [
     ],
   },
 
-  // Third batch, 2026-11-04
   {
     id: "xp13",
     title: "A Library of Things",
@@ -544,25 +549,30 @@ const passageItems: PoolPassage[] = [
   },
 ];
 
-const pad = (n: number) => String(n).padStart(2, "0");
-const levels: Record<string, Level> = {};
+const { levels, make } = makePool();
+Object.assign(levels, parseLevels(retiredLevels));
 
-function make(type: "sentence" | "restatement" | "reading", items: PoolItem[], idOf: (i: number) => string, passageId = "") {
-  return items.map(([level, stem, correct, wrong, why, paragraph], i) => {
-    const id = idOf(i);
-    levels[id] = level;
-    return toQuestion(id, type, [stem, correct, wrong, why, paragraph], passageId);
-  });
-}
+export const poolSentence: Question[] = [
+  ...make("sentence", sentence, (i) => `ex-sc-${pad(i + 1)}`),
+  ...retired.flatMap((b) => b.sentence),
+];
+export const poolRestatement: Question[] = [
+  ...make("restatement", restatement, (i) => `ex-rs-${pad(i + 1)}`),
+  ...retired.flatMap((b) => b.restatement),
+];
 
-export const poolSentence: Question[] = make("sentence", sentence, (i) => `ex-sc-${pad(i + 1)}`);
-export const poolRestatement: Question[] = make("restatement", restatement, (i) => `ex-rs-${pad(i + 1)}`);
-
-export const poolPassages: Passage[] = passageItems.map(({ id, title, paragraphs }) => ({ id, title, paragraphs }));
+export const poolPassages: Passage[] = [
+  ...passageItems.map(({ id, title, paragraphs }) => ({ id, title, paragraphs })),
+  ...retired.map((b) => b.passage),
+];
 
 /** Reading questions by passage, in the passage's own order */
-export const poolReading: Record<string, Question[]> = Object.fromEntries(
-  passageItems.map((p) => [p.id, make("reading", p.items, (i) => `ex-rc-${p.id}-${i + 1}`, p.id)]),
-);
+export const poolReading: Record<string, Question[]> = {
+  ...Object.fromEntries(passageItems.map((p) => [p.id, make("reading", p.items, (i) => `ex-rc-${p.id}-${i + 1}`, p.id)])),
+  ...Object.fromEntries(retired.map((b) => [b.passage.id, b.reading])),
+};
 
-export const poolLevels: Record<string, Level> = levels;
+export const poolLevels = levels;
+
+/** Whether a question belongs to the exam-only pool (never shown in practice) */
+export const isPoolId = (id: string) => id in levels;

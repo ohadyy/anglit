@@ -2,35 +2,16 @@ import type { MetadataRoute } from "next";
 import { site } from "@/lib/site";
 import { blogPosts } from "@/content/blog";
 import { institutions } from "@/content/institutions";
+import { INDEXED_PAGES, pageUrl } from "@/lib/nav";
 
-// Public, indexable pages only. Internal tools (/studio, /review, /content),
-// and account/checkout flows are
-// deliberately left out — they carry robots: { index: false } in their own metadata.
+// Public, indexable pages only (the list is lib/nav.ts). Internal tools and the account and
+// checkout flows are deliberately left out — they carry robots: { index: false } in their own metadata.
 // Bump by hand when page content really changes; "now" on every build teaches Google to ignore lastmod.
 const PAGES_UPDATED = new Date("2026-11-06");
 
-const PUBLIC_PATHS = [
-  { path: "", priority: 1, changeFrequency: "weekly" as const },
-  { path: "/start", priority: 0.9, changeFrequency: "weekly" as const },
-  { path: "/sample-test", priority: 0.8, changeFrequency: "monthly" as const },
-  { path: "/amirnet-words", priority: 0.8, changeFrequency: "monthly" as const },
-  { path: "/practice/daily", priority: 0.6, changeFrequency: "daily" as const },
-  { path: "/amirnet", priority: 0.8, changeFrequency: "monthly" as const },
-  { path: "/guide", priority: 0.6, changeFrequency: "monthly" as const },
-  { path: "/learn/connectors", priority: 0.7, changeFrequency: "monthly" as const },
-  { path: "/learn/affixes", priority: 0.7, changeFrequency: "monthly" as const },
-  { path: "/score", priority: 0.7, changeFrequency: "monthly" as const },
-  { path: "/exam-dates", priority: 0.7, changeFrequency: "daily" as const },
-  { path: "/pricing", priority: 0.7, changeFrequency: "monthly" as const },
-  { path: "/private-tutor", priority: 0.7, changeFrequency: "monthly" as const },
-  { path: "/ads", priority: 0.6, changeFrequency: "weekly" as const },
-  { path: "/blog", priority: 0.6, changeFrequency: "weekly" as const },
-  { path: "/llm-information", priority: 0.5, changeFrequency: "monthly" as const },
-];
-
 export default function sitemap(): MetadataRoute.Sitemap {
-  const staticEntries = PUBLIC_PATHS.map(({ path, priority, changeFrequency }) => ({
-    url: `${site.url}${path}`,
+  const staticEntries = INDEXED_PAGES.map(({ path, sitemap: { priority, changeFrequency } }) => ({
+    url: pageUrl(site.url, path),
     lastModified: PAGES_UPDATED,
     changeFrequency,
     priority,

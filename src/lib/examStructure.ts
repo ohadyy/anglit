@@ -1,10 +1,14 @@
-import { isCorrectAnswer, questions, wordFormationQuestions, type ExamQuestion, type QuestionType } from "@/content/questions";
+import { isCorrectAnswer, type ExamQuestion, type QuestionType } from "@/content/questions";
 import { audioCompletionSets, lectureSets, wordFormationSets } from "@/content/pilotBank";
 import { findExamTest, grammarSetIds } from "@/content/examTests";
 import { frozenTests } from "@/content/frozenTests";
 import { poolPassages, poolReading, poolRestatement, poolSentence } from "@/content/examPool";
 import { difficultyOf, estimateAbility } from "@/lib/examScore";
-import { WRITING_MINUTES, writingTasks } from "@/content/writingTasks";
+import { findQuestion } from "@/lib/examQuestions";
+import { PILOT_CHAPTER, PILOT_CHAPTER_TYPES, type PilotChapterType } from "@/lib/pilotChapters";
+import { seededRandom, shuffle } from "@/lib/random";
+import { WRITING_MINUTES } from "@/content/practiceFacts";
+import { writingTasks } from "@/content/writingTasks";
 
 // The structure follows NITE's published format (see the practice-test guide):
 // six core chapters, the same in every test, then two experimental chapters.
@@ -16,23 +20,13 @@ import { WRITING_MINUTES, writingTasks } from "@/content/writingTasks";
 // - frozen: the 20 original tests, served exactly as on 2026-11-04 (content/frozenTests.ts);
 // - adaptive: like the real exam, the first chapter is medium and each later chapter is
 //   picked by the ability estimated so far (see buildAdaptive below).
-export type ExamSection = {
+type ExamSection = {
   type: QuestionType;
   count: number;
   minutes: number;
   pilot: boolean;
 };
 
-/** The four experimental chapter types, with their size from the published format */
-export const PILOT_CHAPTER_TYPES = ["listening", "audiocomplete", "wordformation", "grammar"] as const;
-export type PilotChapterType = (typeof PILOT_CHAPTER_TYPES)[number];
-
-export const PILOT_CHAPTER: Record<PilotChapterType, { count: number; minutes: number }> = {
-  listening: { count: 5, minutes: 7 },
-  audiocomplete: { count: 4, minutes: 4 },
-  wordformation: { count: 4, minutes: 3 },
-  grammar: { count: 4, minutes: 4 },
-};
 
 export const CORE_SECTIONS: ExamSection[] = [
   { type: "sentence", count: 4, minutes: 4, pilot: false },
@@ -43,15 +37,7 @@ export const CORE_SECTIONS: ExamSection[] = [
   { type: "sentence", count: 4, minutes: 4, pilot: false },
 ];
 
-export const EXAM_CORE_QUESTIONS = CORE_SECTIONS.reduce((sum, s) => sum + s.count, 0);
-export const EXAM_CORE_MINUTES = CORE_SECTIONS.reduce((sum, s) => sum + s.minutes, 0);
-
-// Two experimental chapters, so 8 to 10 questions in total
-const pilotCounts = PILOT_CHAPTER_TYPES.map((t) => PILOT_CHAPTER[t].count);
-export const EXAM_PILOT_QUESTIONS_RANGE = `${2 * Math.min(...pilotCounts)}–${2 * Math.max(...pilotCounts)}`;
-
-/** One section of a fixed test, with its questions */
-/** `prompt` is set only on a writing chapter, which has no questions */
+/** One section of a test, with its questions. `prompt` is set only on a writing chapter, which has no questions */
 export type ExamPlanItem = { section: ExamSection; questions: ExamQuestion[]; prompt?: string };
 
 /** The writing task of the 7-chapter version. It replaces the two pilot chapters, never joins them.
@@ -64,9 +50,12 @@ function writingChapter(testNumber: string): ExamPlanItem {
   };
 }
 
-/** Questions and minutes for a test, with or without the pilot sections */
+export function planFor(plan: ExamPlanItem[], includePilot: boolean): ExamPlanItem[] {
+  return plan.filter((p) => includePilot || !p.section.pilot);
+}
+
 export function planTotals(plan: ExamPlanItem[], includePilot: boolean) {
-  const included = plan.filter((p) => includePilot || !p.section.pilot);
+  const included = planFor(plan, includePilot);
   return {
     sections: included.length,
     questions: included.reduce((sum, p) => sum + p.questions.length, 0),
@@ -74,37 +63,11 @@ export function planTotals(plan: ExamPlanItem[], includePilot: boolean) {
   };
 }
 
-/** Small seeded PRNG (mulberry32), so one test number always gives the same order */
-function seededRandom(seed: number) {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function shuffle<T>(arr: T[], rand: () => number): T[] {
-  const copy = [...arr];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
-
-// Every set a pilot chapter can draw from, by type
-const byId = new Map<string, ExamQuestion>([
-  ...questions.map((q) => [q.id, q] as const),
-  ...wordFormationQuestions.map((q) => [q.id, q] as const),
-]);
 const pilotSetsByType: Record<PilotChapterType, ExamQuestion[][]> = {
   listening: lectureSets,
   audiocomplete: audioCompletionSets,
   wordformation: wordFormationSets,
-  grammar: grammarSetIds.map((ids) => ids.map((id) => byId.get(id)!)),
+  grammar: grammarSetIds.map((ids) => ids.map((id) => findQuestion(id)!)),
 };
 
 /** The two experimental chapters of one test. The number decides the types and the sets.
@@ -199,7 +162,7 @@ export function buildExam(testNumber: string, answers: Answers = {}, seen: reado
       const section: ExamSection = pilot
         ? { type: part.type, count: pilot.count, minutes: pilot.minutes, pilot: true }
         : core;
-      return { section, questions: part.ids.map((id) => byId.get(id)!) };
+      return { section, questions: part.ids.map((id) => findQuestion(id)!) };
     });
   }
 

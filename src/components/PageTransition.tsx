@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
+import { prefersReducedMotion } from "@/lib/useReducedMotion";
 
 gsap.registerPlugin(DrawSVGPlugin);
 
@@ -45,7 +46,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
       clearTimeout(safetyTimer.current);
       safetyTimer.current = null;
     }
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (prefersReducedMotion()) {
       gsap.set(overlayRef.current, { opacity: 0 });
       stageRef.current = "idle";
       return;
@@ -69,7 +70,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (prevPathname.current === pathname) return;
     prevPathname.current = pathname;
-    if (stageRef.current === "idle") return; // no cover was ever started for this nav
+    if (stageRef.current === "idle") return;
     if (stageRef.current === "covering") {
       pendingRevealRef.current = true;
       return;
@@ -81,7 +82,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
   // preventDefault — the link's own default navigation always proceeds untouched.
   useEffect(() => {
     function onClick(event: MouseEvent) {
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      if (prefersReducedMotion()) return;
       // Not checking event.defaultPrevented: Next's own <Link> always calls
       // preventDefault() as part of its normal client-side navigation (it runs its
       // own onClick before this bubble-phase listener), so that flag is already
@@ -106,11 +107,6 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
       const topSegment = (p: string) => p.split("/")[1] ?? "";
       if (topSegment(url.pathname) === topSegment(window.location.pathname)) return;
 
-      // Entering Anglit Platinum paints the same transition in black and gold
-      const toPlatinum = url.pathname === "/platinum" || url.pathname.startsWith("/platinum/");
-      if (overlayRef.current) overlayRef.current.style.backgroundColor = toPlatinum ? "#0a0a0a" : "";
-      pathRef.current?.setAttribute("stroke", toPlatinum ? "#c9a24b" : "#E4E4E4");
-
       stageRef.current = "covering";
       pendingRevealRef.current = false;
       gsap.killTweensOf([overlayRef.current, pathRef.current]);
@@ -119,7 +115,6 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
         .timeline({
           onComplete: () => {
             stageRef.current = "covered";
-            // The route already changed while we were covering — reveal now.
             if (pendingRevealRef.current) reveal();
           },
         })
@@ -148,7 +143,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
       <div
         ref={overlayRef}
         aria-hidden
-        className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-ink opacity-0"
+        className="pointer-events-none fixed inset-0 z-(--z-overlay) flex items-center justify-center bg-ink opacity-0"
       >
         <svg
           width="100%"
@@ -162,7 +157,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
           <path
             ref={pathRef}
             d="M13.4746 291.27C13.4746 291.27 100.646 -18.6724 255.617 16.8418C410.588 52.356 61.0296 431.197 233.017 546.326C431.659 679.299 444.494 21.0125 652.73 100.784C860.967 180.556 468.663 430.709 617.216 546.326C765.769 661.944 819.097 48.2722 988.501 120.156C1174.21 198.957 809.424 543.841 988.501 636.726C1189.37 740.915 1301.67 149.213 1301.67 149.213"
-            stroke="#E4E4E4"
+            className="stroke-mist"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"

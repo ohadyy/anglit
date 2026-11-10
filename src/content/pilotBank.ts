@@ -8,26 +8,43 @@
 // - Word formation (wordformation): one base word in bold, a blank in the sentence, and
 //   the student types the new word. Spelling matters. 3 minutes per chapter.
 // Grammar in context lives in grammarBank.ts.
-// status: "approved". The teacher approved the question bank before these were written.
 
 import type { ListeningQuestion, Passage, WordFormationQuestion } from "./questions";
 
 type Options = ListeningQuestion["options"];
 
-const IMAGE = "/brand/listening-illustration.png";
-
+// Lecture/conversation clips (lec…) get one illustration each (public/brand/listening/<id>.webp),
+// drawn to match the topic and the voice's gender. The short continuation clips (ac…) have none.
 function clip(id: string, title: string): Passage {
-  return { id, title, paragraphs: [], audio: `/audio/pilot/${id}.mp3`, image: IMAGE };
+  const image = id.startsWith("lec") ? `/brand/listening/${id}.webp` : undefined;
+  return { id, title, paragraphs: [], audio: `/audio/pilot/${id}.mp3`, image };
 }
+
+// The bank was written with the right answer almost always in slot B. Each question moves its
+// right answer to the next slot of this fixed list, one slot per question in bank order, six sets
+// of five. It is spread evenly over A–D (8/8/7/7) and uneven on purpose: a few pairs and one
+// run of three, never more. The other options keep their order, and every student sees the same one.
+const ANSWER_SLOTS = [
+  2, 0, 3, 3, 1,
+  0, 2, 2, 1, 3,
+  1, 3, 0, 0, 2,
+  3, 1, 1, 1, 0,
+  2, 0, 3, 2, 1,
+  0, 2, 3, 1, 0,
+] as const;
+let lectureCount = 0;
 
 function lecture(
   id: string,
   passageId: string,
   stem: string,
-  options: Options,
-  answer: 0 | 1 | 2 | 3,
+  written: Options,
+  writtenAnswer: 0 | 1 | 2 | 3,
   explanation: string,
 ): ListeningQuestion {
+  const answer = ANSWER_SLOTS[lectureCount++ % ANSWER_SLOTS.length];
+  const wrong = written.filter((_, i) => i !== writtenAnswer);
+  const options = [...wrong.slice(0, answer), written[writtenAnswer], ...wrong.slice(answer)] as Options;
   return { id, type: "listening", passageId, stem, options, answer, explanation, status: "approved" };
 }
 
@@ -117,6 +134,33 @@ export const lectureSets: ListeningQuestion[][] = [
     lecture("lec6-4", "lec6-c", "What does bleaching mean in the lecture?", ["Coral loses its colorful algae because of warm water", "Coral grows a thicker skeleton", "Fish move away from the reef at night", "The reef becomes deeper"], 0, "בליצה היא מצב שבו האלמוג מאבד את האצות הצבעוניות שלו בגלל מים חמים."),
     lecture("lec6-5", "lec6-c", "What do many resorts do to protect reefs?", ["Ban all visitors from the water", "Use mooring buoys instead of anchors", "Remove the coral and replant it elsewhere", "Build fences around the beach"], 1, "במקום עוגנים, רבים משתמשים בתושבות עגינה."),
   ],
+];
+
+// Extra questions for the lecture clips, for practice only: the real exam has 3–4 questions per
+// clip, but the exam chapters above keep their 5-question size (and their calibration). With these,
+// practice plays a clip once and asks 1, 2 or 3 questions on it. Not part of lectureSets, so no test uses them.
+const EXTRA_SLOTS = [3, 0, 2, 1, 3, 1, 0, 2, 1, 0, 3, 2] as const;
+let extraCount = 0;
+
+function extra(id: string, passageId: string, stem: string, right: string, wrong: [string, string, string], explanation: string): ListeningQuestion {
+  const answer = EXTRA_SLOTS[extraCount++];
+  const options = [...wrong.slice(0, answer), right, ...wrong.slice(answer)] as Options;
+  return { id, type: "listening", passageId, stem, options, answer, explanation, status: "approved" };
+}
+
+export const lectureExtras: ListeningQuestion[] = [
+  extra("lec1-6", "lec1-b", "What has changed about the airport shuttle?", "It now leaves from Terminal 2", ["It no longer runs in the evening", "It now costs extra", "It leaves from the hotel"], "הדובר אומר שהמעבורת לשדה יוצאת עכשיו מטרמינל 2 ולא מטרמינל 1."),
+  extra("lec1-7", "lec1-c", "Why might a damaged area take a long time to recover?", "Because lichens grow very slowly", ["Because lichens need heavy traffic", "Because the fungus cannot hold water", "Because the alga makes no food"], "הדובר מציין שחזזיות גדלות לאט מאוד, ולכן אזור שניזוק יתאושש לאט."),
+  extra("lec2-6", "lec2-a", "Where can hikers still walk?", "On the upper loop, which starts at the picnic area", ["On the lower section near the barrier", "Along the river", "Nowhere in the park"], "המסלול התחתון סגור, אבל הלולאה העליונה, שמתחילה באזור הפיקניק, עדיין פתוחה."),
+  extra("lec2-7", "lec2-b", "How did the team test each cleaning step?", "On a corner of the canvas first", ["On a copy of the painting", "On the frame", "On a piece from the 1950s repairs"], "הצוות בדק כל שלב קודם על פינה קטנה של הבד, לפני שהמשיך לשאר הציור."),
+  extra("lec2-8", "lec2-c", "What was a disadvantage of the Fresnel lens?", "It was heavy, fragile and expensive to build", ["It was too dim to be seen from the sea", "It needed open fires to work", "It was easily blown out by the wind"], "העדשה הייתה כבדה, שבירה ויקרה מאוד לבנייה. הרוח כיבתה את האש הפתוחה, לא את העדשה."),
+  extra("lec3-6", "lec3-c", "What did studies find about the sound level at homes near turbines?", "It was similar to a quiet conversation indoors", ["It was louder than traffic", "It could not be heard at all", "It was highest on calm nights"], "במחקרים נמצא שהרעש בבתים קרובים דומה לשיחה שקטה בתוך הבית. בלילה רגוע הוא כמעט לא מורגש."),
+  extra("lec4-6", "lec4-a", "What should visitors do if they see a bird on the path?", "Walk around it quietly", ["Take a photo from up close", "Pick it up and move it", "Wait until it flies away"], "צריך לעקוף את הציפור בשקט, ולא לצלם מקרוב."),
+  extra("lec4-7", "lec4-c", "What does the waxy coating do for a desert plant?", "It slows the loss of water", ["It stores water for months", "It catches the rain", "It opens the pores at night"], "הציפוי השעווני מאט את האידוי. אגירת המים היא תפקיד של הגבעולים העבים."),
+  extra("lec5-6", "lec5-c", "What does the lecturer say about British and American Sign Language?", "They are very different from each other", ["They are almost identical", "They are both based on spoken English", "They were invented in the same year"], "שתי השפות שונות מאוד זו מזו, למרות ששתי המדינות מדברות אנגלית. שפות סימנים אינן אוניברסליות."),
+  extra("lec6-6", "lec6-a", "What should the customer bring when collecting the medicine?", "An identity card", ["The prescription form", "A payment receipt", "A letter from the doctor"], "ההודעה מבקשת להביא תעודה מזהה בעת האיסוף."),
+  extra("lec6-7", "lec6-b", "What was glass like before glassblowing?", "It was rare and expensive", ["It was cheap and sold everywhere", "It was used only for windows", "It was made without fire"], "לפני נפיחת הזכוכית היא הייתה נדירה ויקרה, ורק בבתי מלאכה מלכותיים ייצרו כלים יפים."),
+  extra("lec6-8", "lec6-c", "What do some resorts require visitors to do before they dive?", "Attend a short briefing", ["Pay a conservation fee", "Wear special sunscreen", "Pass a swimming test"], "חלק מהאתרים דורשים מהמבקרים להשתתף בהדרכה קצרה לפני הצלילה."),
 ];
 
 // ---------- Listening text continuation: 4 sets of four clips (about 20 seconds each) ----------

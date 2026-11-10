@@ -1,14 +1,13 @@
 import { blogPosts, type BlogPost } from "@/content/blog";
 
 // Three brand tones, handed out so neighbours in the grid rarely match (a Latin square for 3 columns).
-// Fixed hex on purpose: the covers keep their colours in both site themes.
+// Brand constants, not the theme variables, on purpose: the covers keep their colours in both site themes.
 const TONES = [
-  { bg: "#E4E4E4", fg: "#19107F", pillBg: "#19107F", pillFg: "#FFFFFF", mark: "#EE478C" },
-  { bg: "#19107F", fg: "#FFFFFF", pillBg: "#FFFFFF", pillFg: "#19107F", mark: "#EE478C" },
-  { bg: "#EE478C", fg: "#0E0852", pillBg: "#0E0852", pillFg: "#FFFFFF", mark: "#FFFFFF" },
+  { bg: "var(--color-mist)", fg: "var(--color-ink)", pillBg: "var(--color-ink)", pillFg: "#fff", mark: "var(--color-marker)" },
+  { bg: "var(--color-ink)", fg: "#fff", pillBg: "#fff", pillFg: "var(--color-ink)", mark: "var(--color-marker)" },
+  { bg: "var(--color-marker)", fg: "var(--color-ink-deep)", pillBg: "var(--color-ink-deep)", pillFg: "#fff", mark: "#fff" },
 ];
 
-/** The blog cover: a Hebrew tag and one big English word. `className` sets the aspect ratio and corners. */
 export function BlogCover({ post, className = "" }: { post: BlogPost; className?: string }) {
   const i = Math.max(0, blogPosts.findIndex((p) => p.slug === post.slug));
   const t = TONES[(i + Math.floor(i / 3)) % 3];
@@ -22,7 +21,6 @@ export function BlogCover({ post, className = "" }: { post: BlogPost; className?
       <span className="rounded-full px-[3.5cqw] py-[1cqw] text-[3.6cqw] font-semibold" style={{ backgroundColor: t.pillBg, color: t.pillFg }}>
         {tag}
       </span>
-      {/* Size shrinks with the word's length so a long word never leaves the frame */}
       <span
         dir="ltr"
         className="max-w-[88cqw] px-[1.5cqw] text-center font-bold leading-[1.1] tracking-tight"

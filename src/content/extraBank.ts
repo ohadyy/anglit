@@ -1,8 +1,7 @@
 import type { Passage, Question } from "./questions";
 
 // Additional original questions and two reading passages. Every item was written
-// for Anglit (nothing copied from NITE or other prep sites). All start as "draft"
-// until the teacher reviews them on /review.
+// for Anglit (nothing copied from NITE or other prep sites).
 
 export const extraPassages: Passage[] = [
   {
@@ -26,7 +25,6 @@ export const extraPassages: Passage[] = [
 ];
 
 export const extraQuestions: Question[] = [
-  // ─── Sentence Completion ───────────────────────────────────────────
   {
     id: "sx-01",
     type: "sentence",
@@ -332,7 +330,6 @@ export const extraQuestions: Question[] = [
     status: "approved",
   },
 
-  // ─── Restatements ──────────────────────────────────────────────────
   {
     id: "rx-01",
     type: "restatement",
@@ -694,7 +691,6 @@ export const extraQuestions: Question[] = [
     status: "approved",
   },
 
-  // ─── Reading: Kelp ─────────────────────────────────────────────────
   {
     id: "rc-kelp-1",
     type: "reading",
@@ -780,7 +776,6 @@ export const extraQuestions: Question[] = [
     status: "approved",
   },
 
-  // ─── Reading: Letters ──────────────────────────────────────────────
   {
     id: "rc-let-1",
     type: "reading",

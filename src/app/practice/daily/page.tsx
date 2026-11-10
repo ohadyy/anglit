@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { buildDailyPool } from "@/lib/practice";
+import { buildSingleStemPool } from "@/lib/practice";
 import { DailyQuestion } from "./DailyQuestion";
 
 export const metadata: Metadata = {
@@ -10,5 +10,5 @@ export const metadata: Metadata = {
 
 // The browser picks today's question from this list by its own date.
 export default function DailyPage() {
-  return <DailyQuestion pool={buildDailyPool()} />;
+  return <DailyQuestion pool={buildSingleStemPool()} />;
 }

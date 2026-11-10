@@ -1,19 +1,9 @@
+import { countWord } from "./facts";
+
 // Decision scenarios for /calm/blackout, in Angela's voice. Wording is gender-neutral (plural). Pending owner review.
 
 export type BlackoutOption = { text: string; good: boolean; reply: string };
 export type BlackoutScenario = { id: string; setup: string; options: BlackoutOption[] };
-
-export const blackoutCopy = {
-  intro: "כמה רגעים שקורים בכל מבחן. בכל אחד תבחרו מה עושים ראשון, ואני אגיד מה כדאי לשים לב אליו. אין ציון.",
-  start: "מתחילים",
-  retry: "ננסה אפשרות אחרת",
-  next: "הרגע הבא",
-  finish: "לסיום",
-  doneTitle: "סיימתם את שלושת הרגעים",
-  doneText: "כשזה קורה באמת, אין צורך להיזכר בהכול. מספיק לזכור צעד אחד: לנשום, ואז לפעול.",
-  again: "עוד פעם",
-  back: "חזרה",
-};
 
 export const SCENARIOS: BlackoutScenario[] = [
   {
@@ -83,3 +73,15 @@ export const SCENARIOS: BlackoutScenario[] = [
     ],
   },
 ];
+
+export const blackoutCopy = {
+  intro: "כמה רגעים שקורים בכל מבחן. בכל אחד תבחרו מה עושים ראשון, ואני אגיד מה כדאי לשים לב אליו. אין ציון.",
+  start: "מתחילים",
+  retry: "ננסה אפשרות אחרת",
+  next: "הרגע הבא",
+  finish: "לסיום",
+  doneTitle: `סיימתם את ${countWord(SCENARIOS.length, "construct")} הרגעים`,
+  doneText: "כשזה קורה באמת, אין צורך להיזכר בהכול. מספיק לזכור צעד אחד: לנשום, ואז לפעול.",
+  again: "עוד פעם",
+  back: "חזרה",
+};

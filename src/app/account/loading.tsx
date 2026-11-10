@@ -12,7 +12,7 @@ export default function AccountLoading() {
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
-            className="flex min-h-44 animate-pulse flex-col justify-between rounded-3xl border border-line bg-white p-6 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]"
+            className="flex min-h-44 animate-pulse flex-col justify-between rounded-3xl border border-line bg-white p-6 shadow-card"
           >
             <div>
               <span className="block size-2.5 rounded-full bg-fg/10" />

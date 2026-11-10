@@ -1,4 +1,4 @@
-import { AngelaDrawing } from "./AngelaDrawing";
+import { AngelaDrawing } from "@/components/AngelaDrawing";
 
 // Soft hand-drawn shapes for the calm area: organic blobs, contour lines and ring stamps. They use the theme colors, so they follow light and ink.
 
@@ -22,31 +22,6 @@ export function CalmBackdrop() {
   );
 }
 
-// Angela: a woman's profile in a few flowing lines inside a breathing bubble. The lines draw themselves in, the hair sways.
-export function AngelaFace({ className = "" }: { className?: string }) {
-  const line = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, pathLength: 1 };
-  return (
-    <svg viewBox="0 0 240 240" role="img" aria-label="אנג'לה" className={`mx-auto size-56 text-fg ${className}`}>
-      <circle cx="120" cy="120" r="88" className="calm-disc" fill="currentColor" fillOpacity="0.1" />
-      <g fill="none" stroke="currentColor" strokeOpacity="0.18" strokeWidth="1.2">
-        <ellipse cx="120" cy="120" rx="70" ry="68" />
-        <ellipse cx="122" cy="119" rx="52" ry="50" />
-      </g>
-      <g className="calm-sway">
-        <path {...line} className="calm-draw" style={{ ["--d" as string]: "0.2s" }} d="M118 64C88 64 66 92 70 128C72 152 64 172 50 190" />
-        <path {...line} className="calm-draw" style={{ ["--d" as string]: "0.5s" }} d="M112 70C90 74 80 98 84 128C86 148 82 166 74 182" />
-        <path {...line} className="calm-draw" style={{ ["--d" as string]: "0.8s" }} d="M104 76C94 84 92 102 96 122" />
-        <path {...line} className="calm-draw" style={{ ["--d" as string]: "1.1s" }} d="M118 64C148 52 178 66 188 96" />
-      </g>
-      <path {...line} className="calm-draw" style={{ ["--d" as string]: "0.6s" }} d="M118 66C132 70 141 82 140 96C140 104 147 112 153 118C151 122 146 123 144 124C147 129 148 132 145 135C149 139 148 143 144 145C146 152 141 158 131 161C125 163 121 172 120 192" />
-      <path {...line} className="calm-draw" style={{ ["--d" as string]: "1.4s" }} d="M127 99C131 102 135 102 139 99" />
-      <path {...line} className="calm-draw" style={{ ["--d" as string]: "1.6s" }} d="M125 91C130 88 136 88 140 91" />
-      <path {...line} className="calm-draw" style={{ ["--d" as string]: "1.8s" }} d="M100 132C102 150 110 164 114 192" />
-    </svg>
-  );
-}
-
-// Angela inside the breathing bubble. The drawing traces itself, then floats.
 export function AngelaFigure() {
   return (
     <div className="relative mx-auto size-60">

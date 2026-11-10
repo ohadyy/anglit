@@ -1,19 +1,15 @@
-// Copy and products for /pricing. Kept separate from copy.ts for the same reason as
-// sprintCopy.ts — this isn't part of the homepage's /content review flow.
-
-export type ProductId = "access" | "course" | "private";
+import { REFUND_SUMMARY } from "./facts";
+import type { ProductId } from "@/lib/enums";
 
 export type Product = {
   id: ProductId;
   name: string;
-  price: string;
-  originalPrice?: string;
+  priceIls: number;
   priceUnit: string;
   badge?: string;
   /** Crossed-out "before" price shown next to the real one */
-  listPrice?: string;
+  listPriceIls?: number;
   note?: string;
-  scarcity?: string;
   included: string[];
   excluded: string[];
 };
@@ -22,7 +18,7 @@ export type Product = {
 // so the same row sits at the same height. A card without that row shows it as not included.
 // Row order: the access row first, then the practice, the lessons, the follow-up.
 // A cell is either the text the card includes, or { missing } with the text the card does not include
-export type FeatureCell = string | { missing: string };
+type FeatureCell = string | { missing: string };
 
 export const featureRows: Record<ProductId, FeatureCell>[] = [
   {
@@ -57,8 +53,7 @@ export const featureRows: Record<ProductId, FeatureCell>[] = [
   },
 ];
 
-// The text a product includes in the shared rows, in order (used on the checkout page)
-export function includedFor(id: ProductId): string[] {
+function includedFor(id: ProductId): string[] {
   return featureRows.map((row) => row[id]).filter((c): c is string => typeof c === "string");
 }
 
@@ -66,7 +61,7 @@ export const products: Product[] = [
   {
     id: "access",
     name: "גישה לאתר",
-    price: "97",
+    priceIls: 97,
     priceUnit: "גישה מלאה לאתר ללא הגבלת זמן, תשלום חד פעמי",
     note: "מתאים למי שרוצה להתאמן בעצמו, בקצב שלו, בלי לקבוע שיעורים.",
     included: includedFor("access"),
@@ -75,8 +70,8 @@ export const products: Product[] = [
   {
     id: "course",
     name: "7 ימים לאמירנט",
-    price: "347",
-    listPrice: "500",
+    priceIls: 347,
+    listPriceIls: 500,
     priceUnit: "לכל הסמינר, תשלום חד פעמי",
     badge: "הבחירה המומלצת",
     note: "מתאים לאנשים שרוצים לשפר את הרמה שלהם בצורה כמעט מיידית, עם תרגול יומי וחברים ללמידה.",
@@ -86,7 +81,7 @@ export const products: Product[] = [
   {
     id: "private",
     name: "שיעורים פרטיים",
-    price: "897",
+    priceIls: 897,
     priceUnit: "ל-6 שיעורים פרטיים, תשלום חד פעמי",
     note: "מתאים במיוחד למי שמתקשה ללמוד מרחוק, ומעדיף ללמוד פנים מול פנים.",
     included: includedFor("private"),
@@ -99,7 +94,7 @@ export function getProduct(id: string | null | undefined): Product | undefined {
 }
 
 // Anyone who already paid for something gets this much off the seminar. The checkout API charges the same number.
-export const LOYALTY_PERCENT = 10;
+const LOYALTY_PERCENT = 10;
 export const loyaltyPrice = (ils: number) => Math.round((ils * (100 - LOYALTY_PERCENT)) / 100);
 export const loyaltyLabel = `${LOYALTY_PERCENT}% הנחה ללקוחות קיימים`;
 
@@ -140,7 +135,6 @@ export const pricingCopy = {
   payCta: "לתשלום",
   cta: "הרשמה למחזור הקרוב",
 
-  // The page changes with what the signed-in visitor already bought
   member: {
     yourPlan: "המסלול שלכם",
     accessTitle: "הצעד הבא: הסמינר",
@@ -164,7 +158,7 @@ export const pricingCopy = {
     },
     {
       q: "מה אם אני צריך לבטל?",
-      a: "אפשר לבטל תוך 14 יום מהתשלום, וההחזר מלא. הפרטים המלאים נמצאים במדיניות הביטול באתר.",
+      a: REFUND_SUMMARY,
     },
   ],
 };

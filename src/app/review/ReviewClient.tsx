@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
+import { Stem } from "@/components/Stem";
 import { useState } from "react";
-import { getPassage, questions, TYPE_LABELS, type Question } from "@/content/questions";
+import { getPassage, questions, type Question } from "@/content/questions";
+import { TYPE_LABELS, TYPES } from "@/content/questionLabels";
 import { FeedbackBar } from "@/components/FeedbackBar";
-import { Wordmark } from "@/components/Logo";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { TYPES } from "@/lib/practice";
+import { InternalHeader } from "@/components/InternalHeader";
+import { STORAGE_KEYS } from "@/lib/storageKeys";
 import { useStored } from "@/lib/useStored";
 
 type Verdict = "ok" | "fix";
@@ -20,14 +20,13 @@ const INITIAL = {
 };
 
 export function ReviewClient() {
-  const [st, setSt, reset] = useStored("anglit-review", INITIAL);
+  const [st, setSt, reset] = useStored(STORAGE_KEYS.review, INITIAL);
   const [filter, setFilter] = useState<Filter>("all");
 
   const ok = questions.filter((q) => st.marks[q.id] === "ok").length;
   const fix = questions.filter((q) => st.marks[q.id] === "fix").length;
   const open = questions.length - ok - fix;
 
-  // Tapping the active verdict again clears it
   const mark = (id: string, v: Verdict) =>
     setSt((s) => {
       const marks = { ...s.marks };
@@ -58,12 +57,7 @@ export function ReviewClient() {
 
   return (
     <div className="flex min-h-dvh flex-col pb-40">
-      <header className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
-        <Link href="/" aria-label="לעמוד הבית">
-          <Wordmark className="h-6 w-auto" />
-        </Link>
-        <ThemeToggle />
-      </header>
+      <InternalHeader className="max-w-3xl" />
 
       <main className="mx-auto w-full max-w-3xl px-4 sm:px-6">
         <h1 className="font-display text-3xl font-bold">בדיקת מאגר השאלות</h1>
@@ -188,7 +182,7 @@ function ReviewCard({
       </div>
 
       <p dir="ltr" className="mt-3 text-left text-lg font-medium leading-snug">
-        {q.stem}
+        <Stem text={q.stem} revealed={false} />
       </p>
       <ol dir="ltr" className="mt-3 flex flex-col gap-1.5 text-left">
         {q.options.map((o, i) => (

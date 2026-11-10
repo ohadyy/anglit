@@ -3,6 +3,7 @@ import Link from "next/link";
 import { connectorsLesson as c } from "@/content/connectorsLesson";
 import { questions } from "@/content/questions";
 import { TryIt } from "@/components/TryIt";
+import { CARD } from "@/lib/ui";
 
 export const metadata: Metadata = {
   title: c.seoTitle,
@@ -10,7 +11,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/learn/connectors" },
 };
 
-const CARD = "rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-6";
 
 // One sentence question (the although/despite trap) and one restatement
 const SAMPLE_IDS = ["cn-08", "cn-21"];

@@ -1,22 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import { STORAGE_KEYS } from "@/lib/storageKeys";
+import { CARD } from "@/lib/ui";
 import { useStored } from "@/lib/useStored";
 
-export type ChecklistStep = { label: string; done: boolean; href: string };
+type ChecklistStep = { label: string; done: boolean; href: string };
 
 // First steps for a new member. The server decides which steps apply and which are done;
 // this component only shows them and remembers on this device if the member closed the card.
 export function StartChecklist({ steps }: { steps: ChecklistStep[] }) {
-  const [dismissed, setDismissed] = useStored("anglit-start-checklist", false);
+  const [dismissed, setDismissed] = useStored(STORAGE_KEYS.startChecklist, false);
   const doneCount = steps.filter((s) => s.done).length;
   const allDone = doneCount === steps.length;
 
-  // Hidden once every step is done, or when the member closed it on this device
   if (allDone || dismissed) return null;
 
   return (
-    <section aria-labelledby="start-checklist-title" className="mt-8 rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-6">
+    <section aria-labelledby="start-checklist-title" className={`mt-8 ${CARD}`}>
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 id="start-checklist-title" className="font-display text-xl font-bold">
@@ -35,7 +36,6 @@ export function StartChecklist({ steps }: { steps: ChecklistStep[] }) {
         </button>
       </div>
 
-      {/* Progress bar: the same style as the practice bar */}
       <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-fg/12" aria-hidden>
         <div className="h-full rounded-full bg-fg transition-[width] duration-300" style={{ width: `${(doneCount / steps.length) * 100}%` }} />
       </div>

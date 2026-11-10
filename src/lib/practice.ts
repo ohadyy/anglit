@@ -1,15 +1,14 @@
 import { questions, type Question, type QuestionType } from "@/content/questions";
 import { affixQuestions } from "@/content/affixesBank";
+import { FREE_QUESTION_COUNT, LEVEL_GROUPS, type LevelGroup } from "@/content/practiceFacts";
+import { levelOf } from "@/content/difficulty";
 
-export { TYPES, ALL_TYPES, isQuestionType } from "@/content/questionLabels";
-
-/** Every question of one type, in bank order */
 export function buildSet(type: QuestionType): Question[] {
   return questions.filter((q) => q.type === type);
 }
 
-/** The single-stem questions the question of the day draws from (no passage needed) */
-export function buildDailyPool(): Question[] {
+/** The single-stem questions (no passage or audio needed): the question of the day and the timed challenge draw from these */
+export function buildSingleStemPool(): Question[] {
   return questions.filter((q) => q.type === "sentence" || q.type === "restatement");
 }
 
@@ -23,11 +22,23 @@ export function buildAffixes(): Question[] {
   return affixQuestions;
 }
 
-/** The five questions anyone can try without paying: two sentence completions,
+/** The FREE_QUESTION_COUNT questions anyone can try without paying: two sentence completions,
  * two restatements and one reading question */
 export function buildFreeSet(): Question[] {
   const sc = buildSet("sentence").slice(0, 2);
   const rs = buildSet("restatement").slice(0, 2);
   const rc = questions.filter((q) => q.type === "reading" && q.passageId === "heat").slice(0, 1);
-  return [...sc, ...rs, ...rc];
+  const free = [...sc, ...rs, ...rc];
+  if (free.length !== FREE_QUESTION_COUNT) throw new Error(`buildFreeSet returned ${free.length} questions, FREE_QUESTION_COUNT is ${FREE_QUESTION_COUNT}`);
+  return free;
+}
+
+/** Questions of one level group. Types with no rated questions (grammar, listening) return [] and get no picker. */
+export function filterByLevel(set: Question[], group: LevelGroup): Question[] {
+  const levels = LEVEL_GROUPS.find((g) => g.id === group)!.levels as readonly number[];
+  return set.filter((q) => levels.includes(levelOf(q.id) ?? 0));
+}
+
+export function levelCounts(set: Question[]): Record<LevelGroup, number> {
+  return Object.fromEntries(LEVEL_GROUPS.map((g) => [g.id, filterByLevel(set, g.id).length])) as Record<LevelGroup, number>;
 }

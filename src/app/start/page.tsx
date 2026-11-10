@@ -32,7 +32,7 @@ export default async function StartPage() {
           <Link
             key={card.href}
             href={card.href}
-            className="group flex flex-col overflow-hidden rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] hover:border-fg/30"
+            className="group flex flex-col overflow-hidden rounded-3xl border border-line bg-white shadow-card hover:border-fg/30"
           >
             <FreePreview id={card.id} />
             <div className="flex flex-1 flex-col justify-between p-6">
@@ -49,7 +49,7 @@ export default async function StartPage() {
         ))}
       </nav>
 
-      <section className="mt-12 rounded-3xl border border-line bg-white p-6 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
+      <section className="mt-12 rounded-3xl border border-line bg-white p-6 shadow-card">
         <h2 className="text-xl font-bold">{copy.onboardingPersuadeTitle}</h2>
         <p className="mt-3 leading-relaxed opacity-80">{copy.onboardingPersuadeText}</p>
         <Link

@@ -38,9 +38,18 @@ function formatDate(key: string) {
   return `${WEEKDAY_NAMES[weekday]}, ${d}.${m}.${y}`;
 }
 
+// First month with exam dates that is not before the current month (else the last one), so the calendar never opens on an empty past month
+function firstMonth() {
+  const months = [...new Set(Object.keys(examDates).map((k) => k.slice(0, 7)))].sort();
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const [y, m] = (months.find((x) => x >= thisMonth) ?? months[months.length - 1] ?? thisMonth).split("-").map(Number);
+  return { year: y, month: m - 1 };
+}
+
 export function ExamDatesCalendar() {
   const [filter, setFilter] = useState<Filter>("all");
-  const [cursor, setCursor] = useState({ year: 2026, month: 9 });
+  const [cursor, setCursor] = useState(firstMonth);
   const [picked, setPicked] = useState<string | null>(null);
 
   const daysInMonth = new Date(cursor.year, cursor.month + 1, 0).getDate();
@@ -93,7 +102,7 @@ export function ExamDatesCalendar() {
         </div>
       </div>
 
-      <div className="border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-6">
+      <div className="border border-line bg-white p-5 shadow-card sm:p-6">
         <div className="flex items-center justify-between">
           <button
             type="button"

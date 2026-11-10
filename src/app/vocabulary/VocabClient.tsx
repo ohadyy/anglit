@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FreeNextCard } from "@/components/FreeNextCard";
 import { speak } from "@/components/ReadAloud";
 import { vocabCopy, type VocabWord } from "@/content/vocabulary";
+import { postVocabAnswer } from "@/lib/postVocabAnswer";
 
 export function VocabClient({
   words,
@@ -36,12 +37,7 @@ export function VocabClient({
   const current = words[index];
 
   function answer(knew: boolean) {
-    fetch("/api/vocab/answer", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ wordId: current.id, knew }),
-      keepalive: true,
-    }).catch(() => {});
+    postVocabAnswer(current.id, knew);
     setIndex((i) => i + 1);
     setFlipped(false);
   }
@@ -80,14 +76,14 @@ export function VocabClient({
         </div>
         <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-fg/12">
           <span
-            className="block h-full origin-right rounded-full bg-fg transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+            className="block h-full origin-right rounded-full bg-fg transition-transform duration-500 ease-enter"
             style={{ transform: `scaleX(${progress / 100})` }}
           />
         </div>
       </div>
 
       {done ? (
-        <div className="mt-10 border border-line bg-white p-8 text-center shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
+        <div className="mt-10 border border-line bg-white p-8 text-center shadow-card">
           <p className="font-hand text-3xl">{vocabCopy.roundDone}</p>
           <p className="mt-3 leading-relaxed opacity-80">{vocabCopy.roundDoneText}</p>
           <button
@@ -127,13 +123,13 @@ export function VocabClient({
             className="flip-card w-full text-center"
           >
             <span className="flip-inner w-full">
-              <span className="flip-face flex min-h-72 flex-col items-center justify-center gap-3 border border-line bg-white p-8 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
+              <span className="flip-face flex min-h-72 flex-col items-center justify-center gap-3 border border-line bg-white p-8 shadow-card">
                 <span dir="ltr" className="text-5xl font-bold tracking-tight sm:text-6xl">
                   {current.word}
                 </span>
                 <span className="text-sm opacity-70">{vocabCopy.reveal}</span>
               </span>
-              <span className="flip-face flip-face-back flex min-h-72 flex-col items-center justify-center gap-5 border border-line bg-white p-8 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
+              <span className="flip-face flip-face-back flex min-h-72 flex-col items-center justify-center gap-5 border border-line bg-white p-8 shadow-card">
                 <span className="text-3xl font-bold sm:text-4xl">{current.translation}</span>
                 <span dir="ltr" className="max-w-sm leading-relaxed opacity-80">
                   {current.example}

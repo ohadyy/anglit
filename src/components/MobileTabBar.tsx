@@ -2,19 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { PAGE } from "@/lib/nav";
 
-// Bottom tab bar for phones (the common pattern from the app guide): the two main areas
-// are always one thumb-tap away. Hidden from sm up, where the header nav does the job.
 const tabs = [
-  { href: "/practice", label: "תרגול", icon: <path d="M8 12.5l2.5 2.5L16 9.5" /> },
-  { href: "/account", label: "אזור אישי", icon: <path d="M12 12a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM5 20c1-3.5 3.8-5 7-5s6 1.5 7 5" /> },
+  { href: PAGE.practice.path, label: PAGE.practice.nav, icon: <path d="M8 12.5l2.5 2.5L16 9.5" /> },
+  { href: PAGE.account.path, label: PAGE.account.nav, icon: <path d="M12 12a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM5 20c1-3.5 3.8-5 7-5s6 1.5 7 5" /> },
 ];
 
 export function MobileTabBar() {
   const path = usePathname();
 
   return (
-    <nav aria-label="ניווט ראשי" className="fixed inset-x-3 bottom-3 z-30 sm:hidden">
+    <nav aria-label="ניווט ראשי" className="fixed inset-x-3 bottom-3 z-(--z-bar) sm:hidden">
       <ul
         className="mx-auto grid max-w-md grid-cols-2 gap-1 rounded-2xl border border-line bg-bg/90 p-1.5 shadow-[0_18px_40px_-20px_rgb(14_8_82/0.4)] backdrop-blur-md"
         style={{ marginBottom: "env(safe-area-inset-bottom)" }}

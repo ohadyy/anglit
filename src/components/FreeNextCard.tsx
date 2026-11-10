@@ -15,7 +15,7 @@ export function FreeNextCard({ current }: { current: FreeActivityId }) {
           <Link
             key={a.id}
             href={a.href}
-            className="group flex items-center justify-between gap-4 rounded-2xl border border-line bg-white p-4 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] hover:border-fg/30"
+            className="group flex items-center justify-between gap-4 rounded-2xl border border-line bg-white p-4 shadow-card hover:border-fg/30"
           >
             <span>
               <span className="block font-semibold">{a.title}</span>

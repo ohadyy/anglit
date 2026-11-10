@@ -4,15 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { calmCopy } from "@/content/calm";
 import { SESSIONS } from "@/content/calmSessions";
 import { TIMINGS } from "@/content/calmTimings";
+import { formatClock } from "@/lib/formatClock";
 
 // Transcript paragraphs: the script without its [n] pause marks.
 function paragraphs(script: string) {
   return script.split("\n\n").map((p) => p.replace(/\s*\[\d+\]/g, "").trim());
-}
-
-function clock(s: number) {
-  const m = Math.floor(s / 60);
-  return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 }
 
 export function SessionsPlayer() {
@@ -28,7 +24,6 @@ export function SessionsPlayer() {
   const starts = session ? TIMINGS[session.id] : [];
   const active = starts.filter((t) => t <= time + 0.2).length - 1;
 
-  // Keep the paragraph being read in the middle of the transcript
   useEffect(() => {
     if (showText) lines.current[active]?.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [active, showText]);
@@ -100,8 +95,8 @@ export function SessionsPlayer() {
         className="h-8 w-full cursor-pointer accent-[var(--fg)]"
       />
       <div dir="ltr" className="flex justify-between text-xs tabular-nums opacity-60">
-        <span>{clock(time)}</span>
-        <span>{clock(duration)}</span>
+        <span>{formatClock(Math.floor(time))}</span>
+        <span>{formatClock(Math.floor(duration))}</span>
       </div>
     </div>
   );

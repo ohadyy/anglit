@@ -1,8 +1,12 @@
+import type { VocabRow } from "./vocabulary";
+// APPEND ONLY: ids (vw-N) come from the position in the merged list (vocabulary.ts) and are saved in student
+// progress. This is the last file merged, so new words go at the END of this array. Never insert, reorder or
+// delete a row (npm run check:vocab). Raise PINNED_COUNT in scripts/check-vocab-ids.ts after appending.
 // Academic words at the level of the harder exam chapters (content/examPool.ts), added
 // 2026-11-04. Tuple: [word, translation, example, tier, category]. Words already in the
 // bank are skipped when merged (content/vocabulary.ts). Original examples, written apart
 // from the exam sentences so that studying a word never gives away a test answer.
-export const vocabExam: [string, string, string, "easy" | "medium" | "hard" | "native", "verb" | "adjective" | "noun" | "other"][] = [
+export const vocabExam: VocabRow[] = [
   ["hinder", "לעכב, להפריע", "Heavy snow hindered the rescue teams for two days.", "hard", "verb"],
   ["indifferent", "אדיש", "He seemed indifferent to the result of the match.", "medium", "adjective"],
   ["illuminating", "מבהיר, מאיר עיניים", "The interview with the author was truly illuminating.", "hard", "adjective"],

@@ -1,28 +1,17 @@
-import type { Metadata } from "next";
-import { headers } from "next/headers";
-import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
 import { desc, eq } from "drizzle-orm";
-import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { crmNotes, crmState, leads, orders, user } from "@/db/schema";
-import { isStaff, isStaffPhone } from "@/lib/access";
+import { isStaffPhone, MANUAL_PROVIDER, requireStaffSession } from "@/lib/access";
 import { normalizePhone } from "@/lib/phoneAuth";
-import { Wordmark } from "@/components/Logo";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { CrmBoard } from "./CrmBoard";
 import type { Contact, CrmKind, Note } from "./labels";
+import { AdminShell, adminMetadata } from "../AdminShell";
 
-export const metadata: Metadata = {
-  title: "לידים ושיחות",
-  robots: { index: false, follow: false },
-};
+export const metadata = adminMetadata("לידים ושיחות");
 
 // Same gate as /admin: staff phones only, anyone else gets a plain 404.
 export default async function CrmPage() {
-  const authed = await auth.api.getSession({ headers: await headers() });
-  if (!authed) redirect("/sign-in?next=/admin/crm");
-  if (!(await isStaff(authed.user.id))) notFound();
+  await requireStaffSession("/admin/crm");
 
   const [leadRows, userRows, paidRows, stateRows, noteRows] = await Promise.all([
     db.select().from(leads).orderBy(desc(leads.createdAt)),
@@ -36,7 +25,7 @@ export default async function CrmPage() {
   const paidProducts = new Map<string, string[]>();
   const manualIds = new Set<string>();
   for (const o of paidRows) {
-    if (o.provider === "manual") manualIds.add(o.userId);
+    if (o.provider === MANUAL_PROVIDER) manualIds.add(o.userId);
     else if (o.product) paidProducts.set(o.userId, [...(paidProducts.get(o.userId) ?? []), o.product]);
   }
 
@@ -47,7 +36,7 @@ export default async function CrmPage() {
     notesMap.set(key, [...(notesMap.get(key) ?? []), { id: n.id, type: n.type, body: n.body, createdAt: n.createdAt }]);
   }
 
-  const userByPhone = new Map(userRows.filter((u) => u.phone).map((u) => [u.phone as string, u.id]));
+  const userByPhone = new Map(userRows.filter((u) => u.phone).map((u) => [normalizePhone(u.phone as string), u.id]));
 
   const toContact = (
     kind: CrmKind,
@@ -93,31 +82,19 @@ export default async function CrmPage() {
   }
   // A person who left details and then signed up stays one card, the lead's, which holds the history.
   for (const u of userRows) {
-    if (isStaffPhone(u.phone) || (u.phone && leadPhones.has(u.phone))) continue;
+    if (isStaffPhone(u.phone) || (u.phone && leadPhones.has(normalizePhone(u.phone)))) continue;
     contacts.push(toContact("user", u.id, u.id, { name: u.name, phone: u.phone, email: null, source: "account", message: null, createdAt: u.createdAt }));
   }
 
   const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Jerusalem" }).format(new Date());
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full min-w-0 max-w-3xl flex-col px-4 py-10 sm:px-6">
-      <header className="flex items-center justify-between gap-3">
-        <Link href="/" aria-label="לעמוד הבית">
-          <Wordmark className="h-6 w-auto" />
-        </Link>
-        <ThemeToggle />
-      </header>
-
-      <Link href="/admin" className="mt-8 inline-flex min-h-11 w-fit items-center text-sm font-semibold underline underline-offset-4">
-        ← פאנל הניהול
-      </Link>
-      <h1 className="font-display text-3xl font-bold sm:text-4xl">לידים ושיחות</h1>
-      <p className="mt-2 leading-relaxed opacity-70">
-        כל מי שהשאיר פרטים או נרשם לאתר, במקום אחד. אפשר לסמן מי כבר שוחחת איתו, לרשום הערות, לקבוע תזכורת, ולראות מי שילם.
-      </p>
-
+    <AdminShell
+      title="לידים ושיחות"
+      intro="כל מי שהשאיר פרטים או נרשם לאתר, במקום אחד. אפשר לסמן מי כבר שוחחת איתו, לרשום הערות, לקבוע תזכורת, ולראות מי שילם."
+      width="max-w-3xl"
+    >
       <CrmBoard contacts={contacts} today={today} />
-      <div className="pb-10" />
-    </div>
+    </AdminShell>
   );
 }

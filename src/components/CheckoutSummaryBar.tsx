@@ -3,9 +3,6 @@
 import { useState } from "react";
 import SmoothDrawer from "@/components/SmoothDrawer";
 
-// Phone-only order summary: a bar pinned to the bottom with the product and price, which opens the
-// Smooth Drawer (a sheet that peeks, then expands to the full list). Keeps the payment steps at the
-// top of the screen instead of under a tall card.
 export function CheckoutSummaryBar({
   name,
   price,
@@ -14,13 +11,12 @@ export function CheckoutSummaryBar({
   excluded,
 }: {
   name: string;
-  price: string;
+  price: number;
   note?: string;
   included: string[];
   excluded: string[];
 }) {
   const [open, setOpen] = useState(false);
-  // A swipe up on the bar opens the sheet, so it can be pulled up like a drawer and not only tapped
   const startSwipe = (startY: number) => {
     let swiped = false;
     const move = (e: PointerEvent) => {
@@ -39,7 +35,7 @@ export function CheckoutSummaryBar({
   };
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-30 touch-none border-t border-line bg-bg/95 backdrop-blur lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-(--z-bar) touch-none border-t border-line bg-bg/95 backdrop-blur lg:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       onPointerDown={(e) => startSwipe(e.clientY)}
     >
@@ -54,7 +50,6 @@ export function CheckoutSummaryBar({
           total={`${price} ₪`}
           included={included}
           excluded={excluded}
-          note={note}
           confirmLabel="להמשך לתשלום"
           detailsLabel="מה כלול בהזמנה"
           hideDetailsLabel="להסתיר פרטים"

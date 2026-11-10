@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
+import { useModalLock } from "@/lib/useModalLock";
 
-// A panel that slides up from the bottom of the phone screen, for details and confirmations.
-// The page behind stays where it is; closing is by the button, the backdrop or Escape.
 export function BottomSheet({
   open,
   onClose,
@@ -16,35 +15,20 @@ export function BottomSheet({
   children: ReactNode;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
-  // The latest close handler, so a parent that re-renders does not re-run the focus setup below
-  const onCloseRef = useRef(onClose);
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
+  const sheetRef = useRef<HTMLElement>(null);
+  useModalLock(open, onClose, sheetRef);
 
   useEffect(() => {
-    if (!open) return;
-    // Keep the page behind from scrolling while the sheet is open
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    closeRef.current?.focus();
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCloseRef.current();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = previous;
-      window.removeEventListener("keydown", onKey);
-    };
+    if (open) closeRef.current?.focus();
   }, [open]);
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-40">
+    <div className="fixed inset-0 z-(--z-modal)">
       <button type="button" aria-label="סגירה" tabIndex={-1} onClick={onClose} className="fade-in absolute inset-0 bg-fg/40" />
       <section
+        ref={sheetRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="bottom-sheet-title"

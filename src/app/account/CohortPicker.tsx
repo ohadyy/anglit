@@ -3,9 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BottomSheet } from "@/components/BottomSheet";
-import { COHORT_SESSIONS } from "@/content/cohortSchedule";
-
-type Option = { id: string; label: string; seatsLeft: number };
+type Option = { id: string; label: string; seatsLeft: number; sessions: string };
 
 // Lets a paid course student pick one open cohort. The server does the
 // seat check and sends the WhatsApp confirmation.
@@ -41,7 +39,7 @@ export function CohortPicker({ options, joinedLabel }: { options: Option[]; join
 
   if (joinedLabel) {
     return (
-      <div className="mt-6 rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-5">
+      <div className="mt-6 rounded-3xl border border-line bg-white shadow-card p-5">
         <p className="font-semibold">המחזור שלכם</p>
         <p className="mt-1 text-sm opacity-70">נרשמתם למחזור שמתחיל ב-{joinedLabel}. אישור נשלח אליכם בוואטסאפ.</p>
       </div>
@@ -50,7 +48,7 @@ export function CohortPicker({ options, joinedLabel }: { options: Option[]; join
 
   if (options.length === 0) {
     return (
-      <div className="mt-6 rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-5">
+      <div className="mt-6 rounded-3xl border border-line bg-white shadow-card p-5">
         <p className="font-semibold">שיבוץ למחזורים</p>
         <p className="mt-1 text-sm opacity-70">השיבוץ ייפתח בקרוב. נעדכן אתכם ברגע שיהיו מועדים פנויים.</p>
       </div>
@@ -58,9 +56,8 @@ export function CohortPicker({ options, joinedLabel }: { options: Option[]; join
   }
 
   return (
-    <div className="mt-6 rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-5">
+    <div className="mt-6 rounded-3xl border border-line bg-white shadow-card p-5">
       <p className="font-semibold">בחרו מחזור</p>
-      <p className="mt-1 text-sm opacity-70">המפגשים: {COHORT_SESSIONS}.</p>
       <ul className="mt-4 flex flex-col gap-2">
         {options.map((o) => (
           <li key={o.id}>
@@ -70,7 +67,10 @@ export function CohortPicker({ options, joinedLabel }: { options: Option[]; join
               disabled={o.seatsLeft === 0 || busy !== null}
               className="flex w-full items-center justify-between rounded-2xl border border-line px-4 py-3 text-start transition-colors hover:border-fg/30 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <span className="font-semibold">מחזור שמתחיל ב-{o.label}</span>
+              <span>
+                <span className="block font-semibold">מחזור שמתחיל ב-{o.label}</span>
+                <span className="block text-sm opacity-70">{o.sessions}</span>
+              </span>
               <span className="text-sm tabular-nums opacity-70">
                 {o.seatsLeft === 0 ? "מלא" : `נשארו ${o.seatsLeft} מקומות`}
               </span>
@@ -88,7 +88,7 @@ export function CohortPicker({ options, joinedLabel }: { options: Option[]; join
             <p className="text-lg font-semibold">מחזור שמתחיל ב-{picked.label}</p>
             <p className="mt-1 text-sm opacity-70">{picked.seatsLeft === 0 ? "המחזור מלא" : `נשארו ${picked.seatsLeft} מקומות`}</p>
             <p className="mt-4 leading-relaxed opacity-80">
-              המפגשים: {COHORT_SESSIONS}. אישור והפרטים לכניסה לזום יגיעו אליכם בוואטסאפ.
+              המפגשים: {picked.sessions}. אישור והפרטים לכניסה לזום יגיעו אליכם בוואטסאפ.
             </p>
             <button
               type="button"

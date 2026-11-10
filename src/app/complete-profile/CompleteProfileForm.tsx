@@ -4,11 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { trackMeta } from "@/components/MetaPixel";
-import { AuthShell } from "@/components/AuthShell";
+import { AuthShell, authInput as input } from "@/components/AuthShell";
 import { signIn } from "@/lib/auth-client";
-
-const input =
-  "w-full rounded-2xl border border-line bg-white px-4 py-3.5 text-base outline-none transition-colors focus:border-fg focus:ring-2 focus:ring-fg/15";
 
 export function CompleteProfileForm({ next, name }: { next: string; name: string }) {
   const router = useRouter();

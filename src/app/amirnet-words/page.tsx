@@ -5,6 +5,7 @@ import { vocabCategories } from "@/content/vocabulary";
 import { PUBLIC_WORD_COUNT, wordsCopy as t } from "@/content/seoPages";
 import { approvedWords } from "@/lib/vocab";
 import { site } from "@/lib/site";
+import { CARD } from "@/lib/ui";
 
 export const metadata: Metadata = {
   title: t.metaTitle,
@@ -12,7 +13,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/amirnet-words" },
 };
 
-const CARD = "rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-6";
 
 export default function AmirnetWordsPage() {
   const all = approvedWords();

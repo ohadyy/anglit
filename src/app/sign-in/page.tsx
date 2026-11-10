@@ -6,13 +6,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { signIn } from "@/lib/auth-client";
 import { phoneToSyntheticEmail } from "@/lib/phoneAuth";
-import { AuthShell } from "@/components/AuthShell";
+import { AuthShell, authInput as input } from "@/components/AuthShell";
 import { GoogleButton } from "@/components/GoogleButton";
 import { authCopy } from "@/content/copy";
 import { safeNext } from "@/lib/safeNext";
-
-const input =
-  "w-full rounded-2xl border border-line bg-white px-4 py-3.5 text-base outline-none transition-colors focus:border-fg focus:ring-2 focus:ring-fg/15";
 
 function SignInForm() {
   const router = useRouter();
@@ -42,7 +39,7 @@ function SignInForm() {
     <AuthShell>
       {error && <Image src="/login-fail.svg" alt="" width={2825} height={1910} className="mx-auto mb-4 h-auto w-56 sm:w-64" />}
       <div
-        className="account-enter rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] p-7 shadow-[0_24px_48px_-20px_rgb(14_8_82/0.35)] sm:p-9"
+        className="account-enter rounded-3xl border border-line bg-white p-7 shadow-[0_24px_48px_-20px_rgb(14_8_82/0.35)] sm:p-9"
         style={{ "--delay": "0ms" } as React.CSSProperties}
       >
         <h1 className="font-display text-center text-3xl font-bold">
@@ -55,6 +52,9 @@ function SignInForm() {
         <form onSubmit={onSubmit} className="mt-3 flex flex-col gap-3">
           <input
             type="tel"
+            name="tel"
+            autoComplete="tel"
+            inputMode="tel"
             placeholder="מספר טלפון"
             dir="ltr"
             value={phone}
@@ -64,9 +64,9 @@ function SignInForm() {
           />
           <label className="flex flex-col gap-1.5">
             <span className="text-sm opacity-70">תאריך לידה</span>
-            <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} required className={input} />
+            <input type="date" name="bday" autoComplete="bday" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} required className={input} />
           </label>
-          {error && <p className="text-sm text-warn">{error}</p>}
+          {error && <p role="alert" className="text-sm text-warn">{error}</p>}
           <button
             type="submit"
             disabled={loading}

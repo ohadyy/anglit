@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db";
-import { notify } from "@/lib/ntfy";
+import { contactLines, notify } from "@/lib/ntfy";
 
 // Login is phone number + birth date instead of email + a real password —
 // the owner wants zero-friction sign-up and to capture both for birthday
@@ -55,7 +55,7 @@ export const auth = betterAuth({
       // Speed to lead: whoever signs up and then stalls at checkout can be called within minutes
       create: {
         after: async (u) => {
-          await notify("New signup - Anglit", [`שם: ${u.name}`, `טלפון: ${(u as { phone?: string }).phone ?? "לא ידוע"}`], "bust_in_silhouette");
+          await notify("New signup - Anglit", contactLines(u.name, (u as { phone?: string }).phone), "bust_in_silhouette");
         },
       },
       update: {

@@ -6,7 +6,6 @@ import { rs, sc } from "./bankHelpers";
 // question and "my mistakes". Original writing for Anglit.
 
 export const connectorQuestions: Question[] = [
-  // ─── Which connector? ───
   sc("cn-01", "The train was delayed for two hours; ____, we missed our connecting flight.", ["as a result", "nevertheless", "in contrast", "otherwise"], "האיחור גרם לפספוס הטיסה, אז מה שבא אחרי הנקודה-פסיק הוא תוצאה: as a result.", "אחרי נקודה-פסיק: האם זו תוצאה, ניגוד או הוספה?", ["as a result"]),
   sc("cn-02", "____ the heavy rain, the match was played as planned.", ["Despite", "Because of", "Therefore", "Unless"], "המשחק נערך בניגוד למצופה. Despite בא לפני שם עצם (the heavy rain).", "despite + שם עצם. אחריה משפט שלם? פסלו אותה.", ["Despite"]),
   sc("cn-03", "She rarely exercises, ____ her brother runs ten kilometers every morning.", ["whereas", "because", "so", "unless"], "שני אנשים הפוכים: היא כמעט לא מתעמלת והוא רץ כל בוקר. whereas = בעוד ש-, ניגוד.", "whereas ו-while מציגות ניגוד בין שני דברים, לא סיבה.", ["whereas"]),
@@ -18,7 +17,6 @@ export const connectorQuestions: Question[] = [
   sc("cn-09", "Take an umbrella; ____, you may get wet.", ["otherwise", "moreover", "for instance", "meanwhile"], "otherwise = אחרת: אם לא תיקחו מטרייה, אתם עלולים להירטב.", "otherwise = אם לא, אז.", ["otherwise"]),
   sc("cn-10", "Please wait here ____ your name is called.", ["until", "unless", "despite", "therefore"], "until = עד ש-. מחכים עד שיקראו בשם.", "פעולה שנמשכת עד רגע מסוים: until.", ["until"]),
 
-  // ─── A blank that depends on the connector ───
   sc("cn-11", "Although the new policy was widely ____, the mayor refused to change it.", ["criticized", "praised", "ignored", "explained"], "Although הופכת כיוון. אם ראש העיר סירב לשנות, מצפים שהייתה ביקורת. criticized = זכתה לביקורת.", "Although = ניגוד. החסר הפוך מהחלק השני.", ["Although"]),
   sc("cn-12", "The writer's style is so ____ that even young readers can follow her arguments with ease.", ["lucid", "obscure", "complex", "ornate"], "so … that מציגה תוצאה: אפילו קוראים צעירים מבינים בקלות, ולכן הסגנון בהיר. lucid = בהיר, ברור.", "so … that: התוצאה מגלה כמה חזקה המילה החסרה.", ["so", "that"]),
   sc("cn-13", "Far from being ____, the speech was surprisingly warm and personal.", ["detached", "sincere", "cheerful", "brief"], "Far from = רחוק מלהיות. חם ואישי הוא ההפך מ-detached (מרוחק).", "Far from = ההפך. חפשו את ההפך ממה שבא אחרי הפסיק.", ["Far from"]),
@@ -30,7 +28,6 @@ export const connectorQuestions: Question[] = [
   sc("cn-19", "The city has invested heavily in public transport. As a result, the number of cars on the roads has ____.", ["declined", "soared", "vanished", "doubled"], "As a result = כתוצאה מכך. השקעה בתחבורה ציבורית מורידה את מספר המכוניות. vanished קיצונית מדי.", "As a result: חפשו תוצאה הגיונית, לא קיצונית.", ["As a result"]),
   sc("cn-20", "Provided that the weather remains ____, the outdoor concert will take place as scheduled.", ["favorable", "stormy", "hazardous", "severe"], "Provided that = בתנאי ש-. התנאי להופעה בחוץ הוא מזג אוויר טוב: favorable.", "Provided that / as long as = תנאי חיובי.", ["Provided that"]),
 
-  // ─── Restatements ───
   rs("cn-21", "Although the hotel was expensive, the service was disappointing.", ["The hotel was expensive, yet its service was disappointing.", "The service was disappointing because it was expensive.", "The hotel was cheap, so the service was disappointing.", "The service was disappointing, which is why the hotel was expensive."], "Although יוצרת ניגוד: מלון יקר ובכל זאת שירות מאכזב. yet שומרת על הניגוד. שאר התשובות הופכות אותו לסיבה ותוצאה.", "קבעו קודם את הקשר במקור, ופסלו כל תשובה שמחליפה אותו."),
   rs("cn-22", "Unless you register by Friday, you will lose your place.", ["You will keep your place only if you register by Friday.", "If you register by Friday, you will lose your place.", "You will lose your place even if you register by Friday.", "You will lose your place because you register on Friday."], "unless = אם לא. אם לא נרשמים עד יום שישי מאבדים מקום, כלומר שומרים מקום רק אם נרשמים.", "החליפו unless ב-if not ובדקו."),
   rs("cn-23", "Despite being exhausted, Noa kept running.", ["Noa was exhausted, but she kept running.", "Noa kept running because she was exhausted.", "Noa stopped running since she was exhausted.", "Noa kept running until she was exhausted."], "Despite = למרות: העייפות לא עצרה אותה. but שומרת על הניגוד.", "Despite = but."),

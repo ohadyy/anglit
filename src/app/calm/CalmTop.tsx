@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-// Minimal top bar for the calm area. The review page has its own header.
 export function CalmTop() {
   const path = usePathname();
   if (path === "/calm/review") return null;

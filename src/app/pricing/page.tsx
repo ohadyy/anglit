@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 import Link from "next/link";
-import { featureRows, getProduct, loyaltyLabel, loyaltyPrice, pricingCopy, products, type Product } from "@/content/pricingCopy";
+import { featureRows, getProduct, loyaltyLabel, pricingCopy, products, type Product } from "@/content/pricingCopy";
 import { LeadForm } from "@/components/LeadForm";
 import { FeatureToggle } from "@/components/FeatureToggle";
 import { TierPreview } from "@/components/TierPreview";
-import { upcomingCourseOffer, type CourseOffer } from "@/lib/cohorts";
 import { getViewer, isLoyal } from "@/lib/viewer";
+import { coursePrice, discountPercent } from "@/lib/pricing";
 
-// Shows the live cohort offer and seat count, so this page cannot be cached at build time
+// The page depends on who is signed in, so it cannot be cached at build time
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -29,7 +29,7 @@ const gridFor: Record<number, string> = { 1: "max-w-md", 2: "max-w-3xl lg:grid-c
 
 export default async function PricingPage({ searchParams }: { searchParams: Promise<{ as?: string }> }) {
   const { as } = await searchParams;
-  const [offer, viewer] = await Promise.all([upcomingCourseOffer(), getViewer(as)]);
+  const viewer = await getViewer(as);
   const { member } = pricingCopy;
   const paid = viewer.tier === "access" || viewer.tier === "course";
   const loyal = isLoyal(viewer);
@@ -86,7 +86,6 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
                   product={product}
                   className={desktopOrder[product.id]}
                   delay={i * 140}
-                  offer={product.id === "course" ? offer : null}
                   loyal={loyal && product.id === "course"}
                 />
               ))}
@@ -143,17 +142,16 @@ function ProductCard({
   product,
   className,
   delay,
-  offer,
   loyal,
 }: {
   product: Product;
   className: string;
   delay: number;
-  offer: CourseOffer | null;
   loyal: boolean;
 }) {
   const recommended = !!product.badge;
-  const listIls = offer ? offer.priceIls : Number(product.price);
+  // Only the course card is ever loyal
+  const loyalPrice = loyal ? coursePrice(true) : null;
 
   return (
     <div
@@ -170,51 +168,29 @@ function ProductCard({
 
       <div className="flex flex-col lg:min-h-[17rem]">
       <p className="text-sm opacity-70">{product.name}</p>
-      {loyal ? (
+      {loyalPrice ? (
         <>
           <p className="mt-3 text-2xl">
-            <s className="text-warn">{listIls} ₪</s>
+            <s className="text-warn">{loyalPrice.listIls} ₪</s>
           </p>
-          <p className="mt-1 text-6xl font-bold tracking-tight text-ok">{loyaltyPrice(listIls)} ₪</p>
+          <p className="mt-1 text-6xl font-bold tracking-tight text-ok">{loyalPrice.priceIls} ₪</p>
           <p className="mt-4 rounded-full bg-ok/15 px-4 py-2 text-sm font-semibold text-ok">{loyaltyLabel}</p>
-          {offer && (
-            <p className="mt-3 rounded-full border border-warn/40 bg-warn/10 px-4 py-2 text-sm font-semibold text-warn">
-              למחזור {offer.label} בלבד · חוזר למחיר מלא למחזור הבא
-            </p>
-          )}
-        </>
-      ) : offer ? (
-        <>
-          <p className="mt-3 text-6xl font-bold tracking-tight text-ok">{offer.priceIls}</p>
-          <p className="mt-1 text-sm opacity-70">₪ למחזור {offer.label} בלבד</p>
-          <p className="mt-4 rounded-full bg-ok/15 px-4 py-2 text-sm font-semibold text-ok">
-            הנחה של {Math.round((1 - offer.priceIls / Number(product.price)) * 100)}%
-          </p>
-          <p className="mt-3 rounded-full border border-warn/40 bg-warn/10 px-4 py-2 text-sm font-semibold text-warn">
-            חוזר למחיר מלא למחזור הבא
-          </p>
-          <p className="mt-3 text-sm opacity-70">מחיר רגיל: {product.price} ₪</p>
         </>
       ) : (
         <>
-          {product.listPrice && (
+          {product.listPriceIls && (
             <p className="mt-3 text-2xl">
-              <span className="text-warn line-through">{product.listPrice} ₪</span>{" "}
-              <span className="opacity-70">30% הנחה</span>
+              <span className="text-warn line-through">{product.listPriceIls} ₪</span>{" "}
+              <span className="opacity-70">{discountPercent(product)}% הנחה</span>
             </p>
           )}
           {/* The course card drops the "one-time payment" line, so its shekel sign sits next to the number */}
-          <p className={`${product.listPrice ? "mt-1 text-ok" : "mt-3"} text-6xl font-bold tracking-tight`}>
-            {product.price}
+          <p className={`${product.listPriceIls ? "mt-1 text-ok" : "mt-3"} text-6xl font-bold tracking-tight`}>
+            {product.priceIls}
             {product.id === "course" && " ₪"}
           </p>
           {product.id !== "course" && <p className="mt-1 text-sm opacity-70">₪ {product.priceUnit}</p>}
         </>
-      )}
-      {product.scarcity && (
-        <p className="mt-4 rounded-full border border-warn/40 bg-warn/10 px-4 py-2 text-sm font-semibold text-warn">
-          {product.scarcity}
-        </p>
       )}
       </div>
 

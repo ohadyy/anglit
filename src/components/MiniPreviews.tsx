@@ -1,29 +1,17 @@
+import { Stem } from "./Stem";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { AngelaDrawing } from "@/app/calm/AngelaDrawing";
+import { AngelaDrawing } from "@/components/AngelaDrawing";
 import { LockIcon } from "@/components/LockIcon";
 
-// Miniatures of the product's own screens, shown on the tiles of /account and /practice.
-// Each one says what you will do before you open it. Pure markup: no state, no data.
+const CARD = "rounded-3xl border border-line bg-white shadow-card";
 
-const CARD = "rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]";
-
-export function Bar({ w = "100%" }: { w?: string }) {
+function Bar({ w = "100%" }: { w?: string }) {
   return <i className="block h-2 rounded-full bg-line" style={{ width: w }} />;
 }
 
-export function Opt({ children, on }: { children: ReactNode; on?: boolean }) {
+function Opt({ children, on }: { children: ReactNode; on?: boolean }) {
   return <div className={`rounded-md border px-2 py-1 text-xs ${on ? "border-mint bg-mint/25 font-semibold" : "border-line bg-white"}`}>{children}</div>;
-}
-
-export function Check({ size = 18 }: { size?: number }) {
-  return (
-    <span className="grid shrink-0 place-items-center rounded-full bg-mint text-ink-deep" style={{ width: size, height: size }} aria-hidden="true">
-      <svg viewBox="0 0 24 24" width={size * 0.65} height={size * 0.65} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m5 12.5 4.5 4.5L19 7.5" />
-      </svg>
-    </span>
-  );
 }
 
 // A tile: a miniature above the title. Without href it is a plain card (used where the link is elsewhere).
@@ -70,7 +58,6 @@ export const PREVIEWS = {
       </div>
     </div>
   ),
-  // Account areas
   exams: (
     <div className="w-full">
       <span className="rounded-full bg-ink px-2.5 py-0.5 text-xs font-bold tabular-nums text-mist">38:20</span>
@@ -96,10 +83,9 @@ export const PREVIEWS = {
       ))}
     </div>
   ),
-  // Question types
   sentence: (
     <div className="grid w-full gap-1">
-      <p className="text-xs font-semibold">She ____ to school.</p>
+      <p className="text-xs font-semibold"><Stem text="She ____ to school." revealed={false} /></p>
       <Opt on>goes</Opt>
     </div>
   ),
@@ -148,7 +134,6 @@ export const PREVIEWS = {
       <Opt on>goes</Opt>
     </div>
   ),
-  // Extra practice
   connectors: (
     <div className="flex w-full items-center justify-center gap-1.5 text-xs font-semibold">
       <span className="rounded-md border border-line bg-white px-2 py-1">It was late</span>
@@ -163,7 +148,6 @@ export const PREVIEWS = {
       <span className="rounded-md bg-mint/30 px-2 py-1">ness</span>
     </div>
   ),
-  // Games
   words: (
     <div className="flex w-full items-center justify-center gap-1.5 text-xs font-semibold">
       <span className="rounded-full border border-line bg-white px-2 py-1">happy</span>
@@ -172,6 +156,5 @@ export const PREVIEWS = {
     </div>
   ),
   challenge: <div className="mx-auto grid size-16 place-items-center rounded-full border-4 border-ink/15 border-t-ink text-lg font-bold tabular-nums">20</div>,
-  // Mindset: Angela, the calm area's figure
   calm: <AngelaDrawing className="mx-auto h-20 w-20" />,
 } satisfies Record<string, ReactNode>;

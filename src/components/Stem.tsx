@@ -2,11 +2,10 @@ import { Fragment, type ReactNode } from "react";
 
 const BLANK = /_{3,}/;
 
-function escapeRegExp(s: string) {
+export function escapeRegExp(s: string) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** Wraps keyword matches in <mark class="kw">. */
 export function highlight(text: string, keywords: string[] | undefined, on: boolean): ReactNode {
   if (!on || !keywords?.length) return text;
   const re = new RegExp(`(${keywords.map(escapeRegExp).join("|")})`, "gi");
@@ -21,10 +20,6 @@ export function highlight(text: string, keywords: string[] | undefined, on: bool
   );
 }
 
-/**
- * Renders a question stem. A run of underscores becomes a blank that fills
- * with the correct word once the answer is revealed.
- */
 export function Stem({
   text,
   keywords,
@@ -47,7 +42,7 @@ export function Stem({
           revealed ? "border-ok text-ok" : "border-current/50"
         }`}
       >
-        {revealed ? fill : " "}
+        {revealed ? fill : <span className="sr-only">blank</span>}
       </span>
       {highlight(after, keywords, revealed)}
     </>

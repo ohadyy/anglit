@@ -3,18 +3,14 @@
 import { useMemo, useState, useTransition } from "react";
 import { scoreLevel } from "@/lib/scoreLevels";
 import { setManualAccess } from "./actions";
+import { Badge } from "./crm/Badge";
+import { PRODUCT_LABEL } from "@/lib/enums";
+import { formatCohortDate } from "@/lib/jerusalemTime";
+import { formatShortDate, formatShortDateTime } from "@/lib/formatDate";
 import { ManageSheet } from "./ManageSheet";
 
-// Not imported from @/lib/cohorts: that module also pulls in the Neon db client at
-// module scope, which breaks when bundled into this client component.
-const cohortDateFmt = new Intl.DateTimeFormat("he-IL", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jerusalem" });
-const formatCohortDate = (date: Date) => cohortDateFmt.format(date);
-
-const dateFmt = new Intl.DateTimeFormat("he-IL", { day: "2-digit", month: "2-digit", year: "2-digit" });
-const dateTimeFmt = new Intl.DateTimeFormat("he-IL", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 const ACTIVE_WITHIN_MS = 3 * 24 * 60 * 60 * 1000;
 
-const PRODUCT_LABEL: Record<string, string> = { course: "קורס מלא", access: "גישה", private: "פרטי" };
 const ENROLLMENT_LABEL: Record<string, string> = {
   pending_payment: "ממתין לתשלום",
   active: "פעיל במחזור",
@@ -63,7 +59,7 @@ export function AdminTable({ rows, now, cohorts, selfId }: { rows: Row[]; now: n
   const toggleSort = (key: SortKey) => setSort((s) => (s.key === key ? { key, dir: s.dir === 1 ? -1 : 1 } : { key, dir: 1 }));
 
   return (
-    <div className="mt-8 min-w-0 overflow-hidden rounded-3xl border border-line bg-white shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
+    <div className="mt-8 min-w-0 overflow-hidden rounded-3xl border border-line bg-white shadow-card">
       <div className="flex items-center gap-2.5 p-4 sm:p-5">
         <svg aria-hidden viewBox="0 0 20 20" className="size-5 shrink-0 opacity-50">
           <circle cx="9" cy="9" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
@@ -178,7 +174,7 @@ function UserRow({ row, now, cohorts, isSelf }: { row: Row; now: number; cohorts
         {managing && <ManageSheet row={row} cohorts={cohorts} isSelf={isSelf} open onClose={() => setManaging(false)} />}
       </td>
       <td className="whitespace-nowrap px-4 py-3 opacity-80">{row.enrollment ? formatCohortDate(row.enrollment.cohortStart) : "אין"}</td>
-      <td className="whitespace-nowrap px-4 py-3 tabular-nums opacity-80">{dateFmt.format(row.createdAt)}</td>
+      <td className="whitespace-nowrap px-4 py-3 tabular-nums opacity-80">{formatShortDate(row.createdAt)}</td>
       <td className="whitespace-nowrap px-4 py-3">
         {row.attempts ? (
           <div>
@@ -211,23 +207,12 @@ function UserRow({ row, now, cohorts, isSelf }: { row: Row; now: number; cohorts
           active ? (
             <Badge tone="ok">פעיל/ה</Badge>
           ) : (
-            <span className="text-xs opacity-70">{dateTimeFmt.format(row.lastSeen)}</span>
+            <span className="text-xs opacity-70">{formatShortDateTime(row.lastSeen)}</span>
           )
         ) : (
           <Badge tone="neutral">מעולם לא</Badge>
         )}
       </td>
     </tr>
-  );
-}
-
-function Badge({ tone, children }: { tone: "ok" | "warn" | "neutral"; children: React.ReactNode }) {
-  const toneClass =
-    tone === "ok" ? "border-ok/30 bg-ok/10 text-ok" : tone === "warn" ? "border-warn/40 bg-warn/10 text-warn" : "border-line opacity-70";
-  return (
-    <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-semibold ${toneClass}`}>
-      <span aria-hidden className="size-1.5 rounded-full bg-current" />
-      {children}
-    </span>
   );
 }

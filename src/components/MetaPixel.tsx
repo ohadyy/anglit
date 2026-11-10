@@ -3,11 +3,14 @@
 import Link from "next/link";
 import Script from "next/script";
 import { useEffect, useSyncExternalStore } from "react";
+import { STORAGE_KEYS } from "@/lib/storageKeys";
+import { getItem, setItem } from "@/lib/safeStorage";
 
 const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
-const KEY = "anglit-consent";
+const KEY = STORAGE_KEYS.consent;
 
 type Fbq = (...args: unknown[]) => void;
+const getFbq = () => (window as unknown as { fbq?: Fbq }).fbq;
 type Consent = "yes" | "no" | "unknown" | null;
 
 const listeners = new Set<() => void>();
@@ -18,16 +21,12 @@ const subscribe = (fn: () => void) => {
 
 // Fires a browser pixel event. eventId must match the one sent to the Conversions API.
 export function trackMeta(name: "Lead" | "Purchase", eventId: string, params?: Record<string, unknown>) {
-  (window as unknown as { fbq?: Fbq }).fbq?.("track", name, params ?? {}, { eventID: eventId });
+  getFbq()?.("track", name, params ?? {}, { eventID: eventId });
 }
 
 function readConsent(): Consent {
-  try {
-    const v = localStorage.getItem(KEY);
-    return v === "yes" || v === "no" ? v : null;
-  } catch {
-    return null;
-  }
+  const v = getItem(KEY);
+  return v === "yes" || v === "no" ? v : null;
 }
 
 // Loads the pixel only after the visitor agrees, and shows a one-line banner until they answer. Renders nothing
@@ -40,9 +39,7 @@ export function MetaPixel() {
   if (!PIXEL_ID) return null;
 
   function answer(v: "yes" | "no") {
-    try {
-      localStorage.setItem(KEY, v);
-    } catch {}
+    setItem(KEY, v);
     document.cookie = `${KEY}=${v}; path=/; max-age=31536000; samesite=lax`;
     listeners.forEach((fn) => fn());
   }
@@ -59,7 +56,7 @@ export function MetaPixel() {
         <div
           role="region"
           aria-label="עוגיות ומדידה"
-          className="fixed inset-x-3 bottom-24 z-40 mx-auto flex max-w-md flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-2xl border border-line bg-bg/95 p-3 text-sm shadow-lg backdrop-blur lg:bottom-4"
+          className="fixed inset-x-3 bottom-24 z-(--z-modal) mx-auto flex max-w-md flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-2xl border border-line bg-bg/95 p-3 text-sm shadow-lg backdrop-blur lg:bottom-4"
         >
           <p className="min-w-0 flex-1 basis-48 leading-snug">
             אנחנו משתמשים בעוגיות כדי להבין איך משתמשים באתר ולמדוד את הפרסום שלנו.{" "}
@@ -83,16 +80,19 @@ export function MetaPixel() {
 
 // Drop into a server page to fire one event once it has loaded (e.g. Purchase on the thank-you page)
 export function MetaEvent({ name, eventId, params }: { name: "Lead" | "Purchase"; eventId: string; params?: Record<string, unknown> }) {
+  const consented = useSyncExternalStore(subscribe, readConsent, (): Consent => "unknown") === "yes";
   useEffect(() => {
-    // fbq only exists after consent and after the script loads, so wait for it instead of racing it
+    // Without consent the pixel never loads, so there is nothing to wait for; granting it later re-runs this
+    if (!consented) return;
+    // fbq only exists after the script loads, so wait for it instead of racing it
     const t = setInterval(() => {
-      if ((window as unknown as { fbq?: Fbq }).fbq) {
+      if (getFbq()) {
         trackMeta(name, eventId, params);
         clearInterval(t);
       }
     }, 300);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [consented]);
   return null;
 }

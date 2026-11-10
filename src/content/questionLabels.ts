@@ -16,7 +16,6 @@ export const TYPE_LABELS: Record<QuestionType, { he: string; en: string }> = {
 /** The three types the homepage shows as free-practice cards */
 export const TYPES = ["sentence", "restatement", "reading"] as const satisfies readonly QuestionType[];
 
-/** Every type a visitor can pick on /practice */
 export const ALL_TYPES = ["sentence", "restatement", "reading", "listening", "grammar"] as const satisfies readonly QuestionType[];
 
 export function isQuestionType(v: unknown): v is QuestionType {

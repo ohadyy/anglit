@@ -4,10 +4,13 @@ import Link from "next/link";
 import { guideAsOf, guideCopy as g, NITE_ACCOMMODATIONS_URL, NITE_AMIRNET_URL } from "@/content/examGuide";
 import { NITE_REGISTRATION_URL } from "@/content/examDates";
 import { TYPE_LABELS } from "@/content/questionLabels";
-import { CORE_SECTIONS, PILOT_CHAPTER, PILOT_CHAPTER_TYPES } from "@/lib/examStructure";
+import { SCORE_MAX } from "@/content/facts";
+import { CORE_SECTIONS } from "@/lib/examStructure";
+import { PILOT_CHAPTER, PILOT_CHAPTER_TYPES } from "@/lib/pilotChapters";
 import { SCORE_LEVELS } from "@/lib/scoreLevels";
 import { institutions } from "@/content/institutions";
 import { ScrollIndex } from "@/components/ScrollIndex";
+import { CARD } from "@/lib/ui";
 
 export const metadata: Metadata = {
   title: "מה צריך לדעת על אמירנט",
@@ -21,7 +24,6 @@ function exemptRange(bands: { level: string; range: string }[]) {
   return <bdi dir={/[֐-׿]/.test(r) ? "rtl" : "ltr"}>{r}</bdi>;
 }
 
-const CARD = "rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-6";
 
 export default function AmirnetGuidePage() {
   return (
@@ -86,7 +88,7 @@ export default function AmirnetGuidePage() {
             <li key={l.min} className="flex items-center justify-between gap-3 py-3">
               <span className="font-semibold">{l.label}</span>
               <span className="shrink-0 text-sm tabular-nums opacity-80">
-                <bdi dir="ltr">{l.min}–{SCORE_LEVELS[i + 1] ? SCORE_LEVELS[i + 1].min - 1 : 150}</bdi>
+                <bdi dir="ltr">{l.min}–{SCORE_LEVELS[i + 1] ? SCORE_LEVELS[i + 1].min - 1 : SCORE_MAX}</bdi>
                 {" · "}
                 {l.courses > 0 ? `${l.courses} קורסים` : "בלי קורסי רמה"}
               </span>
@@ -108,7 +110,7 @@ export default function AmirnetGuidePage() {
             {institutions.map((i) => (
               <tr key={i.slug}>
                 <td className="p-4">
-                  <Link href={`/amirnet/${i.slug}`} className="underline underline-offset-4">
+                  <Link href={`/amirnet/${i.slug}`} className="-my-3 inline-flex min-h-11 items-center underline underline-offset-4">
                     {i.name}
                   </Link>
                 </td>
@@ -173,7 +175,6 @@ export default function AmirnetGuidePage() {
         </ul>
       </section>
 
-      {/* Hub links: each topic above has a deeper page */}
       <section className="mt-14">
         <h2 className="text-2xl font-bold">להעמיק בכל נושא</h2>
         <ul className="mt-4 grid gap-2">

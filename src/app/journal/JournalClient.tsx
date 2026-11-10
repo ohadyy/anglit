@@ -1,20 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import type { QuestionType } from "@/content/questions";
 import { ALL_TYPES, TYPE_LABELS } from "@/content/questionLabels";
 import { FeedbackBar } from "@/components/FeedbackBar";
-import { Wordmark } from "@/components/Logo";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { InternalHeader } from "@/components/InternalHeader";
+import { STORAGE_KEYS } from "@/lib/storageKeys";
 import { useStored } from "@/lib/useStored";
 
 type Entry = { id: string; type: QuestionType; answered: string; why: string; rule: string };
 
+// Who the journal summary is addressed to on WhatsApp (an Israeli local number)
+const TEACHER_WHATSAPP = "0535282911";
+
 const INITIAL = { name: "", entries: [] as Entry[] };
 
 export function JournalClient() {
-  const [st, setSt, reset] = useStored("anglit-journal", INITIAL);
+  const [st, setSt, reset] = useStored(STORAGE_KEYS.journal, INITIAL);
   const [type, setType] = useState<QuestionType>("sentence");
   const [answered, setAnswered] = useState("");
   const [why, setWhy] = useState("");
@@ -47,12 +49,7 @@ export function JournalClient() {
 
   return (
     <div className="flex min-h-dvh flex-col pb-40 print:pb-0">
-      <header className="mx-auto flex w-full max-w-2xl items-center justify-between gap-3 px-4 py-4 sm:px-6 print:hidden">
-        <Link href="/" aria-label="לעמוד הבית">
-          <Wordmark className="h-6 w-auto" />
-        </Link>
-        <ThemeToggle />
-      </header>
+      <InternalHeader className="max-w-2xl print:hidden" />
 
       {/* Printable header — hidden on screen, shown only when exporting as PDF */}
       <div className="hidden print:block">
@@ -67,7 +64,7 @@ export function JournalClient() {
           לראות דפוסים חוזרים, לא טעות אקראית אחת. נשמר רק בטלפון שלך.
         </p>
 
-        <section className="mt-6 rounded-3xl border border-line bg-white p-4 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-5 print:hidden">
+        <section className="mt-6 rounded-3xl border border-line bg-white p-4 shadow-card sm:p-5 print:hidden">
           <p className="text-sm font-semibold opacity-70">שורה חדשה</p>
 
           <div className="mt-3 flex flex-wrap gap-2" role="radiogroup" aria-label="סוג הפרק">
@@ -184,7 +181,7 @@ export function JournalClient() {
         status={st.entries.length === 1 ? "שורה אחת ביומן" : `${st.entries.length} שורות ביומן`}
         summary={summary}
         onReset={reset}
-        to="0535282911"
+        to={TEACHER_WHATSAPP}
       />
     </div>
   );

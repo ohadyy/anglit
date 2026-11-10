@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-// On phones the pricing cards stay short: the list of what's included opens on tap. On desktop it is always open.
 export function FeatureToggle({ label, children }: { label: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (

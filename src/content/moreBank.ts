@@ -1,47 +1,9 @@
 import type { GrammarQuestion, Question } from "./questions";
+import { gr, rs, sc, type Opts } from "./bankHelpers";
 
 // More original questions for the extra practice tests. In every row the correct
-// option is written FIRST; place() moves it to a position taken from the item number,
+// option is written FIRST; place() (bankHelpers.ts) moves it to a position taken from the item number,
 // so the answer key is spread evenly. Original writing for Anglit.
-
-type Opts = [string, string, string, string];
-
-function place(id: string, correctFirst: Opts): { options: Opts; answer: 0 | 1 | 2 | 3 } {
-  const answer = (Number(id.replace(/\D/g, "")) * 3 + 1) % 4;
-  const rest = correctFirst.slice(1);
-  const options = [...rest.slice(0, answer), correctFirst[0], ...rest.slice(answer)] as Opts;
-  return { options, answer: answer as 0 | 1 | 2 | 3 };
-}
-
-const sc = (id: string, stem: string, o: Opts, explanation: string, trick: string): Question => ({
-  id,
-  type: "sentence",
-  stem,
-  ...place(id, o),
-  explanation,
-  trick,
-  status: "approved",
-});
-
-const rs = (id: string, stem: string, o: Opts, explanation: string, trick: string): Question => ({
-  id,
-  type: "restatement",
-  stem,
-  ...place(id, o),
-  explanation,
-  trick,
-  status: "approved",
-});
-
-const gr = (id: string, stem: string, o: Opts, explanation: string, trick: string): GrammarQuestion => ({
-  id,
-  type: "grammar",
-  stem,
-  ...place(id, o),
-  explanation,
-  trick,
-  status: "approved",
-});
 
 export const moreSentenceQuestions: Question[] = [
   sc("sy-01", "The manager's ____ response to the complaint calmed the angry customers.", ["prompt", "hostile", "vague", "reluctant"], "תגובה מהירה (prompt) מרגיעה לקוחות כועסים. הצלעות האחרות לא מרגיעות.", "בדקו איזו מילה מסבירה את ההרגעה שבהמשך המשפט."),

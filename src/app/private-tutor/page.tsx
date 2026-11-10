@@ -4,6 +4,7 @@ import Link from "next/link";
 import { privateTutorCopy as t } from "@/content/privateTutor";
 import { getProduct } from "@/content/pricingCopy";
 import { site } from "@/lib/site";
+import { CARD } from "@/lib/ui";
 
 export const metadata: Metadata = {
   title: t.seoTitle,
@@ -11,7 +12,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/private-tutor" },
 };
 
-const CARD = "rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-6";
 
 export default function PrivateTutorPage() {
   const course = getProduct("course");
@@ -33,7 +33,7 @@ export default function PrivateTutorPage() {
     name: "7 ימים לאמירנט",
     provider: { "@type": "EducationalOrganization", name: "Anglit", url: site.url },
     description: t.intro,
-    offers: { "@type": "Offer", priceCurrency: "ILS", price: course?.price },
+    offers: { "@type": "Offer", priceCurrency: "ILS", price: String(course?.priceIls) },
   };
 
   return (
@@ -64,7 +64,7 @@ export default function PrivateTutorPage() {
         <h2 className="text-2xl font-bold">{t.courseTitle}</h2>
         <p className="mt-2 opacity-80">{t.courseText}</p>
         <p className="mt-4 text-4xl font-bold tracking-tight">
-          {course?.price} <span className="text-base font-normal opacity-70">₪ {course?.priceUnit}</span>
+          {course?.priceIls} <span className="text-base font-normal opacity-70">₪ {course?.priceUnit}</span>
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-4">
           <Link href="/checkout?product=course" className="inline-flex rounded-full bg-fg px-6 py-3.5 font-semibold text-bg">

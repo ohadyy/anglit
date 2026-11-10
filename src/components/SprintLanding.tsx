@@ -1,7 +1,8 @@
 import Image from "next/image";
-import type { CourseOffer, nextCohortInfo } from "@/lib/cohorts";
+import type { nextCohortInfo } from "@/lib/cohorts";
 import { HeroDecor } from "@/components/HeroDecor";
-import { COURSE_REGULAR_PRICE, CourseOfferCta, CourseOfferPrice } from "@/components/CourseOfferCard";
+import { CourseOfferCta, CourseOfferPrice } from "@/components/CourseOfferCard";
+import { coursePrice } from "@/lib/pricing";
 import { LeadForm } from "@/components/LeadForm";
 import { TestimonialBubble } from "@/components/TestimonialBubble";
 import { StepsList } from "@/components/StepsList";
@@ -29,10 +30,9 @@ function Urgency({ cohort }: { cohort: NextCohort }) {
 
 type NextCohort = Awaited<ReturnType<typeof nextCohortInfo>>;
 
-export function SprintLanding({ offer, cohort = null }: { offer: CourseOffer | null; cohort?: NextCohort }) {
+export function SprintLanding({ cohort = null }: { cohort?: NextCohort }) {
   return (
     <div className="flex min-h-dvh flex-col pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-0">
-      {/* Warms up the connection to the VSL player before the visitor scrolls to it */}
       <link rel="preconnect" href="https://player.vimeo.com" />
       {/* Header + hero share one continuous gradient, so the logo doesn't sit on a flat block above it */}
       <div className="hero-mesh relative flex flex-col">
@@ -45,7 +45,7 @@ export function SprintLanding({ offer, cohort = null }: { offer: CourseOffer | n
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed opacity-80">{sprintCopy.sub}</p>
 
-          <div className="mt-8 aspect-video w-full overflow-hidden rounded-3xl border border-line bg-ink-deep shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
+          <div className="mt-8 aspect-video w-full overflow-hidden rounded-3xl border border-line bg-ink-deep shadow-card">
             <iframe
               src={VSL}
               title={sprintCopy.videoTitle}
@@ -59,8 +59,8 @@ export function SprintLanding({ offer, cohort = null }: { offer: CourseOffer | n
 
           <TestimonialBubble />
 
-          <div className="mt-8 w-full max-w-sm rounded-3xl border border-line bg-white p-8 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
-            <CourseOfferPrice offer={offer} big />
+          <div className="mt-8 w-full max-w-sm rounded-3xl border border-line bg-white p-8 shadow-card">
+            <CourseOfferPrice big />
             <Cta className="mt-10 w-full" />
             <Urgency cohort={cohort} />
           </div>
@@ -69,13 +69,12 @@ export function SprintLanding({ offer, cohort = null }: { offer: CourseOffer | n
 
       <main className="flex-1">
 
-        {/* Pain: the problem the reader already has */}
         <section className="border-t border-line">
           <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
             <h2 className="text-center text-2xl font-bold text-balance sm:text-3xl">{sprintCopy.painTitle}</h2>
             <ul className="mt-8 flex flex-col gap-3">
               {sprintCopy.pain.map((p) => (
-                <li key={p} className="rounded-3xl border border-line bg-white p-5 text-lg leading-relaxed shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
+                <li key={p} className="rounded-3xl border border-line bg-white p-5 text-lg leading-relaxed shadow-card">
                   {p}
                 </li>
               ))}
@@ -95,13 +94,12 @@ export function SprintLanding({ offer, cohort = null }: { offer: CourseOffer | n
           </div>
         </section>
 
-        {/* What a live teacher adds, right after the teacher intro */}
         <section className="border-t border-line">
           <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
             <h2 className="text-center text-2xl font-bold text-balance sm:text-3xl">{sprintCopy.whyTitle}</h2>
             <ul className="mt-8 grid gap-3 sm:grid-cols-2">
               {sprintCopy.why.map((w) => (
-                <li key={w.title} className="rounded-3xl border border-line bg-white p-6 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
+                <li key={w.title} className="rounded-3xl border border-line bg-white p-6 shadow-card">
                   <p className="font-bold">{w.title}</p>
                   <p className="mt-2 leading-relaxed opacity-80">{w.text}</p>
                 </li>
@@ -116,7 +114,6 @@ export function SprintLanding({ offer, cohort = null }: { offer: CourseOffer | n
           </div>
         </section>
 
-        {/* How the week is built */}
         <section className="border-t border-line">
           <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
             <h2 className="text-center text-2xl font-bold text-balance sm:text-3xl">{sprintCopy.howTitle}</h2>
@@ -126,7 +123,6 @@ export function SprintLanding({ offer, cohort = null }: { offer: CourseOffer | n
           </div>
         </section>
 
-        {/* What is included, with the offer next to it */}
         <section className="border-t border-line">
           <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
             <h2 className="text-center text-2xl font-bold text-balance sm:text-3xl">{sprintCopy.includedTitle}</h2>
@@ -140,18 +136,17 @@ export function SprintLanding({ offer, cohort = null }: { offer: CourseOffer | n
                 </li>
               ))}
             </ul>
-            <div className="mt-10 rounded-3xl border border-line bg-white p-8 text-center shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-10">
-              <CourseOfferPrice offer={offer} big />
+            <div className="mt-10 rounded-3xl border border-line bg-white p-8 text-center shadow-card sm:p-10">
+              <CourseOfferPrice big />
               <Cta className="mt-10 w-full sm:w-auto sm:px-10" />
               <Urgency cohort={cohort} />
             </div>
           </div>
         </section>
 
-        {/* Who it fits, stated plainly on both sides */}
         <section className="border-t border-line">
           <div className="mx-auto grid max-w-3xl gap-3 px-4 py-14 sm:grid-cols-2 sm:px-6">
-            <div className="rounded-3xl border border-line bg-white p-6 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
+            <div className="rounded-3xl border border-line bg-white p-6 shadow-card">
               <p className="font-bold">{sprintCopy.fitTitle}</p>
               <p className="mt-3 leading-relaxed opacity-80">{sprintCopy.fitYes}</p>
             </div>
@@ -179,7 +174,7 @@ export function SprintLanding({ offer, cohort = null }: { offer: CourseOffer | n
             <h2 className="text-center text-2xl font-bold text-balance sm:text-3xl">{sprintCopy.objectionsTitle}</h2>
             <div className="mt-8 grid gap-3">
               {sprintCopy.objections.map((o) => (
-                <div key={o.q} className="rounded-3xl border border-line bg-white p-6 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)]">
+                <div key={o.q} className="rounded-3xl border border-line bg-white p-6 shadow-card">
                   <p className="font-bold">{o.q}</p>
                   <p className="mt-2 leading-relaxed opacity-80">{o.a}</p>
                 </div>
@@ -196,7 +191,6 @@ export function SprintLanding({ offer, cohort = null }: { offer: CourseOffer | n
           </div>
         </section>
 
-        {/* FAQ */}
         <section className="border-t border-line">
           <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
             <h2 className="text-center text-2xl font-bold text-balance sm:text-3xl">{sprintCopy.faqTitle}</h2>
@@ -222,7 +216,6 @@ export function SprintLanding({ offer, cohort = null }: { offer: CourseOffer | n
           </div>
         </section>
 
-        {/* Final CTA */}
         <section className="border-t border-line">
           <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
             <h2 className="text-2xl font-bold text-balance sm:text-3xl">{sprintCopy.title}</h2>
@@ -231,11 +224,10 @@ export function SprintLanding({ offer, cohort = null }: { offer: CourseOffer | n
         </section>
       </main>
 
-      {/* Sticky mobile bar: the price and the action stay in view while scrolling */}
-      <div className="fixed inset-x-0 bottom-0 z-20 flex items-center gap-3 border-t border-line bg-bg/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-(--z-fab) flex items-center gap-3 border-t border-line bg-bg/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
         <div className="min-w-0 flex-1">
-          <p className="text-sm opacity-70">{offer ? `מחיר למחזור ${offer.label}` : "מחיר הסמינר"}</p>
-          <p className="text-xl font-bold tabular-nums">{offer ? offer.priceIls : COURSE_REGULAR_PRICE} ₪</p>
+          <p className="text-sm opacity-70">מחיר הסמינר</p>
+          <p className="text-xl font-bold tabular-nums">{coursePrice(false).priceIls} ₪</p>
         </div>
         <Cta className="shrink-0 px-6 py-3.5" />
       </div>

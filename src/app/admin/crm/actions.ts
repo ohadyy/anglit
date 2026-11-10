@@ -1,24 +1,15 @@
 "use server";
 
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
-import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { crmNotes, crmState, leads } from "@/db/schema";
-import { isStaff } from "@/lib/access";
 import { NOTE_LABEL, STATUS_LABEL, type CrmKind, type CrmStatus, type NoteType } from "./labels";
+import { requireStaff } from "@/lib/access";
+import { BAD_REQUEST, type ActionResult } from "../_shared";
 
-export type ActionResult = { ok: true } | { ok: false; error: string };
-
-const BAD_REQUEST: ActionResult = { ok: false, error: "משהו השתבש. כדאי לרענן את הדף ולנסות שוב." };
 const MAX_NOTE = 1000;
 const MAX_BULK = 500;
-
-async function requireStaff() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !(await isStaff(session.user.id))) throw new Error("forbidden");
-}
 
 // Server actions take whatever the browser sends, so every id and enum value is checked here.
 function validTarget(kind: unknown, refId: unknown) {
@@ -41,7 +32,6 @@ export async function setStatus(kind: CrmKind, refId: string, status: CrmStatus)
   return { ok: true };
 }
 
-// One status for many people at once (the multi-select on the board).
 export async function setStatusMany(targets: { kind: CrmKind; refId: string }[], status: CrmStatus): Promise<ActionResult> {
   await requireStaff();
   if (!Array.isArray(targets) || targets.length === 0 || targets.length > MAX_BULK || !targets.every((t) => validTarget(t?.kind, t?.refId))) {

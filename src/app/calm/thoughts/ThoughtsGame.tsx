@@ -2,23 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { THOUGHTS, thoughtsCopy as t, type Thought } from "@/content/calm";
-import { useStored } from "@/lib/useStored";
+import { THOUGHTS, THOUGHTS_ROUND_SECONDS as SECONDS, thoughtsCopy as t, type Thought } from "@/content/calm";
+import { randomOrder } from "@/lib/random";
+import { useCalmBest } from "../useCalmBest";
 
-const SECONDS = 60;
 const SWIPE_PX = 80;
 
-function shuffled() {
-  const a = [...THOUGHTS];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 export function ThoughtsGame() {
-  const [best, setBest] = useStored("anglit-calm", { thoughtsBest: 0, eliminateBest: 0 });
+  const [best, setBest] = useCalmBest();
   const [phase, setPhase] = useState<"intro" | "play" | "done">("intro");
   const [deck, setDeck] = useState<Thought[]>([]);
   const [i, setI] = useState(0);
@@ -43,7 +34,7 @@ export function ThoughtsGame() {
   }, [phase, left, score, setBest]);
 
   function start() {
-    setDeck(shuffled());
+    setDeck(randomOrder(THOUGHTS));
     setI(0);
     setScore(0);
     setLeft(SECONDS);
@@ -61,7 +52,6 @@ export function ThoughtsGame() {
       setWrong(false);
       setI((n) => n + 1);
     } else {
-      // A wrong answer leaves the card in place until it is sorted correctly
       setWrong(true);
     }
     setDx(0);

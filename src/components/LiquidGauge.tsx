@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { SCORE_MAX, SCORE_MIN } from "@/content/facts";
+import { prefersReducedMotion } from "@/lib/useReducedMotion";
 
-// A round gauge filled with liquid up to the estimated score (50 at the bottom, 150 at the top).
-// On mount it fills from empty up to the score while the number counts up with it, then rests.
+// A round gauge filled with liquid up to the estimated score (the lowest score at the bottom, the highest at the top).
 // The number is drawn twice, ink on the empty part and light on the liquid, so it reads on both.
-// Under reduced motion it shows the final score straight away.
-const SCORE_MIN = 50;
-const SCORE_MAX = 150;
 const FILL_MS = 2200;
 const WAVE = "M0 0 q25 -9 50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 V210 H0 Z";
 
@@ -15,7 +13,7 @@ export function LiquidGauge({ score, className = "" }: { score: number; classNam
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const ms = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 1 : FILL_MS;
+    const ms = prefersReducedMotion() ? 1 : FILL_MS;
     let frame = 0;
     const start = performance.now();
     const tick = (now: number) => {

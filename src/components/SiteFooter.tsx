@@ -3,22 +3,10 @@ import Link from "next/link";
 import { copy } from "@/content/copy";
 import { businessDetails, legalDocs } from "@/content/legal";
 import { site } from "@/lib/site";
+import { FOOTER_LINKS, PAGE } from "@/lib/nav";
+import { waLink } from "@/lib/phoneAuth";
 import { InstagramIcon } from "@/components/InstagramIcon";
 
-const study = [
-  { href: "/start", label: "תרגול חינמי" },
-  { href: "/sample-test", label: "מבחן אמירנט לדוגמה" },
-  { href: "/amirnet-words", label: "אוצר מילים לאמירנט" },
-  { href: "/pricing", label: "מסלולים ומחירים" },
-  { href: "/private-tutor", label: "מורה פרטי לאמירנט" },
-  { href: "/blog", label: "בלוג" },
-  { href: "/exam-dates", label: "מועדי הבחינה" },
-  { href: "/amirnet", label: "מה צריך לדעת על המבחן" },
-  { href: "/score", label: "מחשבון ציון" },
-  { href: "/account", label: "האזור האישי" },
-];
-
-// Dark block (data-invert): mist text on ink. Section markers use Hebrew letters.
 export function SiteFooter() {
   return (
     // Bottom padding on phones keeps the last lines clear of the tab bar
@@ -38,7 +26,7 @@ export function SiteFooter() {
             <ul className="mt-4 flex flex-col gap-2 text-base">
               <li>
                 <a
-                  href={businessDetails.whatsappUrl}
+                  href={waLink(businessDetails.phone)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex min-h-11 items-center underline underline-offset-4"
@@ -71,7 +59,7 @@ export function SiteFooter() {
           <section>
             <p className="font-hand text-2xl">(ב) ללמוד</p>
             <ul className="mt-4 flex flex-col gap-2 text-base">
-              {study.map((item) => (
+              {FOOTER_LINKS.map((item) => (
                 <li key={item.href}>
                   <Link href={item.href} className="inline-flex min-h-11 items-center underline underline-offset-4 hover:opacity-100">
                     {item.label}
@@ -87,18 +75,17 @@ export function SiteFooter() {
             <p className="mt-4 text-sm opacity-80">
               {businessDetails.legalName} · {businessDetails.registrationLabel} {businessDetails.registrationNumber} · {businessDetails.address}
             </p>
-            {/* Just links, no explanatory text — compact row that wraps instead of a tall stacked list */}
             <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-sm">
               {legalDocs.map((doc) => (
-                <Link key={doc.slug} href={`/legal/${doc.slug}`} className="inline-flex min-h-8 items-center underline underline-offset-4 opacity-80 hover:opacity-100">
+                <Link key={doc.slug} href={`/legal/${doc.slug}`} className="inline-flex min-h-11 items-center underline underline-offset-4 opacity-80 hover:opacity-100">
                   {doc.title}
                 </Link>
               ))}
               {/* Cancelling a purchase has its own visible link, as the consumer law requires */}
-              <Link href="/legal/refunds" className="inline-flex min-h-8 items-center font-semibold underline underline-offset-4 hover:opacity-100">
+              <Link href="/legal/refunds" className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4 hover:opacity-100">
                 ביטול עסקה
               </Link>
-              <Link href="/llm-information" className="inline-flex min-h-8 items-center underline underline-offset-4 opacity-80 hover:opacity-100">
+              <Link href={PAGE.llm.path} className="inline-flex min-h-11 items-center underline underline-offset-4 opacity-80 hover:opacity-100">
                 מידע ל-AI
               </Link>
             </div>
@@ -106,7 +93,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-8 flex flex-col gap-4 border-t border-line pt-5 text-sm sm:mt-14 sm:flex-row sm:items-center sm:justify-between sm:gap-5 sm:pt-6">
-          <Image src="/brand/wordmark-light.png" alt="Anglit" width={1576} height={481} className="h-6 w-auto self-start sm:h-7" />
+          <Image src="/brand/wordmark-light.png" alt={site.name} width={1576} height={481} className="h-6 w-auto self-start sm:h-7" />
           <p className="opacity-70">
             © {new Date().getFullYear()} {businessDetails.name}. {copy.footerDisclaimer}
           </p>

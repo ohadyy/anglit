@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { localDay } from "@/lib/formatDate";
+import { STORAGE_KEYS } from "@/lib/storageKeys";
+import { CARD } from "@/lib/ui";
 import { useStored } from "@/lib/useStored";
 
 type Step = { text: string; links: { href: string; label: string }[] };
 
-// What to do today, by how many days are left until the exam
 function planFor(daysLeft: number): Step {
   if (daysLeft <= 0) return { text: "בהצלחה במבחן! לישון טוב, לאכול משהו, ולהגיע קצת לפני הזמן.", links: [] };
   if (daysLeft <= 7)
@@ -35,17 +37,17 @@ function planFor(daysLeft: number): Step {
 }
 
 export function ExamCountdown({ className = "" }: { className?: string }) {
-  const [stored, setStored] = useStored("anglit-exam-date", { date: "" });
+  const [stored, setStored] = useStored(STORAGE_KEYS.examDate, { date: "" });
   // Today's date is only known in the browser, so the countdown waits for mount
   const [today, setToday] = useState("");
   // eslint-disable-next-line react-hooks/set-state-in-effect -- read the device date once
-  useEffect(() => setToday(new Date().toLocaleDateString("en-CA")), []);
+  useEffect(() => setToday(localDay()), []);
 
   const daysLeft = stored.date && today ? Math.round((Date.parse(stored.date) - Date.parse(today)) / 86_400_000) : null;
   const step = daysLeft === null ? null : planFor(daysLeft);
 
   return (
-    <section className={`rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-6 ${className}`}>
+    <section className={`${CARD} ${className}`}>
       <h2 className="text-xl font-bold">מתי המבחן שלכם?</h2>
       <label className="mt-3 block text-sm opacity-70" htmlFor="exam-date">
         בוחרים תאריך, ומקבלים כמה ימים נשארו ומה כדאי לעשות היום

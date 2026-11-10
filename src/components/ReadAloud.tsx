@@ -93,7 +93,7 @@ export function ReadAloud() {
       role="toolbar"
       aria-label="הקראה"
       style={{ left: x, top: y }}
-      className="fixed z-50 flex -translate-x-1/2 items-center gap-1 rounded-full border border-line bg-white p-1.5 shadow-[0_12px_30px_-10px_rgb(14_8_82/0.4)]"
+      className="fixed z-(--z-overlay) flex -translate-x-1/2 items-center gap-1 rounded-full border border-line bg-white p-1.5 shadow-[0_12px_30px_-10px_rgb(14_8_82/0.4)]"
     >
       <button
         type="button"
@@ -132,7 +132,6 @@ export function AudioCheck() {
   const [state, setState] = useState<"idle" | "playing" | "asked" | "heard" | "missed" | "failed">("idle");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Stop the clip if the student leaves the intro while it plays
   useEffect(() => () => audioRef.current?.pause(), []);
 
   async function test() {

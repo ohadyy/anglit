@@ -2,30 +2,26 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { STORAGE_KEYS } from "@/lib/storageKeys";
+import { A11Y_SIZES } from "@/lib/themeScript";
+import { getJson, setItem } from "@/lib/safeStorage";
 
-// Small accessibility panel: text size, high contrast, underlined links and stopped animations.
-// It works on the page itself (no third-party script) and remembers the choices on this device.
 type Prefs = { size: 0 | 1 | 2; contrast: boolean; links: boolean; still: boolean };
-const KEY = "anglit-a11y";
+const KEY = STORAGE_KEYS.accessibility;
 const DEFAULTS: Prefs = { size: 0, contrast: false, links: false, still: false };
-const SIZES = ["100%", "112%", "125%"];
 
 function readSaved(): Prefs {
-  try {
-    const saved = JSON.parse(localStorage.getItem(KEY) ?? "null") as Partial<Prefs> | null;
-    return saved ? { ...DEFAULTS, ...saved } : DEFAULTS;
-  } catch {
-    // Storage can be blocked (private window); the defaults still work
-    return DEFAULTS;
-  }
+  const saved = getJson(KEY) as Partial<Prefs> | null | undefined;
+  return saved ? { ...DEFAULTS, ...saved } : DEFAULTS;
 }
 
 function applyPrefs(p: Prefs) {
   const root = document.documentElement;
-  root.style.fontSize = SIZES[p.size];
+  root.style.fontSize = A11Y_SIZES[p.size];
   root.classList.toggle("a11y-contrast", p.contrast);
   root.classList.toggle("a11y-links", p.links);
-  root.classList.toggle("a11y-still", p.still);
+  // The one flag for "stop animations": CSS (globals.css) and JS animations (lib/useReducedMotion) both read it
+  root.toggleAttribute("data-still", p.still);
 }
 
 export function AccessibilityWidget({ aboveTabBar = false }: { aboveTabBar?: boolean }) {
@@ -35,11 +31,7 @@ export function AccessibilityWidget({ aboveTabBar = false }: { aboveTabBar?: boo
 
   useEffect(() => {
     applyPrefs(prefs);
-    try {
-      localStorage.setItem(KEY, JSON.stringify(prefs));
-    } catch {
-      // Same as above: the choice just is not remembered
-    }
+    setItem(KEY, JSON.stringify(prefs));
   }, [prefs]);
 
   const update = (patch: Partial<Prefs>) => setPrefs((p) => ({ ...p, ...patch }));
@@ -48,13 +40,13 @@ export function AccessibilityWidget({ aboveTabBar = false }: { aboveTabBar?: boo
 
   return (
     // On phones it sits above the tab bar; on wider screens it returns to the corner
-    <div className={`fixed end-4 z-30 sm:bottom-4 ${aboveTabBar ? "bottom-[5.25rem]" : "bottom-4"}`}>
+    <div className={`fixed end-4 z-(--z-bar) sm:bottom-4 ${aboveTabBar ? "bottom-(--tab-bar-offset)" : "bottom-4"}`}>
       <button
         type="button"
         aria-expanded={open}
         aria-controls="a11y-panel"
         onClick={() => setOpen((o) => !o)}
-        className="size-10 rounded-full bg-fg text-bg shadow-lg"
+        className="size-11 rounded-full bg-fg text-bg shadow-lg"
         aria-label="תפריט נגישות"
       >
         <svg aria-hidden viewBox="0 0 24 24" className="mx-auto size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

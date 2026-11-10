@@ -1,5 +1,7 @@
 // Text of the prefixes and suffixes lesson at /learn/affixes. Original writing for Anglit.
 
+import { affixQuestions } from "./affixesBank";
+
 export const affixesLesson = {
   seoTitle: "תחיליות וסופיות באמירנט: שיעור קצר ותרגול",
   seoDescription:
@@ -49,7 +51,7 @@ export const affixesLesson = {
   tryTitle: "נסו בעצמכם",
   tryText: "שתי שאלות מהתרגול, עם הסבר אחרי כל תשובה.",
 
-  ctaTitle: "30 שאלות על תחיליות וסופיות",
+  ctaTitle: `${affixQuestions.length} שאלות על תחיליות וסופיות`,
   ctaText: "בוחרים את הצורה הנכונה, מנחשים משמעות מתוך החלקים ובוחרים את התחילית השלילית הנכונה. הסבר לכל תשובה, והטעויות נשמרות ב\"הטעויות שלי\".",
   ctaButton: "לתרגול המלא",
   ctaNote: "התרגול המלא במסלול בתשלום.",

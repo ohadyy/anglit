@@ -2,7 +2,6 @@ import { homeHeroCards as t } from "@/content/copy";
 
 const SHADOW = "shadow-[0_18px_40px_-24px_rgb(14_8_82/0.35)]";
 
-// Two floating test cards and a gain chip, all telling the same story (opening test -> closing test)
 export function HeroCards() {
   return (
     <div className="mt-10">

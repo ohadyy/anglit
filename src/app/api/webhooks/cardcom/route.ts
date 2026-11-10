@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { sendTemplate } from "@/lib/whatsapp";
-import { notify } from "@/lib/ntfy";
+import { contactLines, notify } from "@/lib/ntfy";
 import { sendCapi } from "@/lib/meta";
-import { getProduct } from "@/content/pricingCopy";
+import { getProduct, type Product } from "@/content/pricingCopy";
 import { getLpResult } from "@/lib/cardcom";
 import { db } from "@/db";
-import { enrollments, orders, user } from "@/db/schema";
+import { orders, user } from "@/db/schema";
 
 // Cardcom pings this URL after a payment attempt, but the exact ping payload
 // isn't reliably documented — so instead of trusting it, we only use it as a
@@ -30,50 +30,30 @@ async function extractLowProfileId(request: Request): Promise<string | null> {
   return null;
 }
 
+type Buyer = { name: string; phone: string | null; examDate: string | null; priorScore: number | null } | undefined;
+
 // Only the first confirmed payment sends the thank-you, since Cardcom may ping more than once.
-async function sendPurchaseThanks(userId: string, productId: string | null) {
+async function sendPurchaseThanks(buyer: Buyer, product: Product | undefined) {
   try {
-    const [account] = await db.select({ name: user.name, phone: user.phone }).from(user).where(eq(user.id, userId));
-    const product = getProduct(productId);
-    if (!account?.phone || !product) return;
-    await sendTemplate(account.phone, process.env.WHATSAPP_TEMPLATE_PURCHASE ?? "purchase_thanks", [account.name, product.name]);
+    if (!buyer?.phone || !product) return;
+    await sendTemplate(buyer.phone, process.env.WHATSAPP_TEMPLATE_PURCHASE ?? "purchase_thanks", [buyer.name, product.name]);
   } catch (err) {
     console.error("[cardcom webhook] purchase WhatsApp failed:", err);
   }
 }
 
-// The /diploactjoin overflow path (see src/app/api/diploact/join/route.ts) ties the order to
-// a specific cohort up front, before payment clears, so the seat can be reserved the moment
-// it does — without waiting for the student to pick it themselves in the account page.
-async function enrollInOrderCohort(userId: string, cohortId: string | null) {
-  if (!cohortId) return;
-  try {
-    const [existing] = await db.select({ id: enrollments.id }).from(enrollments).where(eq(enrollments.userId, userId)).limit(1);
-    if (existing) return;
-    await db.insert(enrollments).values({ userId, cohortId, status: "active" });
-  } catch (err) {
-    console.error("[cardcom webhook] auto-enroll failed:", err);
-  }
-}
-
 // Push notification for every paid order, so the phone number is one tap away for a manual
 // WhatsApp message — this stands in for an automated thank-you until the WhatsApp Cloud API
-// template above is actually usable (Meta verification) and until there's a real CRM.
-async function notifyPurchase(userId: string, productId: string | null, amountAgorot: number) {
-  const [account] = await db
-    .select({ name: user.name, phone: user.phone, examDate: user.examDate, priorScore: user.priorScore })
-    .from(user)
-    .where(eq(user.id, userId));
-  const product = getProduct(productId);
+// template above is actually usable (Meta verification).
+async function notifyPurchase(buyer: Buyer, product: Product | undefined, productId: string | null, amountAgorot: number) {
   await notify(
     "New purchase - Anglit",
     [
       `מוצר: ${product?.name ?? productId ?? "לא ידוע"}`,
       `סכום: ${(amountAgorot / 100).toFixed(0)} ₪`,
-      `שם: ${account?.name ?? "לא ידוע"}`,
-      `טלפון: ${account?.phone ?? "לא ידוע"}`,
-      ...(account?.examDate ? [`תאריך מבחן: ${account.examDate}`] : []),
-      ...(account?.priorScore != null ? [`ציון קודם: ${account.priorScore}`] : []),
+      ...contactLines(buyer?.name, buyer?.phone),
+      ...(buyer?.examDate ? [`תאריך מבחן: ${buyer.examDate}`] : []),
+      ...(buyer?.priorScore != null ? [`ציון קודם: ${buyer.priorScore}`] : []),
     ],
     "moneybag",
   );
@@ -99,7 +79,6 @@ export async function POST(request: Request) {
       status: orders.status,
       userId: orders.userId,
       product: orders.product,
-      cohortId: orders.cohortId,
       amountAgorot: orders.amountAgorot,
       providerTransactionId: orders.providerTransactionId,
     })
@@ -117,12 +96,15 @@ export async function POST(request: Request) {
   if (paidOk) {
     if (order.status !== "paid") {
       await db.update(orders).set({ status: "paid", paidAt: new Date() }).where(eq(orders.id, orderId));
-      await sendPurchaseThanks(order.userId, order.product);
-      await notifyPurchase(order.userId, order.product, order.amountAgorot);
+      const [buyer] = await db
+        .select({ name: user.name, phone: user.phone, examDate: user.examDate, priorScore: user.priorScore })
+        .from(user)
+        .where(eq(user.id, order.userId));
+      const product = getProduct(order.product);
+      await sendPurchaseThanks(buyer, product);
+      await notifyPurchase(buyer, product, order.product, order.amountAgorot);
       // Only here, after the payment is confirmed. The order id is the dedupe key shared with the thank-you page.
-      const [buyer] = await db.select({ phone: user.phone }).from(user).where(eq(user.id, order.userId));
       await sendCapi({ name: "Purchase", eventId: orderId, phone: buyer?.phone ?? undefined, value: order.amountAgorot / 100 });
-      if (order.product === "course") await enrollInOrderCohort(order.userId, order.cohortId);
     }
   } else if (order.status === "pending") {
     // Only a pending order can become failed; a paid one is never downgraded by a later ping

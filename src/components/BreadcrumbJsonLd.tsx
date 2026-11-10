@@ -2,7 +2,7 @@ import { site } from "@/lib/site";
 
 // Home › [parent ›] page, as schema.org BreadcrumbList. `path` is e.g. "/blog/my-post".
 export function BreadcrumbJsonLd({ trail }: { trail: { name: string; path: string }[] }) {
-  const items = [{ name: "Anglit", path: "" }, ...trail];
+  const items = [{ name: site.name, path: "" }, ...trail];
   const json = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",

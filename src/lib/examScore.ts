@@ -1,5 +1,8 @@
-import { questions, wordFormationQuestions, type QuestionType } from "@/content/questions";
-import { PILOT_CHAPTER_TYPES } from "@/lib/examStructure";
+import type { QuestionType } from "@/content/questions";
+import { PILOT_CHAPTER_TYPES } from "@/lib/pilotChapters";
+import { findQuestion } from "@/lib/examQuestions";
+import { SCORE_MAX, SCORE_MIN } from "@/content/facts";
+import { scoreLevel } from "@/lib/scoreLevels";
 import { levelOf, type Level } from "@/content/difficulty";
 
 // NITE scores Amirnet with item-response theory (IRT): every question has a calibrated
@@ -27,7 +30,7 @@ const PRIOR_SD = 1.2;
 
 /** Item difficulty (logits) by level. Level 3, the real exam's medium, sits at the national
  * mean: an examinee of 101 gets about 60% of level-3 questions right. */
-export const LEVEL_B: Record<Level, number> = { 1: -1.6, 2: -0.8, 3: 0, 4: 0.8, 5: 1.6 };
+const LEVEL_B: Record<Level, number> = { 1: -1.6, 2: -0.8, 3: 0, 4: 0.8, 5: 1.6 };
 
 export function pCorrect(theta: number, b: number): number {
   return GUESS + (1 - GUESS) / (1 + Math.exp(-SLOPE * (theta - b)));
@@ -51,7 +54,7 @@ export function estimateAbility(items: { b: number; correct: boolean }[]): numbe
 }
 
 export function scoreFromAbility(theta: number): number {
-  return Math.max(50, Math.min(150, Math.round(SCALE_MEAN + SCALE_SD * theta)));
+  return Math.max(SCORE_MIN, Math.min(SCORE_MAX, Math.round(SCALE_MEAN + SCALE_SD * theta)));
 }
 
 /** Difficulty of one question. An unrated id counts as medium; check-exams.ts fails on any. */
@@ -59,14 +62,14 @@ export function difficultyOf(id: string): number {
   return LEVEL_B[levelOf(id) ?? 3];
 }
 
-export { SCORE_LEVELS, scoreLevel, type ScoreLevel } from "@/lib/scoreLevels";
-
 // A short, modest note under the score, by range. It encourages practice and makes no
 // promise about a level or a result.
 export function scoreMessage(score: number): string {
-  if (score >= 134) return "ציון גבוה מאוד. כדאי לבדוק עם המוסד שבו תלמדו מה הציון מזכה אתכם בו.";
-  if (score >= 120) return "רמה טובה מאוד. תרגול ממוקד על סוגי השאלות שטעיתם בהם יכול לחזק עוד את הבסיס.";
-  if (score >= 100) return "יש בסיס טוב. תרגול קבוע על סוגי השאלות שטעיתם בהם יכול לעזור להעלות את הציון. אם תרצו ללמוד את זה בקבוצה קטנה, יש לנו מחזורים בזום.";
+  // The bands are the placement levels: courses left 0 (exempt), 1, 2, and 3 or more
+  const { courses } = scoreLevel(score);
+  if (courses === 0) return "ציון גבוה מאוד. כדאי לבדוק עם המוסד שבו תלמדו מה הציון מזכה אתכם בו.";
+  if (courses === 1) return "רמה טובה מאוד. תרגול ממוקד על סוגי השאלות שטעיתם בהם יכול לחזק עוד את הבסיס.";
+  if (courses === 2) return "יש בסיס טוב. תרגול קבוע על סוגי השאלות שטעיתם בהם יכול לעזור להעלות את הציון. אם תרצו ללמוד את זה בקבוצה קטנה, יש לנו מחזורים בזום.";
   return "יש מקום לשיפור, וזה טבעי בשלב הזה. תרגול קצר ומסודר כל יום יעזור לראות איפה נופלות התשובות. אם תרצו ללמוד את זה בקבוצה קטנה, יש לנו מחזורים בזום.";
 }
 
@@ -76,18 +79,13 @@ export function scoreMessage(score: number): string {
 // set the score on their own.
 export const PILOT_MAX_BONUS = 2;
 
-const typeById = new Map<string, QuestionType>([
-  ...questions.map((q) => [q.id, q.type] as const),
-  ...wordFormationQuestions.map((q) => [q.id, q.type] as const),
-]);
-
-export function isPilotQuestion(id: string): boolean {
-  const type = typeById.get(id);
+function isPilotQuestion(id: string): boolean {
+  const type = questionType(id);
   return type !== undefined && (PILOT_CHAPTER_TYPES as readonly QuestionType[]).includes(type);
 }
 
 export function questionType(id: string): QuestionType | undefined {
-  return typeById.get(id);
+  return findQuestion(id)?.type;
 }
 
 export type ExamScore = {
@@ -122,10 +120,10 @@ export function scoreExam(correctness: Record<string, boolean>): ExamScore {
   }
 
   const pilotBonus = pilotTotal > 0 ? Math.round((PILOT_MAX_BONUS * pilotCorrect) / pilotTotal) : 0;
-  const base = coreTotal > 0 ? scoreFromAbility(estimateAbility(core)) : 50;
+  const base = coreTotal > 0 ? scoreFromAbility(estimateAbility(core)) : SCORE_MIN;
 
   return {
-    estimatedScore: Math.min(150, base + pilotBonus),
+    estimatedScore: Math.min(SCORE_MAX, base + pilotBonus),
     rawCorrect: coreCorrect + pilotCorrect,
     totalQuestions: coreTotal + pilotTotal,
     coreCorrect,

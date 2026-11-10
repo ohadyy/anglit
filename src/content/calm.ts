@@ -1,3 +1,6 @@
+import { SESSIONS } from "./calmSessions";
+import { countWord } from "./facts";
+
 // Texts for the /calm mindset area, voiced by Angela. Wording is gender-neutral on purpose (owner request).
 
 export const calmCopy = {
@@ -10,7 +13,7 @@ export const calmCopy = {
   blackoutTitle: "מה עושים כשנתקעים",
   blackoutText: "שלושה רגעים שקורים בכל מבחן, ומה כדאי לעשות בכל אחד. בלי ציון.",
   sessionsTitle: "סשנים קוליים",
-  sessionsText: "שלוש הקלטות קצרות עם אנג'לה. מומלץ עם אוזניות, ואפשר לעצום עיניים.",
+  sessionsText: `${countWord(SESSIONS.length, "f")} הקלטות קצרות עם אנג'לה. מומלץ עם אוזניות, ואפשר לעצום עיניים.`,
   sessionsBack: "כל הסשנים",
   sessionsAuthor: "אנג'לה",
   playLabel: "ניגון",
@@ -20,6 +23,9 @@ export const calmCopy = {
   minutesUnit: "דקות",
   disclaimer: "זה אימון קצר, לא טיפול. אם הלחץ מרגיש גדול מדי, שווה לדבר עם איש מקצוע.",
 };
+
+/** Length of one thoughts round; the texts say "דקה" (thoughtsText, intro), so change them together */
+export const THOUGHTS_ROUND_SECONDS = 60;
 
 export const thoughtsCopy = {
   intro: "תוך דקה יופיעו מחשבות, אחת אחרי השנייה. מחשבה שמעכבת: לפח. מחשבה שעוזרת: שומרים.",

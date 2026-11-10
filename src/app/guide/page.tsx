@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { guideCopy as g } from "@/content/guideCopy";
+import { downloadGuideCopy as g } from "@/content/guideCopy";
+import { CARD } from "@/lib/ui";
 
 export const metadata: Metadata = {
   title: g.seoTitle,
@@ -8,7 +9,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/guide" },
 };
 
-const CARD = "rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-6";
 const BTN = "inline-flex min-h-12 items-center justify-center rounded-full bg-fg px-6 py-3.5 font-semibold text-bg transition-opacity hover:opacity-85";
 
 export default function GuidePage() {
@@ -18,7 +18,6 @@ export default function GuidePage() {
         <h1 className="font-display min-w-0 flex-1 self-center text-[1.85rem] leading-[1.25] font-bold tracking-tight sm:text-4xl">
           <mark className="pink">{g.title}</mark>
         </h1>
-        {/* Wrapper stretches to the title height; the cropped SVG fills it top to bottom */}
         <div className="relative w-36 shrink-0 sm:w-64">
           {/* eslint-disable-next-line @next/next/no-img-element -- SVG, nothing for next/image to optimize */}
           <img src="/guide/guide-illustration.svg" alt="" className="absolute inset-0 h-full w-full object-contain" />
@@ -30,7 +29,7 @@ export default function GuidePage() {
         <a
           href="/guide/anglit-amirnet-guide.pdf"
           download={g.downloadFile}
-          className="flex min-h-20 w-full items-center justify-center gap-3 rounded-full bg-fg px-8 py-5 text-xl font-bold text-bg shadow-[0_18px_40px_-12px_rgb(25_16_127/0.55)] ring-4 ring-[#ee478c] transition-transform hover:scale-[1.02] active:scale-[0.98] sm:min-h-24 sm:text-2xl"
+          className="flex min-h-20 w-full items-center justify-center gap-3 rounded-full bg-fg px-8 py-5 text-xl font-bold text-bg shadow-[0_18px_40px_-12px_rgb(25_16_127/0.55)] ring-4 ring-marker transition-transform hover:scale-[1.02] active:scale-[0.98] sm:min-h-24 sm:text-2xl"
         >
           <svg viewBox="0 0 24 24" fill="none" className="size-7 shrink-0" aria-hidden="true">
             <path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />

@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { calculatorCopy as c } from "@/content/examGuide";
+import { SCORE_MAX, SCORE_MIN } from "@/content/facts";
 import { SCORE_LEVELS, scoreLevel } from "@/lib/scoreLevels";
 
-// Eases a number toward its target, so a changed cost rolls instead of jumping
 function useRolling(target: number) {
   const [value, setValue] = useState(target);
   useEffect(() => {
@@ -30,7 +30,7 @@ export function ScoreCalculator() {
   const cost = useRolling(level.courses * c.costPerCourse);
 
   function set(v: number) {
-    const clamped = Math.min(150, Math.max(50, Math.round(v)));
+    const clamped = Math.min(SCORE_MAX, Math.max(SCORE_MIN, Math.round(v)));
     setScore(clamped);
     setDraft(String(clamped));
   }
@@ -38,11 +38,11 @@ export function ScoreCalculator() {
   function type(raw: string) {
     setDraft(raw);
     const v = Number(raw);
-    if (raw !== "" && v >= 50 && v <= 150) setScore(Math.round(v));
+    if (raw !== "" && v >= SCORE_MIN && v <= SCORE_MAX) setScore(Math.round(v));
   }
 
   return (
-    <div className="rounded-3xl border border-line bg-white p-5 shadow-[0_18px_40px_-24px_rgb(14_8_82/0.3)] sm:p-7">
+    <div className="rounded-3xl border border-line bg-white p-5 shadow-card sm:p-7">
       <label htmlFor="score-input" className="text-sm font-semibold opacity-70">
         {c.inputLabel}
       </label>
@@ -59,8 +59,8 @@ export function ScoreCalculator() {
           id="score-input"
           type="number"
           inputMode="numeric"
-          min={50}
-          max={150}
+          min={SCORE_MIN}
+          max={SCORE_MAX}
           value={draft}
           onChange={(e) => type(e.target.value)}
           onBlur={() => setDraft(String(score))}
@@ -80,16 +80,16 @@ export function ScoreCalculator() {
       <div dir="ltr" className="mt-4">
         <input
           type="range"
-          min={50}
-          max={150}
+          min={SCORE_MIN}
+          max={SCORE_MAX}
           value={score}
           onChange={(e) => set(Number(e.target.value))}
           aria-label={c.inputLabel}
           className="h-11 w-full cursor-pointer accent-fg"
         />
         <div className="flex justify-between text-xs tabular-nums opacity-60">
-          <span>50</span>
-          <span>150</span>
+          <span>{SCORE_MIN}</span>
+          <span>{SCORE_MAX}</span>
         </div>
       </div>
 
@@ -109,7 +109,6 @@ export function ScoreCalculator() {
         )}
       </div>
 
-      {/* The six levels as a ladder: the current one lit, the ones already passed marked, dots show courses left */}
       <ol className="mt-5 flex flex-col-reverse gap-2" aria-hidden>
         {SCORE_LEVELS.map((l) => {
           const here = l.min === level.min;

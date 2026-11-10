@@ -5,7 +5,10 @@ import Link from "next/link";
 import { FreeNextCard } from "@/components/FreeNextCard";
 import { useMemo, useState } from "react";
 import { useStored } from "@/lib/useStored";
-import { randomOrder } from "@/lib/shuffle";
+import { randomOrder, seededShuffle } from "@/lib/random";
+import { STORAGE_KEYS } from "@/lib/storageKeys";
+import { postVocabAnswer } from "@/lib/postVocabAnswer";
+import { escapeRegExp } from "@/components/Stem";
 
 type GameWord = { id: string; word: string; translation: string; example: string };
 
@@ -13,21 +16,8 @@ const ROUND_LIMIT = 30; // the round never grows past this many questions
 const OFFSET = 3; // a missed word comes back three questions later
 const MAX_REQUEUE = 2; // and at most twice per word
 
-// Deterministic shuffle, so the options of one question do not reorder on each render
-function shuffle<T>(items: T[], seed: number): T[] {
-  const out = [...items];
-  let s = seed;
-  for (let i = out.length - 1; i > 0; i--) {
-    s = (s * 9301 + 49297) % 233280;
-    const j = Math.floor((s / 233280) * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
-}
-
-// Shows the example sentence with the target word highlighted
 function Example({ sentence, word }: { sentence: string; word: string }) {
-  const parts = sentence.split(new RegExp(`(${word})`, "i"));
+  const parts = sentence.split(new RegExp(`(${escapeRegExp(word)})`, "i"));
   return (
     <>
       {parts.map((part, i) =>
@@ -52,7 +42,7 @@ export function WordChain({ words, paid }: { words: GameWord[]; paid: boolean })
   const [streak, setStreak] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [missed, setMissed] = useState<string[]>([]);
-  const [best, setBest] = useStored("anglit-chain-best", 0);
+  const [best, setBest] = useStored(STORAGE_KEYS.chainBest, 0);
 
   const done = started && index >= queue.length;
   const current = queue[index];
@@ -61,8 +51,9 @@ export function WordChain({ words, paid }: { words: GameWord[]; paid: boolean })
     if (!current) return [];
     const others = words.filter((w) => w.id !== current.id);
     const seed = index * 7919 + current.word.length;
-    const wrong = shuffle(others, seed).slice(0, 3);
-    return shuffle([current, ...wrong], seed + 1);
+    const wrong = seededShuffle(others, seed).slice(0, 3);
+    // Seeded, so the options of one question do not reorder on each render
+    return seededShuffle([current, ...wrong], seed + 1);
   }, [current, index, words]);
 
   function choose(option: GameWord) {
@@ -71,12 +62,7 @@ export function WordChain({ words, paid }: { words: GameWord[]; paid: boolean })
     const knew = option.id === current.id;
     // Same endpoint /vocabulary uses, so a word missed here also comes back there. Best-effort:
     // signed-out guests get 401 and nothing is lost, since this is only a backup to the in-round chain.
-    fetch("/api/vocab/answer", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ wordId: current.id, knew }),
-      keepalive: true,
-    }).catch(() => {});
+    postVocabAnswer(current.id, knew);
     if (knew) {
       setCorrect((c) => c + 1);
       const next = streak + 1;
@@ -86,7 +72,6 @@ export function WordChain({ words, paid }: { words: GameWord[]; paid: boolean })
     }
     setStreak(0);
     if (!missed.includes(current.word)) setMissed((m) => [...m, current.word]);
-    // A missed word comes back a few questions later, so it is recalled again before it fades
     const times = requeued[current.id] ?? 0;
     if (times < MAX_REQUEUE && queue.length < ROUND_LIMIT) {
       setRequeued((r) => ({ ...r, [current.id]: times + 1 }));
@@ -192,7 +177,6 @@ export function WordChain({ words, paid }: { words: GameWord[]; paid: boolean })
         </span>
       </div>
 
-      {/* The chain: one link per correct answer in a row, so the streak shows at a glance */}
       <div className="mt-4 flex h-3 items-center gap-1.5" role="img" aria-label={`שרשרת: ${streak} חוליות`}>
         {Array.from({ length: Math.max(streak, 1) }).map((_, i) => (
           <span

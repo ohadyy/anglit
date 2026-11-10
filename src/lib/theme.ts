@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
-import { THEME_KEY as KEY } from "./themeScript";
+import { STORAGE_KEYS } from "./storageKeys";
+import { setItem } from "./safeStorage";
 
-export type Theme = "light" | "ink";
+type Theme = "light" | "ink";
 
 function read(): Theme {
   return document.documentElement.dataset.theme === "ink" ? "ink" : "light";
@@ -19,9 +20,7 @@ export function useTheme() {
   const theme = useSyncExternalStore(subscribe, read, () => "light" as Theme);
   const setTheme = useCallback((t: Theme) => {
     document.documentElement.dataset.theme = t;
-    try {
-      localStorage.setItem(KEY, t);
-    } catch {}
+    setItem(STORAGE_KEYS.theme, t);
   }, []);
   const toggle = useCallback(() => setTheme(read() === "ink" ? "light" : "ink"), [setTheme]);
   return { theme, setTheme, toggle };

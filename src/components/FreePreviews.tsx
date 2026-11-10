@@ -1,3 +1,4 @@
+import { Stem } from "./Stem";
 import type { ReactNode } from "react";
 import type { FreeActivityId } from "@/content/freePractice";
 
@@ -21,11 +22,10 @@ function Dot({ on }: { on?: boolean }) {
   );
 }
 
-// Each free practice shown as a miniature of its own screen, so the card says what you will do before you open it
 const PREVIEWS: Record<FreeActivityId, ReactNode> = {
   daily: (
     <div className="w-full">
-      <p className="text-sm font-semibold">She ____ to school.</p>
+      <p className="text-sm font-semibold"><Stem text="She ____ to school." revealed={false} /></p>
       <div className="mt-3 flex justify-between">
         {[1, 1, 1, 1, 1, 0, 0].map((on, i) => (
           <Dot key={i} on={!!on} />

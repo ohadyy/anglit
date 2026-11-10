@@ -9,7 +9,6 @@ export async function couponAgorot(code: string | undefined | null, baseIls: num
     .from(coupons)
     .where(eq(coupons.code, (code ?? "").trim().toUpperCase()));
   if (!coupon) return null;
-  // A fixed price never raises the price if the base is already lower
   if (coupon.priceIls !== null) return Math.min(coupon.priceIls, baseIls) * 100;
   return Math.round(baseIls * (100 - (coupon.percent ?? 0)));
 }

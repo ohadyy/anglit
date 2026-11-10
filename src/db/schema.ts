@@ -4,9 +4,9 @@
 // orders) are defined below and reference `user` from there.
 export * from "./auth-schema";
 
-import { relations } from "drizzle-orm";
 import { pgTable, text, integer, timestamp, jsonb, primaryKey, boolean } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
+import { COHORT_STATUSES, LEAD_SOURCES, PRODUCT_IDS } from "../lib/enums";
 
 // מחזור — one week-long cycle: a start date, an exam date, a seat cap.
 export const cohorts = pgTable("cohorts", {
@@ -14,7 +14,9 @@ export const cohorts = pgTable("cohorts", {
   startDate: timestamp("start_date").notNull(),
   examDate: timestamp("exam_date").notNull(),
   capacity: integer("capacity").notNull(),
-  status: text("status", { enum: ["upcoming", "active", "closed"] })
+  // Free text shown to students, e.g. "ראשון 19:00, שלישי 19:00". Null falls back to COHORT_SESSIONS.
+  sessions: text("sessions"),
+  status: text("status", { enum: COHORT_STATUSES })
     .notNull()
     .default("upcoming"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -40,8 +42,8 @@ export const enrollments = pgTable("enrollments", {
 });
 
 // One Cardcom charge attempt. Amounts are in agorot (smallest ILS unit) to
-// avoid float rounding. `cohortId` is nullable: people pay before a cohort
-// is necessarily open yet, and get slotted in once one exists.
+// avoid float rounding. `cohortId` is legacy: an earlier flow tied a payment to a cohort,
+// nothing writes it now, but old rows may still point at a cohort.
 // `providerTransactionId` holds Cardcom's LowProfileId.
 export const orders = pgTable("orders", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
@@ -50,7 +52,7 @@ export const orders = pgTable("orders", {
     .references(() => user.id, { onDelete: "cascade" }),
   cohortId: text("cohort_id").references(() => cohorts.id, { onDelete: "restrict" }),
   amountAgorot: integer("amount_agorot").notNull(),
-  product: text("product", { enum: ["access", "course", "private"] }),
+  product: text("product", { enum: PRODUCT_IDS }),
   currency: text("currency").notNull().default("ILS"),
   provider: text("provider").notNull().default("cardcom"),
   providerTransactionId: text("provider_transaction_id"),
@@ -92,10 +94,6 @@ export const examTests = pgTable("exam_tests", {
   usedAt: timestamp("used_at"),
 });
 
-export const examAttemptsRelations = relations(examAttempts, ({ one }) => ({
-  user: one(user, { fields: [examAttempts.userId], references: [user.id] }),
-}));
-
 // "Leave your details" — people who aren't ready to self-serve through
 // sign-up/checkout yet. Not tied to a user account (they may not have one).
 // Where a student is with each vocabulary word: box 1 (missed) to 3 (known well).
@@ -134,7 +132,7 @@ export const leads = pgTable("leads", {
   name: text("name").notNull(),
   contact: text("contact").notNull(),
   message: text("message"),
-  source: text("source", { enum: ["pricing", "sign-up", "ads"] }).notNull(),
+  source: text("source", { enum: LEAD_SOURCES }).notNull(),
   consent: boolean("consent").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -165,21 +163,6 @@ export const crmNotes = pgTable("crm_notes", {
   body: text("body").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
-
-export const cohortsRelations = relations(cohorts, ({ many }) => ({
-  enrollments: many(enrollments),
-  orders: many(orders),
-}));
-
-export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
-  user: one(user, { fields: [enrollments.userId], references: [user.id] }),
-  cohort: one(cohorts, { fields: [enrollments.cohortId], references: [cohorts.id] }),
-}));
-
-export const ordersRelations = relations(orders, ({ one }) => ({
-  user: one(user, { fields: [orders.userId], references: [user.id] }),
-  cohort: one(cohorts, { fields: [orders.cohortId], references: [cohorts.id] }),
-}));
 
 // Checkout coupons made from /admin/coupons: either a percent off or a fixed final price, never both.
 export const coupons = pgTable("coupons", {

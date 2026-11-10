@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { blackoutCopy as t, SCENARIOS } from "@/content/blackout";
+import { calmCopy } from "@/content/calm";
 
 export function BlackoutGame() {
   const [started, setStarted] = useState(false);
@@ -20,7 +21,7 @@ export function BlackoutGame() {
   if (!started || done) {
     return (
       <Shell>
-        <h1 className="font-display text-4xl font-bold">{done ? t.doneTitle : "מה עושים כשנתקעים"}</h1>
+        <h1 className="font-display text-4xl font-bold">{done ? t.doneTitle : calmCopy.blackoutTitle}</h1>
         <p className="mt-4 text-lg leading-relaxed opacity-80">{done ? t.doneText : t.intro}</p>
         <button onClick={restart} className="mt-10 min-h-12 rounded-full bg-fg px-10 font-semibold text-bg">
           {done ? t.again : t.start}

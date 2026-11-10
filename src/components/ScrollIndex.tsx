@@ -2,14 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-// A rail of section links that stays under the header while a long page scrolls, and marks the section
-// being read. On a phone it is one row that scrolls sideways, with the active pill kept in view.
 export function ScrollIndex({ items }: { items: { id: string; label: string }[] }) {
   const [active, setActive] = useState(items[0]?.id);
 
   useEffect(() => {
     const onScroll = () => {
-      // The last section whose top has passed the line just under the header
       let current = items[0]?.id;
       for (const { id } of items) {
         const el = document.getElementById(id);
@@ -28,7 +25,7 @@ export function ScrollIndex({ items }: { items: { id: string; label: string }[] 
   }, [active]);
 
   return (
-    <nav aria-label="בעמוד הזה" className="sticky top-[5.5rem] z-20 -mx-4 mt-6 bg-bg/90 px-4 py-2 backdrop-blur sm:mx-0 sm:rounded-full sm:px-2">
+    <nav aria-label="בעמוד הזה" className="sticky top-[5.5rem] z-(--z-fab) -mx-4 mt-6 bg-bg/90 px-4 py-2 backdrop-blur sm:mx-0 sm:rounded-full sm:px-2">
       <ul className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {items.map(({ id, label }) => (
           <li key={id} className="shrink-0">

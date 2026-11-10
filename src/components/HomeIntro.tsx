@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { LogoTraceLoader } from "@/components/LogoTraceLoader";
+import { STORAGE_KEYS } from "@/lib/storageKeys";
+import { getItem, setItem } from "@/lib/safeStorage";
 
-import { INTRO_SEEN_KEY as SEEN_KEY } from "@/lib/themeScript";
+const SEEN_KEY = STORAGE_KEYS.introSeen;
 
 const MIN_LOOP_MS = 800;
 const FADE_MS = 250;
@@ -18,11 +20,7 @@ export function HomeIntro({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(true);
 
   useEffect(() => {
-    let seen = false;
-    try {
-      seen = sessionStorage.getItem(SEEN_KEY) === "1";
-    } catch {}
-    if (seen) {
+    if (getItem(SEEN_KEY, "session") === "1") {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- runs once on mount, gated by sessionStorage
       setMounted(false);
       return;
@@ -32,9 +30,7 @@ export function HomeIntro({ children }: { children: React.ReactNode }) {
     // cleans up, and remounts this effect) can't skip the real timer.
     const t = setTimeout(() => {
       setLoading(false);
-      try {
-        sessionStorage.setItem(SEEN_KEY, "1");
-      } catch {}
+      setItem(SEEN_KEY, "1", "session");
     }, MIN_LOOP_MS);
     return () => clearTimeout(t);
   }, []);
@@ -49,7 +45,7 @@ export function HomeIntro({ children }: { children: React.ReactNode }) {
       {mounted && (
         <div
           data-home-intro
-          className="fixed inset-0 z-50 flex items-center justify-center bg-bg transition-opacity"
+          className="fixed inset-0 z-(--z-overlay) flex items-center justify-center bg-bg transition-opacity"
           style={{ opacity: visible ? 1 : 0, transitionDuration: `${FADE_MS}ms` }}
         >
           <LogoTraceLoader loading={loading} size={96} loopDurationSeconds={1.1} fillFadeSeconds={0.35} className="text-fg" onDone={handleDone} />

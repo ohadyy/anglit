@@ -11,7 +11,9 @@ import { QuestionView, TypeLabel } from "@/components/QuestionView";
 import { LockIcon } from "@/components/LockIcon";
 import { TactileButton } from "@/components/TactileButton";
 import { fetchServerMistakes, readMistakes, recordAnswers, removeMistake, saveMistakesLocally, type Mistakes } from "@/lib/mistakes";
-import { randomOrder } from "@/lib/shuffle";
+import { randomOrderByClip } from "@/lib/random";
+import { CHALLENGE_SECONDS, FREE_QUESTION_COUNT, LEVEL_GROUPS, WRITING_MINUTES, type LevelGroup } from "@/content/practiceFacts";
+import { countWord } from "@/content/facts";
 import type { QuestionNote } from "@/content/questionNotes";
 import { FreeNextCard } from "@/components/FreeNextCard";
 import { MiniTile, PREVIEWS } from "@/components/MiniPreviews";
@@ -20,10 +22,12 @@ import { DailyQuestion } from "./daily/DailyQuestion";
 export type PracticeMode = QuestionType | "free" | "mistakes" | "connectors" | "affixes";
 
 // The server decides what this visitor may see and passes only that: visitors without paid
-// access get the five free questions, and paid access unlocks every question type.
-export type PracticeData = {
+// access get the free questions (FREE_QUESTION_COUNT), and paid access unlocks every question type.
+type PracticeData = {
   paid: boolean;
-  /** The five free questions, with the passage they use */
+  /** Seminar students (and staff): every explanation gets an "ask Ohad on WhatsApp" link */
+  canAsk: boolean;
+  /** The free questions (FREE_QUESTION_COUNT), with the passage they use */
   free: Question[];
   /** The questions of the requested type, empty when this visitor may not see them */
   set: Question[];
@@ -34,21 +38,24 @@ export type PracticeData = {
   passages: Passage[];
   /** Hebrew notes for the mistakes review, sent only to paid members on that page */
   notes: Record<string, QuestionNote>;
+  /** How many questions the connectors and affixes lessons come with, for their tiles */
+  lessonCounts: { connectors: number; affixes: number };
+  /** The level picker of a question type with rated questions, null elsewhere. counts are for the whole type. */
+  levelPicker: { active: LevelGroup | undefined; counts: Record<LevelGroup, number> } | null;
 };
 
 export function PracticeClient({ mode, data }: { mode?: PracticeMode; data: PracticeData }) {
-  const { paid, free, set, counts, dailyPool, passages, notes } = data;
+  const { paid, canAsk, free, set, counts, dailyPool, passages, notes, lessonCounts, levelPicker } = data;
   return (
     <PassageProvider passages={passages}>
-      {!mode && <TypeChooser paid={paid} counts={counts} dailyPool={dailyPool} />}
+      {!mode && <TypeChooser paid={paid} counts={counts} dailyPool={dailyPool} lessonCounts={lessonCounts} />}
       {mode === "free" && <PracticeSession mode="free" set={free} notes={notes} paid={paid} />}
-      {mode === "mistakes" && <MistakesReview paid={paid} bank={set} notes={notes} />}
-      {mode && mode !== "free" && mode !== "mistakes" && (!paid ? <LockedPractice label={mode === "connectors" ? "מילות קישור" : mode === "affixes" ? "תחיליות וסופיות" : TYPE_LABELS[mode].he} /> : <PracticeSession mode={mode} set={set} notes={notes} paid={paid} />)}
+      {mode === "mistakes" && <MistakesReview paid={paid} canAsk={canAsk} bank={set} notes={notes} />}
+      {mode && mode !== "free" && mode !== "mistakes" && (!paid ? <LockedPractice label={mode === "connectors" ? "מילות קישור" : mode === "affixes" ? "תחיליות וסופיות" : TYPE_LABELS[mode].he} /> : <PracticeSession mode={mode} set={set} notes={notes} paid={paid} canAsk={canAsk} picker={levelPicker && <LevelPicker type={mode} picker={levelPicker} />} />)}
     </PassageProvider>
   );
 }
 
-// Every practice is a tile with a miniature of its own screen, two to a row on a phone
 function Category({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mt-10">
@@ -58,7 +65,7 @@ function Category({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function TypeChooser({ paid, counts, dailyPool }: { paid: boolean; counts: Record<QuestionType, number>; dailyPool: Question[] }) {
+function TypeChooser({ paid, counts, dailyPool, lessonCounts }: { paid: boolean; counts: Record<QuestionType, number>; dailyPool: Question[]; lessonCounts: PracticeData["lessonCounts"] }) {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
       <p className="font-hand text-2xl opacity-70">תרגול חופשי</p>
@@ -66,7 +73,7 @@ function TypeChooser({ paid, counts, dailyPool }: { paid: boolean; counts: Recor
       <p className="mt-3 max-w-xl text-lg leading-relaxed opacity-80">
         {paid
           ? "בלי לחץ זמן. אחרי כל תשובה תקבלו הסבר, ואפשר לעבור בין התרגולים בכל רגע."
-          : "בחינם אפשר לתרגל 5 שאלות לדוגמה. לתרגול מלא בכל הסוגים יש מסלול בתשלום."}
+          : `בחינם אפשר לתרגל ${FREE_QUESTION_COUNT} שאלות לדוגמה. לתרגול מלא בכל הסוגים יש מסלול בתשלום.`}
       </p>
 
       {dailyPool.length > 0 && (
@@ -76,7 +83,7 @@ function TypeChooser({ paid, counts, dailyPool }: { paid: boolean; counts: Recor
       )}
 
       <Category title="תרגול שאלות">
-        {!paid && <MiniTile href="/practice?type=free" title="5 שאלות חינם" text="מכל הסוגים, עם הסבר" aside="להתחיל ←">{PREVIEWS.sentence}</MiniTile>}
+        {!paid && <MiniTile href="/practice?type=free" title={`${FREE_QUESTION_COUNT} שאלות חינם`} text="מכל הסוגים, עם הסבר" aside="להתחיל ←">{PREVIEWS.sentence}</MiniTile>}
         {ALL_TYPES.map((t) => (
           <MiniTile
             key={t}
@@ -93,14 +100,14 @@ function TypeChooser({ paid, counts, dailyPool }: { paid: boolean; counts: Recor
       </Category>
 
       <Category title="תרגול נוסף">
-        <MiniTile href="/learn/connectors" title="מילות קישור" text="שיעור קצר ו-30 שאלות" aside="ללמוד ←">{PREVIEWS.connectors}</MiniTile>
-        <MiniTile href="/learn/affixes" title="תחיליות וסופיות" text="שיעור קצר ו-30 שאלות" aside="ללמוד ←">{PREVIEWS.affixes}</MiniTile>
-        <MiniTile href="/practice/writing" title="מטלת כתיבה" text="12 דקות, הקלדה, וטקסט לדוגמה" aside="לתרגל ←">{PREVIEWS.writing}</MiniTile>
+        <MiniTile href="/learn/connectors" title="מילות קישור" text={`שיעור קצר ו-${lessonCounts.connectors} שאלות`} aside="ללמוד ←">{PREVIEWS.connectors}</MiniTile>
+        <MiniTile href="/learn/affixes" title="תחיליות וסופיות" text={`שיעור קצר ו-${lessonCounts.affixes} שאלות`} aside="ללמוד ←">{PREVIEWS.affixes}</MiniTile>
+        <MiniTile href="/practice/writing" title="מטלת כתיבה" text={`${WRITING_MINUTES} דקות, הקלדה, וטקסט לדוגמה`} aside="לתרגל ←">{PREVIEWS.writing}</MiniTile>
       </Category>
 
       <Category title="משחקים">
         <MiniTile href="/practice/words" title="שרשרת מילים" text="מילה בעברית, ותשובה באנגלית" aside="לשחק ←">{PREVIEWS.words}</MiniTile>
-        <MiniTile href="/practice/challenge" title="אתגר נגד השעון" text="20 שניות לשאלה, בלי טעויות" aside="לשחק ←">{PREVIEWS.challenge}</MiniTile>
+        <MiniTile href="/practice/challenge" title="אתגר נגד השעון" text={`${CHALLENGE_SECONDS} שניות לשאלה, בלי טעויות`} aside="לשחק ←">{PREVIEWS.challenge}</MiniTile>
       </Category>
 
       <Category title="מיינדסט">
@@ -119,13 +126,13 @@ function LockedPractice({ label }: { label: string }) {
       <p className="mt-5 font-hand text-2xl opacity-70">{label}</p>
       <h1 className="font-display mt-2 text-2xl font-bold">התרגול הזה במסלול בתשלום</h1>
       <p className="mt-3 leading-relaxed opacity-80">
-        בחינם אפשר לתרגל 5 שאלות לדוגמה מכל הסוגים, עם הסבר מלא לכל תשובה. לתרגול מלא בכל הסוגים יש מסלול בתשלום.
+        בחינם אפשר לתרגל {FREE_QUESTION_COUNT} שאלות לדוגמה מכל הסוגים, עם הסבר מלא לכל תשובה. לתרגול מלא בכל הסוגים יש מסלול בתשלום.
       </p>
       <Link href="/pricing" className="mt-8 flex w-full items-center justify-center rounded-full bg-fg px-6 py-4 font-semibold text-bg">
         לצפייה במסלולים
       </Link>
       <Link href="/practice?type=free" className="mt-4 inline-flex min-h-11 items-center text-sm underline opacity-70">
-        לחמש השאלות החינמיות
+        ל{countWord(FREE_QUESTION_COUNT, "f")} השאלות החינמיות
       </Link>
     </div>
   );
@@ -136,11 +143,15 @@ function PracticeSession({
   set,
   notes,
   paid,
+  canAsk = false,
+  picker,
 }: {
   mode: PracticeMode;
   set: Question[];
   notes: Record<string, QuestionNote>;
   paid: boolean;
+  canAsk?: boolean;
+  picker?: ReactNode;
 }) {
   // Shuffled once per mount (and again whenever the question bank changes), so
   // the order differs from session to session instead of always starting with
@@ -150,7 +161,7 @@ function PracticeSession({
   const [picks, setPicks] = useState<(number | null)[]>(() => set.map(() => null));
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- shuffle after mount so server and client agree on first paint, then randomize
-    setOrder(randomOrder(set));
+    setOrder(randomOrderByClip(set));
     setIndex(0);
     setPicks(set.map(() => null));
   }, [set]);
@@ -197,6 +208,8 @@ function PracticeSession({
         {!done && <span className="tabular-nums opacity-70">{index + 1} מתוך {order.length}</span>}
       </div>
 
+      {picker && <div className="mx-auto mt-3 w-full max-w-3xl px-4 sm:px-6">{picker}</div>}
+
       <div className="mx-auto mt-3 w-full max-w-3xl px-4 sm:px-6" aria-hidden>
         <div className="h-1.5 overflow-hidden rounded-full bg-fg/12">
           <div
@@ -214,14 +227,14 @@ function PracticeSession({
             <div className="mb-4">
               <TypeLabel q={q} />
             </div>
-            <QuestionView q={q} selected={selected} revealed={revealed} onSelect={pick} note={notes[q.id]} />
+            <QuestionView q={q} selected={selected} revealed={revealed} onSelect={pick} note={notes[q.id]} askOhad={canAsk} />
           </div>
         )}
       </main>
 
       {!done && (
         <div
-          className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-bg/95 backdrop-blur"
+          className="fixed inset-x-0 bottom-0 z-(--z-fab) border-t border-line bg-bg/95 backdrop-blur"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
@@ -241,6 +254,42 @@ function PracticeSession({
         </div>
       )}
     </div>
+  );
+}
+
+// Links, not state: the server filters the questions, so this works without script.
+// Same wording as the vocabulary picker (קל / בינוני / קשה).
+function LevelPicker({ type, picker }: { type: PracticeMode; picker: NonNullable<PracticeData["levelPicker"]> }) {
+  const total = Object.values(picker.counts).reduce((a, b) => a + b, 0);
+  const chips = [
+    { key: "all", label: "הכול", href: `/practice?type=${type}`, count: total, active: !picker.active },
+    ...LEVEL_GROUPS.map((g) => ({
+      key: g.id,
+      label: g.label,
+      href: picker.counts[g.id] ? `/practice?type=${type}&level=${g.id}` : null,
+      count: picker.counts[g.id],
+      active: picker.active === g.id,
+    })),
+  ];
+  return (
+    <ul className="flex flex-wrap gap-2" aria-label="רמת קושי">
+      {chips.map((c) => (
+        <li key={c.key}>
+          {c.href ? (
+            <Link
+              href={c.href}
+              aria-current={c.active ? "true" : undefined}
+              className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-semibold ${c.active ? "border-fg bg-fg text-bg" : "border-fg/25 hover:bg-fg/5"}`}
+            >
+              {c.label}
+              <bdi dir="ltr" className="tabular-nums opacity-70">{c.count}</bdi>
+            </Link>
+          ) : (
+            <span className="inline-flex min-h-11 items-center rounded-full border border-line px-4 text-sm opacity-40">{c.label}</span>
+          )}
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -337,7 +386,7 @@ function MistakesTile() {
   );
 }
 
-function MistakesReview({ paid, bank, notes }: { paid: boolean; bank: Question[]; notes: Record<string, QuestionNote> }) {
+function MistakesReview({ paid, canAsk, bank, notes }: { paid: boolean; canAsk: boolean; bank: Question[]; notes: Record<string, QuestionNote> }) {
   const [mistakes, setMistakes] = useMistakes();
   if (mistakes === null) return null;
   const count = Object.keys(mistakes).length;
@@ -363,7 +412,7 @@ function MistakesReview({ paid, bank, notes }: { paid: boolean; bank: Question[]
           לצפייה במסלולים
         </Link>
         <Link href="/practice?type=free" className="mt-4 inline-flex min-h-11 items-center text-sm underline opacity-70">
-          לחמש השאלות החינמיות
+          ל{countWord(FREE_QUESTION_COUNT, "f")} השאלות החינמיות
         </Link>
       </div>
     );
@@ -406,7 +455,7 @@ function MistakesReview({ paid, bank, notes }: { paid: boolean; bank: Question[]
       <ol className="mt-8 grid gap-10">
         {list.map((q) => (
           <li key={q.id} className="border-t border-line pt-8">
-            <MistakeCard q={q} chosen={mistakes[q.id]} note={notes[q.id]} onDone={() => done(q.id)} />
+            <MistakeCard q={q} chosen={mistakes[q.id]} note={notes[q.id]} canAsk={canAsk} onDone={() => done(q.id)} />
           </li>
         ))}
       </ol>
@@ -418,11 +467,13 @@ function MistakeCard({
   q,
   chosen,
   note,
+  canAsk,
   onDone,
 }: {
   q: Question;
   chosen: number | null;
   note?: QuestionNote;
+  canAsk: boolean;
   onDone: () => void;
 }) {
   return (
@@ -431,7 +482,7 @@ function MistakeCard({
         <TypeLabel q={q} />
       </div>
       {chosen === null && <p className="mb-4 text-sm font-semibold opacity-80">לא עניתם על השאלה הזאת בזמן.</p>}
-      <QuestionView q={q} selected={chosen} revealed note={note} />
+      <QuestionView q={q} selected={chosen} revealed note={note} askOhad={canAsk} />
 
       <TactileButton type="button" onClick={onDone} className="mt-5">
         הבנתי, להסיר מהרשימה
