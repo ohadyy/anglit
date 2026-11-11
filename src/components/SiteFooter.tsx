@@ -93,7 +93,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-8 flex flex-col gap-4 border-t border-line pt-5 text-sm sm:mt-14 sm:flex-row sm:items-center sm:justify-between sm:gap-5 sm:pt-6">
-          <Image src="/brand/wordmark-light.png" alt={site.name} width={1576} height={481} className="h-6 w-auto self-start sm:h-7" />
+          <Image src="/brand/wordmark-light.png" alt={site.name} width={328} height={100} className="h-6 w-auto self-start sm:h-7" />
           <p className="opacity-70">
             © {new Date().getFullYear()} {businessDetails.name}. {copy.footerDisclaimer}
           </p>

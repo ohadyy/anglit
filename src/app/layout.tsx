@@ -19,7 +19,7 @@ const googleSans = localFont({
 
 // Rubik for headings (OFL) and Gadi Almog for handwritten accents (free license, see fonts/GadiAlmog-license.pdf)
 const rubik = localFont({
-  src: "./fonts/Rubik-Bold.ttf",
+  src: "./fonts/Rubik-Bold.woff2",
   variable: "--font-rubik",
   weight: "700",
   display: "swap",

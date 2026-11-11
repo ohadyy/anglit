@@ -79,3 +79,34 @@ export const wordsCopy = {
   gameCta: "משחק מילים חינם",
   moreTitle: "עוד לימוד מילים",
 };
+
+/** How many questions each question-type practice page shows */
+export const TYPE_PAGE_QUESTIONS = 6;
+
+/** /amirnet/practice/[type]: one public practice page per question type, for "תרגול השלמת משפטים" style searches */
+export const typePracticePages = [
+  {
+    slug: "sentence-completion",
+    type: "sentence" as const,
+    name: "השלמת משפטים",
+    metaTitle: "תרגול השלמת משפטים לאמירנט: שאלות עם תשובות והסבר",
+    description:
+      "תרגול השלמת משפטים לאמירנט בחינם: שאלות מקוריות באותו פורמט של המבחן, עם התשובה הנכונה והסבר לכל שאלה.",
+    intro:
+      "בהשלמת משפטים מקבלים משפט באנגלית עם מילה חסרה, ובוחרים מתוך ארבע אפשרויות את המילה שמשלימה אותו. זה סוג השאלה הנפוץ ביותר באמירנט: שלושה מתוך ששת הפרקים הקבועים הם השלמת משפטים. כאן יש שאלות לתרגול, עם התשובה וההסבר.",
+    tipsSlug: "tips-hashlamat-mishpatim",
+    tipsLabel: "איך לפתור שאלות השלמת משפטים",
+  },
+  {
+    slug: "restatement",
+    type: "restatement" as const,
+    name: "ניסוח מחדש",
+    metaTitle: "תרגול ניסוח מחדש לאמירנט: שאלות עם תשובות והסבר",
+    description:
+      "תרגול ניסוח מחדש לאמירנט בחינם: שאלות מקוריות באותו פורמט של המבחן, עם התשובה הנכונה והסבר לכל שאלה.",
+    intro:
+      "בניסוח מחדש מקבלים משפט באנגלית, ובוחרים מתוך ארבע אפשרויות את המשפט שאומר את אותו הדבר במילים אחרות. באמירנט יש שני פרקים קבועים של ניסוח מחדש. כאן יש שאלות לתרגול, עם התשובה וההסבר.",
+    tipsSlug: "tips-nisuach-mechadash",
+    tipsLabel: "איך לפתור שאלות ניסוח מחדש בלי להתבלבל",
+  },
+];

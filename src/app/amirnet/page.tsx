@@ -191,6 +191,8 @@ export default function AmirnetGuidePage() {
         <ul className="mt-4 grid gap-2">
           {[
             { href: "/sample-test", label: "מבחן אמירנט לדוגמה, עם תשובות והסבר" },
+            { href: "/amirnet/practice/sentence-completion", label: "תרגול השלמת משפטים" },
+            { href: "/amirnet/practice/restatement", label: "תרגול ניסוח מחדש" },
             { href: "/amirnet-words", label: "אוצר מילים לאמירנט" },
             { href: "/blog/harshama-leamirnet", label: "איך נרשמים לאמירנט: מחיר, מועדים וכל השלבים" },
             { href: "/blog/hatamot-baamirnet", label: "התאמות באמירנט: מי זכאי ואיך מגישים בקשה" },

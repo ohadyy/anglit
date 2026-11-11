@@ -3,6 +3,7 @@ import { site } from "@/lib/site";
 import { blogPosts } from "@/content/blog";
 import { institutions } from "@/content/institutions";
 import { levelPages } from "@/content/levelPages";
+import { typePracticePages } from "@/content/seoPages";
 import { INDEXED_PAGES, pageUrl } from "@/lib/nav";
 
 // Public, indexable pages only (the list is lib/nav.ts). Internal tools and the account and
@@ -35,5 +36,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "monthly" as const,
     priority: 0.6,
   }));
-  return [...staticEntries, ...institutionEntries, ...levelEntries, ...blogEntries];
+  const typeEntries = typePracticePages.map((p) => ({
+    url: `${site.url}/amirnet/practice/${p.slug}`,
+    lastModified: PAGES_UPDATED,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+  return [...staticEntries, ...institutionEntries, ...levelEntries, ...typeEntries, ...blogEntries];
 }

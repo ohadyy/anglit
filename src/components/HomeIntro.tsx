@@ -7,8 +7,9 @@ import { getItem, setItem } from "@/lib/safeStorage";
 
 const SEEN_KEY = STORAGE_KEYS.introSeen;
 
-const MIN_LOOP_MS = 800;
-const FADE_MS = 250;
+// ~1.35s end to end (was ~2s): same animation, shorter steps, so the page shows sooner
+const MIN_LOOP_MS = 500;
+const FADE_MS = 200;
 
 // A short logo-trace splash on first visit this tab session only — repeat
 // visits (back button, re-navigation) skip straight to the page. The overlay is part of
@@ -48,7 +49,7 @@ export function HomeIntro({ children }: { children: React.ReactNode }) {
           className="fixed inset-0 z-(--z-overlay) flex items-center justify-center bg-bg transition-opacity"
           style={{ opacity: visible ? 1 : 0, transitionDuration: `${FADE_MS}ms` }}
         >
-          <LogoTraceLoader loading={loading} size={96} loopDurationSeconds={1.1} fillFadeSeconds={0.35} className="text-fg" onDone={handleDone} />
+          <LogoTraceLoader loading={loading} size={96} loopDurationSeconds={0.8} fillFadeSeconds={0.25} className="text-fg" onDone={handleDone} />
         </div>
       )}
       {children}

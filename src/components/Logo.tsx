@@ -8,16 +8,16 @@ export function Wordmark({ className = "h-7 w-auto" }: { className?: string }) {
       <Image
         src="/brand/wordmark-dark.png"
         alt="Anglit"
-        width={1576}
-        height={481}
+        width={328}
+        height={100}
         priority
         className={`ink:hidden ${className}`}
       />
       <Image
         src="/brand/wordmark-light.png"
         alt="Anglit"
-        width={1576}
-        height={481}
+        width={328}
+        height={100}
         priority
         className={`hidden ink:block ${className}`}
       />

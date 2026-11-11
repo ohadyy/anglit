@@ -16,6 +16,8 @@ import { copy, homeFaqGroups, homeFeatures, homeHowSteps, homeQuestionTypes } fr
 import { examDatesCopy } from "@/content/examDates";
 import { calculatorCopy, guideCopy } from "@/content/examGuide";
 import { ScoreCalculator } from "@/components/ScoreCalculator";
+import { institutions } from "@/content/institutions";
+import { levelPages } from "@/content/levelPages";
 import { getViewer, isLoyal } from "@/lib/viewer";
 import { TierPreview } from "@/components/TierPreview";
 import { organizationJsonLd } from "@/lib/organizationJsonLd";
@@ -237,6 +239,27 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ a
                   {examDatesCopy.homeLink}
                 </Link>
               </div>
+              {/* Folded so the section stays quiet; the links are still in the HTML for search engines */}
+              {[
+                { label: copy.homeInstitutionsLabel, links: institutions.map((i) => ({ href: `/amirnet/${i.slug}`, name: i.name })) },
+                { label: copy.homeLevelsLabel, links: levelPages.map((l) => ({ href: `/amirnet/level/${l.slug}`, name: l.name })) },
+              ].map((group) => (
+                <details key={group.label} className="group mt-3 text-sm">
+                  <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 underline underline-offset-4 opacity-70 hover:opacity-100">
+                    {group.label}
+                    <span aria-hidden className="group-open:rotate-180 transition-transform">⌄</span>
+                  </summary>
+                  <ul className="mt-2 flex flex-wrap gap-2">
+                    {group.links.map((l) => (
+                      <li key={l.href}>
+                        <Link href={l.href} className="inline-flex min-h-11 items-center rounded-full border border-fg/25 px-4 hover:bg-fg/5">
+                          {l.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              ))}
             </div>
             <ScoreCalculator />
           </div>
