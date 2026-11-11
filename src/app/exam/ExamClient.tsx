@@ -233,7 +233,7 @@ export function ExamClient({
       </div>
       {showReview && (
         <div className="mx-auto w-full max-w-md px-4 pb-24">
-          <ExamReview items={review} />
+          <ExamReview items={review} askOhad={inCourse} />
         </div>
       )}
       </>

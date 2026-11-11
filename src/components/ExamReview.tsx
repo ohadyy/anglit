@@ -9,7 +9,7 @@ export type ReviewItem = { q: ExamQuestion; value: number | string | null | unde
 
 /** Every question of a finished test: what the student chose, the right answer and why.
  * Needs a PassageProvider around it for the reading and listening questions. */
-export function ExamReview({ items }: { items: ReviewItem[] }) {
+export function ExamReview({ items, askOhad = false }: { items: ReviewItem[]; askOhad?: boolean }) {
   const rows = items.map((item, i) => ({ ...item, n: i + 1, correct: isCorrectAnswer(item.q, item.value) }));
   const wrong = rows.filter((r) => !r.correct);
   const [showAll, setShowAll] = useState(wrong.length === 0);
@@ -53,7 +53,7 @@ export function ExamReview({ items }: { items: ReviewItem[] }) {
               {q.type === "wordformation" ? (
                 <TypedAnswer q={q} value={typeof value === "string" ? value : null} />
               ) : (
-                <QuestionView q={q as Question} selected={typeof value === "number" ? value : null} revealed showPassage={showPassage} />
+                <QuestionView q={q as Question} selected={typeof value === "number" ? value : null} revealed showPassage={showPassage} askOhad={askOhad} />
               )}
             </li>
           );

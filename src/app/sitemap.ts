@@ -2,12 +2,13 @@ import type { MetadataRoute } from "next";
 import { site } from "@/lib/site";
 import { blogPosts } from "@/content/blog";
 import { institutions } from "@/content/institutions";
+import { levelPages } from "@/content/levelPages";
 import { INDEXED_PAGES, pageUrl } from "@/lib/nav";
 
 // Public, indexable pages only (the list is lib/nav.ts). Internal tools and the account and
 // checkout flows are deliberately left out — they carry robots: { index: false } in their own metadata.
 // Bump by hand when page content really changes; "now" on every build teaches Google to ignore lastmod.
-const PAGES_UPDATED = new Date("2026-11-06");
+const PAGES_UPDATED = new Date("2026-11-11");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticEntries = INDEXED_PAGES.map(({ path, sitemap: { priority, changeFrequency } }) => ({
@@ -28,5 +29,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "monthly" as const,
     priority: 0.7,
   }));
-  return [...staticEntries, ...institutionEntries, ...blogEntries];
+  const levelEntries = levelPages.map((l) => ({
+    url: `${site.url}/amirnet/level/${l.slug}`,
+    lastModified: PAGES_UPDATED,
+    changeFrequency: "monthly" as const,
+    priority: 0.6,
+  }));
+  return [...staticEntries, ...institutionEntries, ...levelEntries, ...blogEntries];
 }

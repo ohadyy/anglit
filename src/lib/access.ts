@@ -45,6 +45,11 @@ export async function paidProducts(userId: string): Promise<ProductId[]> {
   return [...new Set(rows.map((r) => r.product).filter((p): p is ProductId => !!p))];
 }
 
+/** Seminar students (and staff, to test it) may ask Ohad about a question on WhatsApp: personal answers are part of the seminar */
+export async function canAskOhad(userId: string, phone: string | null | undefined): Promise<boolean> {
+  return isStaffPhone(phone) || (await paidProducts(userId)).includes("course");
+}
+
 /** The gate for the staff pages: sign in first, and anyone who is not staff gets a plain 404 (no hint the page exists) */
 export async function requireStaffSession(next: string) {
   const session = await auth.api.getSession({ headers: await headers() });

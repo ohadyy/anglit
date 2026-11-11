@@ -3,6 +3,8 @@ import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 import Link from "next/link";
 import { ScoreCalculator } from "@/components/ScoreCalculator";
 import { calculatorCopy as c } from "@/content/examGuide";
+import { institutions } from "@/content/institutions";
+import { levelPages } from "@/content/levelPages";
 
 export const metadata: Metadata = {
   title: "מחשבון ציון אמירנט",
@@ -21,6 +23,30 @@ export default function ScorePage() {
       <div className="mt-8">
         <ScoreCalculator />
       </div>
+
+      {/* Calculator users next ask "what does my level mean here": link both answers */}
+      <section className="mt-10">
+        <h2 className="text-xl font-bold">מה אומרת כל רמה</h2>
+        <ul className="mt-3 flex flex-wrap gap-2">
+          {levelPages.map((l) => (
+            <li key={l.slug}>
+              <Link href={`/amirnet/level/${l.slug}`} className="inline-flex min-h-11 items-center rounded-full border border-fg/25 px-4 text-sm hover:bg-fg/5">
+                {l.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <h2 className="mt-8 text-xl font-bold">ציון לפטור מאנגלית לפי מוסד</h2>
+        <ul className="mt-3 flex flex-wrap gap-2">
+          {institutions.map((i) => (
+            <li key={i.slug}>
+              <Link href={`/amirnet/${i.slug}`} className="inline-flex min-h-11 items-center rounded-full border border-fg/25 px-4 text-sm hover:bg-fg/5">
+                {i.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <div data-invert="" className="mt-10 rounded-3xl p-6 sm:p-8">
         <h2 className="text-2xl font-bold">{c.ctaTitle}</h2>

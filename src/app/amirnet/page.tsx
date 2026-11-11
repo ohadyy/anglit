@@ -8,7 +8,8 @@ import { SCORE_MAX } from "@/content/facts";
 import { CORE_SECTIONS } from "@/lib/examStructure";
 import { PILOT_CHAPTER, PILOT_CHAPTER_TYPES } from "@/lib/pilotChapters";
 import { SCORE_LEVELS } from "@/lib/scoreLevels";
-import { institutions } from "@/content/institutions";
+import { institutions, rangeDir } from "@/content/institutions";
+import { levelPages } from "@/content/levelPages";
 import { ScrollIndex } from "@/components/ScrollIndex";
 import { CARD } from "@/lib/ui";
 
@@ -18,12 +19,22 @@ export const metadata: Metadata = {
   alternates: { canonical: "/amirnet" },
 };
 
-// "134–150" must stay LTR or it flips; "134 ומעלה" must stay RTL
 function exemptRange(bands: { level: string; range: string }[]) {
   const r = bands.find((b) => b.level === "פטור")?.range ?? "ראו בעמוד המוסד";
-  return <bdi dir={/[֐-׿]/.test(r) ? "rtl" : "ltr"}>{r}</bdi>;
+  return <bdi dir={rangeDir(r)}>{r}</bdi>;
 }
 
+
+// A level name links to its own page when there is one (the exemption row has none)
+function LevelLabel({ label }: { label: string }) {
+  const page = levelPages.find((p) => p.labels.includes(label));
+  if (!page) return <span className="font-semibold">{label}</span>;
+  return (
+    <Link href={`/amirnet/level/${page.slug}`} className="font-semibold underline underline-offset-4">
+      {label}
+    </Link>
+  );
+}
 
 export default function AmirnetGuidePage() {
   return (
@@ -86,7 +97,7 @@ export default function AmirnetGuidePage() {
         <ul className={`${CARD} mt-5 divide-y divide-line !py-1`}>
           {SCORE_LEVELS.map((l, i) => (
             <li key={l.min} className="flex items-center justify-between gap-3 py-3">
-              <span className="font-semibold">{l.label}</span>
+              <LevelLabel label={l.label} />
               <span className="shrink-0 text-sm tabular-nums opacity-80">
                 <bdi dir="ltr">{l.min}–{SCORE_LEVELS[i + 1] ? SCORE_LEVELS[i + 1].min - 1 : SCORE_MAX}</bdi>
                 {" · "}

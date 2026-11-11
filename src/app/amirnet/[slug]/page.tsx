@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
-import { getInstitution, institutions } from "@/content/institutions";
+import { getInstitution, institutions, rangeDir } from "@/content/institutions";
 import { NITE_FACTS } from "@/content/facts";
 import { CARD } from "@/lib/ui";
 import { ArticleCta } from "@/components/ArticleCta";
 
+
+// Leads with the words people search for (Search Console: "פטור מאנגלית בטכניון")
+const headline = (inName: string) => `פטור מאנגלית ${inName}: איזה ציון אמירנט צריך`;
 
 export function generateStaticParams() {
   return institutions.map((i) => ({ slug: i.slug }));
@@ -21,8 +24,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const inst = await findInstitution(params);
   if (!inst) return { title: "מוסד לימודים" };
   return {
-    title: `איזה ציון אמירנט צריך ${inst.inName}`,
-    description: `${inst.answer} הטבלה המלאה של הרמות, מהמקור הרשמי של המוסד.`,
+    title: headline(inst.inName),
+    description: `${inst.answer} טבלת הרמות המלאה, מהמקור הרשמי של המוסד.`,
     alternates: { canonical: `/amirnet/${inst.slug}` },
   };
 }
@@ -31,6 +34,17 @@ export default async function InstitutionPage({ params }: { params: Promise<{ sl
   const inst = await findInstitution(params);
   if (!inst) notFound();
   const others = institutions.filter((i) => i.slug !== inst.slug);
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: `איזה ציון אמירנט צריך לפטור מאנגלית ${inst.inName}?`,
+        acceptedAnswer: { "@type": "Answer", text: inst.answer },
+      },
+    ],
+  };
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-16 pt-4 sm:px-6">
@@ -40,12 +54,13 @@ export default async function InstitutionPage({ params }: { params: Promise<{ sl
           { name: inst.name, path: `/amirnet/${inst.slug}` },
         ]}
       />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <Link href="/amirnet" className="inline-flex min-h-11 items-center text-sm underline underline-offset-4 opacity-70">
         מה צריך לדעת על אמירנט
       </Link>
 
       <h1 className="font-display mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-        <mark className="pink">איזה ציון אמירנט צריך {inst.inName}</mark>
+        <mark className="pink">{headline(inst.inName)}</mark>
       </h1>
       <p className="mt-4 max-w-xl text-lg leading-relaxed">{inst.answer}</p>
 
@@ -59,7 +74,7 @@ export default async function InstitutionPage({ params }: { params: Promise<{ sl
                 {b.note && <span className="block text-sm opacity-70">{b.note}</span>}
               </span>
               <span className="shrink-0 text-sm tabular-nums opacity-80">
-                <bdi dir="ltr">{b.range}</bdi>
+                <bdi dir={rangeDir(b.range)}>{b.range}</bdi>
               </span>
             </li>
           ))}

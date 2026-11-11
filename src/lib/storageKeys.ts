@@ -6,7 +6,6 @@ export const STORAGE_KEYS = {
   introSeen: "anglit-intro-seen",
   studio: "anglit-studio",
   review: "anglit-review",
-  lab: "anglit-lab",
   mistakes: "anglit-mistakes",
   extraTime: "anglit-extra-time",
   daily: "anglit-daily",

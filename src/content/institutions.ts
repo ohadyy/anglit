@@ -3,7 +3,10 @@
 // Never add an institution from memory, a forum or a course-seller's site: a wrong threshold
 // costs more trust than the page earns. To add one, open its official English-unit page,
 // copy the table, fill `sourceUrl` + `checkedAt`. Institutions set levels themselves (NITE says so).
-// Not added yet because the official page could not be read: Reichman, Sapir, Ariel.
+// Not added yet: Sapir (official page would not load), Reichman (only the international school's
+// page lists bands), Ariel (only a pre-academic PDF), Afeka and Shenkar (no table on the page).
+// Some colleges print an "Amirnet 234" column: that is the old AMIR 150–250 scale. Use the
+// psychometric/AMIRAM column, which NITE says equals the Amirnet 50–150 scale.
 
 import { NITE_FACTS } from "./facts";
 
@@ -30,6 +33,10 @@ export type Institution = {
 };
 
 const CHECKED = "20.10.2026";
+const CHECKED_NOV = "11.11.2026";
+
+/** "120–133" must render LTR or it flips; "134 ומעלה" must stay RTL */
+export const rangeDir = (range: string) => (/[֐-׿]/.test(range) ? "rtl" : "ltr");
 
 export const institutions: Institution[] = [
   {
@@ -202,6 +209,112 @@ export const institutions: Institution[] = [
       "מועמד עם ציון נמוך מ-85, שעומד בדרישות החוג, מתקבל על תנאי: צריך להשלים בהצלחה את רמת טרום בסיסי עד סוף שנה א׳, אחרת הלימודים יופסקו.",
       "לפי דרישות המועצה להשכלה גבוהה, צריך להגיע לרמת פטור עד סוף שנה ב׳, ובכל מקרה לפני הרישום לסמינר, לקורסים מתקדמים או לעבודת גמר.",
       "שיפור רמה אפשרי רק עם ציון חדש באמירנט או בפסיכומטרי, לפני פתיחת שנת הלימודים או בין הסמסטרים.",
+    ],
+  },
+  {
+    slug: "tel-aviv-yaffo-college",
+    name: "המכללה האקדמית תל אביב-יפו",
+    inName: "במכללה האקדמית תל אביב-יפו",
+    sourceLabel: "השגת פטור וסיווג לרמות אנגלית, המכללה האקדמית תל אביב-יפו",
+    sourceUrl: "https://www.mta.ac.il/english_classification",
+    checkedAt: CHECKED_NOV,
+    answer:
+      "במכללה האקדמית תל אביב-יפו ציון 134 ומעלה באמירנט או בפרק האנגלית של הפסיכומטרי נותן פטור. מי שלא הגיע לפטור צריך להגיע אליו עד סוף השנה השנייה.",
+    bands: [
+      { level: "פטור", range: "134 ומעלה" },
+      { level: "מתקדמים ב׳", range: "120–133", note: "4 ש״ס" },
+      { level: "מתקדמים א׳", range: "100–119", note: "4 ש״ס" },
+      { level: "בסיסי", range: "85–99", note: "6 ש״ס" },
+    ],
+    facts: [
+      "מי שלא הגיע לפטור עד סוף השנה השנייה יכול להירשם רק לקורסי אנגלית, עד שיגיע לפטור.",
+      "אפשר בכל שלב בלימודים להיבחן שוב באמירנט או בפסיכומטרי כדי לשפר את הרמה, כולל לצורך פטור.",
+      "לפי החלטת המועצה להשכלה גבוהה, כל סטודנט לומד לפחות שני קורסים באנגלית במהלך התואר, גם מי שהתקבל עם פטור.",
+      "בדף המכללה מופיעה גם עמודה בסולם 150–250 של אמי״ר הישן. אמירנט היום נמדד בסולם 50–150, כמו פרק האנגלית בפסיכומטרי.",
+    ],
+  },
+  {
+    slug: "ruppin",
+    name: "המרכז האקדמי רופין",
+    inName: "במרכז האקדמי רופין",
+    sourceLabel: "המחלקה לאנגלית למטרות אקדמיות, המרכז האקדמי רופין",
+    sourceUrl: "https://www.ruppin.ac.il/academic-services/teaching-english/",
+    checkedAt: CHECKED_NOV,
+    answer:
+      "ברופין ציון 134 ומעלה באמירנט או בפרק האנגלית של הפסיכומטרי נותן פטור. הרמה נקבעת לפי הציון הגבוה מבין השניים.",
+    bands: [
+      { level: "פטור", range: "134 ומעלה" },
+      { level: "מתקדמים ב׳", range: "120–133" },
+      { level: "מתקדמים א׳", range: "100–119" },
+      { level: "בסיסי", range: "85–99" },
+      { level: "טרום בסיסי א׳+ב׳", range: "50–84" },
+    ],
+    facts: [
+      "מי שלא מציג ציון עד פתיחת שנת הלימודים מסווג לרמה הנמוכה ביותר, טרום בסיסי.",
+      "חובה להגיע לפטור עד סוף השנה שלפני האחרונה בתואר, אחרת אי אפשר להמשיך בלימודים.",
+      "אפשר לשפר את הרמה במהלך התואר עם ציון חדש באמירנט, או בקורסי רמות.",
+      "לפי הנחיות המועצה להשכלה גבוהה, כל סטודנט לומד לפחות שני קורסים באנגלית במהלך התואר.",
+    ],
+  },
+  {
+    slug: "hit-holon",
+    name: "מכון טכנולוגי חולון (HIT)",
+    inName: "במכון טכנולוגי חולון",
+    sourceLabel: "המחלקה לאנגלית כשפה זרה, מכון טכנולוגי חולון",
+    sourceUrl: "https://www.hit.ac.il/candidates/english-studies/",
+    checkedAt: CHECKED_NOV,
+    answer:
+      "ב-HIT ציון 134 ומעלה באמירנט או בפרק האנגלית של הפסיכומטרי נותן פטור. כל רמה מתחת למתקדמים ב׳ היא קורס בתשלום נוסף על שכר הלימוד.",
+    bands: [
+      { level: "פטור", range: "134 ומעלה" },
+      { level: "מתקדמים ב׳", range: "120–133", note: "4 ש״ש, כלול בשכר הלימוד" },
+      { level: "מתקדמים א׳", range: "100–119", note: "4 ש״ש, 1,600 ₪ נוסף על שכר הלימוד" },
+      { level: "בסיסי", range: "85–99", note: "6 ש״ש, 2,400 ₪ נוסף על שכר הלימוד" },
+      { level: "טרום בסיסי ב׳", range: "70–84", note: "6 ש״ס, 2,400 ₪ נוסף על שכר הלימוד" },
+      { level: "טרום בסיסי א׳", range: "50–69", note: "8 ש״ס, 2,800 ₪ נוסף על שכר הלימוד" },
+    ],
+    facts: [
+      "צריך לסיים את חובות האנגלית עד סוף השנה השנייה, ואי אפשר להתחיל את פרויקט הגמר לפני כן.",
+      "נוכחות של כ-80% בשיעורים היא חובה בכל קורסי האנגלית, וההוראה פרונטלית בלבד.",
+      "מי שמשובץ לטרום בסיסי א׳ נרשם לקורס של טרום בסיסי ב׳ ומשלים שעתיים שבועיות נוספות.",
+    ],
+  },
+  {
+    slug: "colman",
+    name: "המסלול האקדמי המכללה למינהל",
+    inName: "במכללה למינהל",
+    sourceLabel: "היחידה להוראת אנגלית, המסלול האקדמי המכללה למינהל",
+    sourceUrl: "https://www.colman.ac.il/students/english-teaching-unit/q-a/",
+    checkedAt: CHECKED_NOV,
+    answer: "במכללה למינהל ציון 134 ומעלה בפסיכומטרי, באמיר״ם או באמירנט פוטר מקורסי האנגלית.",
+    bands: [
+      { level: "פטור", range: "134 ומעלה" },
+      { level: "מתקדמים ב׳", range: "120–133" },
+      { level: "מתקדמים א׳", range: "100–119" },
+      { level: "בסיסי", range: "85–99" },
+      { level: "טרום בסיסי א׳/ב׳", range: "50–84" },
+    ],
+    facts: ["הדף של המכללה עדיין קורא למבחן אמיר״ם. אמירנט החליף אותו ממאי 2024, באותו סולם ציונים."],
+  },
+  {
+    slug: "azrieli-jerusalem",
+    name: "עזריאלי מכללה אקדמית להנדסה ירושלים",
+    inName: "בעזריאלי מכללה להנדסה",
+    sourceLabel: "קביעת רמת אנגלית, עזריאלי מכללה אקדמית להנדסה ירושלים",
+    sourceUrl: "https://www.jce.ac.il/candidates/preparation-courses/english-level/",
+    checkedAt: CHECKED_NOV,
+    answer:
+      "בעזריאלי ירושלים ציון 134 ומעלה נותן פטור מאנגלית. כדי להתקבל לתואר בהנדסה צריך ציון של 85 לפחות.",
+    bands: [
+      { level: "פטור", range: "134 ומעלה" },
+      { level: "מתקדמים ב׳", range: "120–133" },
+      { level: "מתקדמים א׳", range: "100–119" },
+      { level: "בסיסי", range: "85–99" },
+      { level: "קורס טרום בסיסי בקיץ", range: "70–84" },
+    ],
+    facts: [
+      "מי שזכאי להתאמות במבחן צריך להיבחן דרך מאל״ו ולא בקמפוס, כי המבחן במכללה מתקיים במתכונת רגילה.",
+      "הדף של המכללה עדיין קורא למבחן אמיר״ם. אמירנט החליף אותו ממאי 2024, באותו סולם ציונים.",
     ],
   },
 ];

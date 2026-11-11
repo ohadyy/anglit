@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { hasPaidAccess, isStaffPhone, paidProducts } from "@/lib/access";
+import { canAskOhad, hasPaidAccess } from "@/lib/access";
 import { buildAffixes, buildConnectors, buildFreeSet, buildSet, buildSingleStemPool, filterByLevel, levelCounts } from "@/lib/practice";
 import { passages, type Passage, type Question, type QuestionType } from "@/content/questions";
 import { ALL_TYPES, isQuestionType } from "@/content/questionLabels";
@@ -22,8 +22,7 @@ export default async function PracticePage({ searchParams }: PageProps<"/practic
   const { type, level } = await searchParams;
   const session = await auth.api.getSession({ headers: await headers() });
   const paid = session ? await hasPaidAccess(session.user.id) : false;
-  // Answers from Ohad on WhatsApp are part of the seminar, not of the site-access product (staff can test it)
-  const canAsk = !!session && (isStaffPhone(session.user.phone) || (await paidProducts(session.user.id)).includes("course"));
+  const canAsk = !!session && (await canAskOhad(session.user.id, session.user.phone));
   const mode: PracticeMode | undefined =
     type === "free" || type === "mistakes" || type === "connectors" || type === "affixes" ? type : isQuestionType(type) ? type : undefined;
 

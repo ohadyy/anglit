@@ -5,7 +5,7 @@ const inSection = (path: string, section: string) => path === section || path.st
 const inAny = (path: string, sections: readonly string[]) => sections.some((s) => inSection(path, s));
 
 /** Internal tools and the calm area: no site header, footer or tab bar */
-const OWN_CHROME = ["/studio", "/review", "/lab", "/admin", "/journal", "/calm"];
+const OWN_CHROME = ["/studio", "/review", "/admin", "/journal", "/calm"];
 
 // Practice and exam sessions have their own bottom bar or a timer, the campaign landing pages and pricing
 // are for people without an account yet (one call to action), and the sign-in / sign-up / checkout forms
@@ -13,7 +13,7 @@ const OWN_CHROME = ["/studio", "/review", "/lab", "/admin", "/journal", "/calm"]
 const NO_TAB_BAR = ["/practice", "/exam", "/ads", "/pricing", "/sign-in", "/sign-up", "/checkout", "/start"];
 
 /** Disallowed in robots.txt: tools and account flows (each also carries its own noindex) */
-export const NOINDEX_PATHS = ["/studio", "/review", "/lab", "/admin", "/journal", "/account", "/sign-in", "/sign-up", "/checkout"];
+export const NOINDEX_PATHS = ["/studio", "/review", "/admin", "/journal", "/account", "/sign-in", "/sign-up", "/checkout"];
 
 export const isOwnChrome = (path: string) => inAny(path, OWN_CHROME);
 

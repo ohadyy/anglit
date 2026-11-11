@@ -3,6 +3,7 @@ import { copy } from "@/content/copy";
 import { getProduct } from "@/content/pricingCopy";
 import { blogPosts } from "@/content/blog";
 import { institutions } from "@/content/institutions";
+import { levelPages } from "@/content/levelPages";
 import { GROUP_SIZE_TEXT } from "@/content/facts";
 import { INDEXED_PAGES } from "@/lib/nav";
 import { site } from "@/lib/site";
@@ -28,6 +29,10 @@ ${INDEXED_PAGES.map((p) => `- [${p.title}](${site.url}${p.path}): ${p.descriptio
 ## איזה ציון אמירנט צריך בכל מוסד
 
 ${institutions.map((i) => `- [${i.name}](${site.url}/amirnet/${i.slug}): ${i.answer}`).join("\n")}
+
+## רמות האנגלית (טרום בסיסי עד מתקדמים ב׳)
+
+${levelPages.map((l) => `- [${l.name}](${site.url}/amirnet/level/${l.slug}): ${l.answer}`).join("\n")}
 
 ## Blog posts
 

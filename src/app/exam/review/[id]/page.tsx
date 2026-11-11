@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { hasPaidAccess } from "@/lib/access";
+import { canAskOhad, hasPaidAccess } from "@/lib/access";
 import { db } from "@/db";
 import { examAttempts } from "@/db/schema";
 import { passagesFor, reviewItems } from "@/lib/examQuestions";
@@ -51,7 +51,7 @@ export default async function ExamReviewPage({ params }: PageProps<"/exam/review
       ) : (
         <div className="mt-6">
           <PassageProvider passages={passages}>
-            <ExamReview items={items} />
+            <ExamReview items={items} askOhad={await canAskOhad(session.user.id, session.user.phone)} />
           </PassageProvider>
         </div>
       )}
