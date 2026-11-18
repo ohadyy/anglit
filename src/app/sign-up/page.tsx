@@ -2,15 +2,14 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useRef, useState } from "react";
-import { useModalLock } from "@/lib/useModalLock";
+import { Suspense, useEffect, useState } from "react";
+import { clearOnboarding, readOnboarding, type Onboarding } from "@/lib/onboarding";
 import { trackMeta } from "@/components/MetaPixel";
 import { signUp } from "@/lib/auth-client";
 import { phoneToSyntheticEmail } from "@/lib/phoneAuth";
 import { AuthShell, authInput as input } from "@/components/AuthShell";
 import { GoogleButton } from "@/components/GoogleButton";
 import { authCopy } from "@/content/copy";
-import { SCORE_MAX, SCORE_MIN } from "@/content/facts";
 import { safeNext } from "@/lib/safeNext";
 
 function SignUpForm() {
@@ -23,22 +22,19 @@ function SignUpForm() {
   const [loading, setLoading] = useState(false);
   const [terms, setTerms] = useState(false);
   const [marketing, setMarketing] = useState(false);
-  // The account fields above are valid and ready; this gate asks two more
-  // questions before the account is actually created, so a WhatsApp follow-up
-  // can reference a real exam date or score instead of being generic.
-  const [gateOpen, setGateOpen] = useState(false);
-  const gateRef = useRef<HTMLDivElement>(null);
-  // Keeps Tab inside the questions dialog; the no-op close is deliberate (see the dialog below)
-  useModalLock(gateOpen, () => {}, gateRef);
-  const [examDate, setExamDate] = useState("");
-  const [priorScore, setPriorScore] = useState("");
+  // The questions before sign-up (/onboarding) are answered first, so a WhatsApp follow-up can
+  // use the real exam date and scores. Without answers the visitor goes there before the form.
+  const [answers, setAnswers] = useState<Onboarding | null>(null);
+  useEffect(() => {
+    const saved = readOnboarding();
+    if (!saved) router.replace(`/onboarding?next=${encodeURIComponent(next)}`);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- read the browser's saved answers once
+    else setAnswers(saved);
+  }, [router, next]);
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setGateOpen(true);
-  }
-
-  async function createAccount() {
+    if (!answers) return;
     setError(null);
     setLoading(true);
     const { error } = await signUp.email({
@@ -49,12 +45,13 @@ function SignUpForm() {
       birthDate,
       termsAccepted: terms,
       marketingConsent: marketing,
-      examDate: examDate || undefined,
-      priorScore: priorScore ? Number(priorScore) : undefined,
+      examDate: answers.examDate || undefined,
+      priorScore: answers.priorScore ?? undefined,
+      targetScore: answers.targetScore ?? undefined,
+      gender: answers.gender ?? undefined,
     });
     setLoading(false);
     if (error) {
-      setGateOpen(false);
       // Map known codes to Hebrew; never show the library's English message
       const code = error.code ?? "";
       setError(
@@ -68,8 +65,12 @@ function SignUpForm() {
     }
     // Name and phone are real now, so this is a genuine lead (not an empty click)
     trackMeta("Lead", crypto.randomUUID());
+    clearOnboarding();
     router.push(next);
   }
+
+  // Until the saved answers are read (or the visitor is sent to the questions) there is nothing to show
+  if (!answers) return null;
 
   return (
     <AuthShell>
@@ -142,45 +143,6 @@ function SignUpForm() {
           </Link>
         </p>
       </div>
-
-      {gateOpen && (
-        // Intentionally has no backdrop click, no X and no Escape handler — the only way
-        // through is "המשך", so the two questions below always get asked once.
-        <div ref={gateRef} role="dialog" aria-modal="true" aria-labelledby="gate-title" className="fixed inset-0 z-(--z-overlay) grid place-items-center bg-fg/40 p-4">
-          <div className="fade-in w-full max-w-sm rounded-3xl border border-line bg-white p-7 shadow-2xl">
-            <h2 id="gate-title" className="font-display text-xl font-bold">עוד שתי שאלות, ואתם בפנים</h2>
-            <p className="mt-2 text-sm leading-relaxed opacity-70">
-              כדי שנדע איך ללוות אתכם נכון. אין תשובה נכונה, וגם אפשר לדלג.
-            </p>
-            <label className="mt-5 flex flex-col gap-1.5">
-              <span className="text-sm opacity-70">יש לכם תאריך למבחן? (אופציונלי)</span>
-              <input type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} className={input} />
-            </label>
-            <label className="mt-3 flex flex-col gap-1.5">
-              <span className="text-sm opacity-70">ניגשתם בעבר? איזה ציון קיבלתם? (אופציונלי, דלגו אם לא)</span>
-              <input
-                type="number"
-                inputMode="numeric"
-                min={SCORE_MIN}
-                max={SCORE_MAX}
-                placeholder="למשל 95"
-                dir="ltr"
-                value={priorScore}
-                onChange={(e) => setPriorScore(e.target.value)}
-                className={`${input} text-right`}
-              />
-            </label>
-            <button
-              type="button"
-              disabled={loading}
-              onClick={createAccount}
-              className="mt-5 w-full rounded-full bg-fg px-6 py-3.5 font-semibold text-bg disabled:opacity-50"
-            >
-              {loading ? "נרשם..." : "המשך"}
-            </button>
-          </div>
-        </div>
-      )}
     </AuthShell>
   );
 }

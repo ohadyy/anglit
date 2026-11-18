@@ -27,6 +27,9 @@ export const user = pgTable("user", {
   marketingConsent: boolean("marketing_consent").default(false),
   examDate: text("exam_date"),
   priorScore: integer("prior_score"),
+  targetScore: integer("target_score"),
+  // "f" | "m", asked in /onboarding; null = not answered, the site then uses neutral wording
+  gender: text("gender"),
 });
 
 export const session = pgTable(

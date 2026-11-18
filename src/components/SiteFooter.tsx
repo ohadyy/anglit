@@ -85,6 +85,9 @@ export function SiteFooter() {
               <Link href="/legal/refunds" className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4 hover:opacity-100">
                 ביטול עסקה
               </Link>
+              <Link href="/contact" className="inline-flex min-h-11 items-center underline underline-offset-4 opacity-80 hover:opacity-100">
+                פרטי העסק
+              </Link>
               <Link href={PAGE.llm.path} className="inline-flex min-h-11 items-center underline underline-offset-4 opacity-80 hover:opacity-100">
                 מידע ל-AI
               </Link>
@@ -95,7 +98,7 @@ export function SiteFooter() {
         <div className="mt-8 flex flex-col gap-4 border-t border-line pt-5 text-sm sm:mt-14 sm:flex-row sm:items-center sm:justify-between sm:gap-5 sm:pt-6">
           <Image src="/brand/wordmark-light.png" alt={site.name} width={328} height={100} className="h-6 w-auto self-start sm:h-7" />
           <p className="opacity-70">
-            © {new Date().getFullYear()} {businessDetails.name}. {copy.footerDisclaimer}
+            © {new Date().getFullYear()} {businessDetails.name} · {businessDetails.legalName}. {copy.footerDisclaimer}
           </p>
         </div>
       </div>

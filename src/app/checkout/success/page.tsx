@@ -37,7 +37,7 @@ export default async function CheckoutSuccessPage({
   // The browser Purchase fires only once the order is confirmed paid. If the confirmation is slower than this
   // page, the server-side event from the webhook still covers it.
   const fireBrowserPurchase = order.status === "paid";
-  const steps = product === "access" || product === "private" ? checkoutSuccessStepsByProduct[product] : checkoutSuccessStepsByProduct.course;
+  const steps = checkoutSuccessStepsByProduct[product ?? "course"];
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-4 py-12 sm:px-6">
       {fireBrowserPurchase && <MetaEvent name="Purchase" eventId={orderId!} params={{ value: order.amountAgorot / 100, currency: "ILS" }} />}

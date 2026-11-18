@@ -1,7 +1,7 @@
 // Legal pages, served from /legal/[slug]. Drafts based on what the site actually does.
 // Check with a lawyer before launch, and keep the guarantee wording identical to copy.ts.
 
-import { GUARANTEE_CONDITION, REFUND_DAYS } from "./facts";
+import { GUARANTEE_CONDITION, GUARANTEE_DETAILS, GUARANTEE_TITLE, REFUND_DAYS } from "./facts";
 
 export const legalUpdatedAt = "4.10.2026";
 
@@ -47,9 +47,11 @@ export const legalDocs: LegalDoc[] = [
         ],
       },
       {
-        title: "התחייבות המחזור הבא",
+        title: "ההתחייבות: החזר כספי או המחזור הבא בחינם",
         paragraphs: [
-          `לא השתפרתם בין מבחן הפתיחה למבחן הסיום? המחזור הבא עלינו. ${GUARANTEE_CONDITION}.`,
+          `${GUARANTEE_TITLE} ${GUARANTEE_CONDITION}.`,
+          GUARANTEE_DETAILS,
+          `ההתחייבות היא בנוסף לזכות הביטול ל-${REFUND_DAYS} יום, ואינה פוגעת בה.`,
         ],
       },
       {

@@ -12,15 +12,19 @@ export function AdminShell({
   intro,
   width,
   back = true,
+  tone = "sunset",
   children,
 }: {
   title: string;
   intro: ReactNode;
-  width: "max-w-3xl" | "max-w-6xl";
+  width: "max-w-3xl" | "max-w-6xl" | "max-w-screen-2xl";
   back?: boolean;
+  /** Backdrop colours: sunset everywhere, green for the money pages (CRM) */
+  tone?: "sunset" | "money";
   children: ReactNode;
 }) {
   return (
+    <div className="admin-bg" data-theme="ink" data-tone={tone}>
     <div className={`mx-auto flex min-h-dvh w-full min-w-0 ${width} flex-col px-4 py-10 sm:px-6`}>
       <header className="flex items-center justify-between gap-3">
         <Link href="/" aria-label="לעמוד הבית">
@@ -39,6 +43,7 @@ export function AdminShell({
 
       {children}
       <div className="pb-10" />
+    </div>
     </div>
   );
 }

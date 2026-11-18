@@ -12,12 +12,15 @@ import { FREE_QUESTION_COUNT } from "@/content/practiceFacts";
 import { isStaffPhone, paidProducts } from "@/lib/access";
 import { cohortOptionsFor } from "@/lib/cohorts";
 import { MiniTile, PREVIEWS } from "@/components/MiniPreviews";
-import { copy } from "@/content/copy";
+import { copy, accountVoice as v } from "@/content/copy";
+import { pick } from "@/lib/gender";
 import { UserAvatar } from "./UserAvatar";
 import { SignOutButton } from "./SignOutButton";
 import { CohortPicker } from "./CohortPicker";
 import { StartChecklist } from "./StartChecklist";
 import { ProgressCard } from "./ProgressCard";
+import { SyncExamDate } from "./SyncExamDate";
+import { daysUntil } from "@/lib/urgency";
 
 export default async function AccountPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -35,11 +38,14 @@ export default async function AccountPage() {
   const paid = isStaffPhone(session.user.phone) || owned.length > 0;
   const course = owned.includes("course");
 
-  const closeTest = attempts.find((a) => a.kind === "close");
   // attempts are newest first, so the last open test is the first one taken: the baseline
   const openTest = attempts.findLast((a) => a.kind === "open");
-  const latestTest = attempts[0] && attempts[0].id !== openTest?.id ? attempts[0] : undefined;
+  // The student's highest score after the first test: a later 125 never hides an earlier 130
+  const bestTest = attempts.filter((a) => a.id !== openTest?.id).reduce<(typeof attempts)[number] | undefined>((best, a) => (!best || a.estimatedScore > best.estimatedScore ? a : best), undefined);
+  const closeTest = bestTest;
+  const latestTest = bestTest;
   const cohort = course ? await cohortOptionsFor(session.user.id) : null;
+  const g = session.user.gender;
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-4 py-12 sm:px-6">
@@ -56,7 +62,7 @@ export default async function AccountPage() {
 
       {!paid && (
         <div className="account-enter mt-8 rounded-3xl border border-line bg-white shadow-card p-5" style={delayStyle(60)}>
-          <p className="font-semibold">{copy.accountUnpaidBannerTitle}</p>
+          <p className="font-semibold">{pick(g, v.unpaidTitle)}</p>
           <p className="mt-1 text-sm opacity-70">{copy.accountUnpaidBannerText}</p>
           <Link
             href="/pricing"
@@ -69,7 +75,15 @@ export default async function AccountPage() {
 
       {paid && (
         <div className="account-enter" style={delayStyle(60)}>
-          <ProgressCard open={openTest?.estimatedScore ?? null} latest={latestTest?.estimatedScore ?? null} />
+          <ProgressCard
+            open={openTest?.estimatedScore ?? null}
+            latest={latestTest?.estimatedScore ?? null}
+            prior={session.user.priorScore ?? null}
+            target={session.user.targetScore ?? null}
+            daysLeft={daysUntil(session.user.examDate, new Date().getTime())}
+            gender={g ?? null}
+          />
+          <SyncExamDate date={session.user.examDate ?? null} />
         </div>
       )}
 
@@ -81,7 +95,7 @@ export default async function AccountPage() {
           delay={300}
           href={course ? "#cohort" : "/pricing"}
           title="המחזור שלי"
-          text={!course ? "לתלמידי \"7 ימים לאמירנט\" בלבד" : cohort?.joinedLabel ? `נרשמתם למחזור שמתחיל ב-${cohort.joinedLabel}` : "בחרו מחזור, ותקבלו אישור בוואטסאפ"}
+          text={!course ? "לתלמידי \"7 ימים לאמירנט\" בלבד" : cohort?.joinedLabel ? `${pick(g, v.joined)}${cohort.joinedLabel}` : pick(g, v.cohortPick)}
           locked={!course}
           preview={PREVIEWS.cohort}
         />
@@ -89,10 +103,10 @@ export default async function AccountPage() {
 
       <StartChecklist
         steps={[
-          { label: "שלמו את המסלול", done: paid, href: "/pricing" },
+          { label: pick(g, v.stepPay), done: paid, href: "/pricing" },
           // Only course students pick a cohort; practice-only members skip this step
-          ...(course ? [{ label: "בחרו מחזור", done: !!cohort?.joinedLabel, href: "#cohort" }] : []),
-          ...(paid ? [{ label: "עשו את מבחן הפתיחה", done: !!openTest, href: "/exam" }] : []),
+          ...(course ? [{ label: pick(g, v.stepCohort), done: !!cohort?.joinedLabel, href: "#cohort" }] : []),
+          ...(paid ? [{ label: pick(g, v.stepOpen), done: !!openTest, href: "/exam" }] : []),
         ]}
       />
 
@@ -104,10 +118,10 @@ export default async function AccountPage() {
 
       {(openTest || closeTest) && (
         <section className="account-enter mt-10" style={delayStyle(420)}>
-          <h2 className="font-display text-xl font-bold">התוצאות שלכם</h2>
+          <h2 className="font-display text-xl font-bold">{pick(g, v.results)}</h2>
           <div className="mt-4 flex flex-col gap-3">
-            {openTest && <ResultCard title="מבחן פתיחה" attempt={openTest} />}
-            {closeTest && <ResultCard title="מבחן סיום" attempt={closeTest} />}
+            {openTest && <ResultCard title="מבחן פתיחה" attempt={openTest} g={g} />}
+            {closeTest && <ResultCard title="הגבוה ביותר" attempt={closeTest} g={g} />}
           </div>
         </section>
       )}
@@ -115,7 +129,7 @@ export default async function AccountPage() {
       {/* Empty state: a paid member with no results yet gets a clear next step, not a blank space */}
       {paid && !openTest && !closeTest && (
         <section className="account-enter mt-10" style={delayStyle(420)}>
-          <h2 className="font-display text-xl font-bold">התוצאות שלכם</h2>
+          <h2 className="font-display text-xl font-bold">{pick(g, v.results)}</h2>
           <div className="mt-4 rounded-3xl border border-dashed border-line p-6 text-center">
             <Image src="/studying-with-clock.svg" alt="" width={2775} height={1860} className="mx-auto mb-4 h-auto w-48 sm:w-56" />
             <p className="font-semibold">עוד אין תוצאות מבחן</p>
@@ -162,7 +176,7 @@ function delayStyle(ms: number): CSSProperties {
   return { "--delay": `${ms}ms` } as CSSProperties;
 }
 
-function ResultCard({ title, attempt }: { title: string; attempt: typeof examAttempts.$inferSelect }) {
+function ResultCard({ title, attempt, g }: { title: string; attempt: typeof examAttempts.$inferSelect; g: string | null | undefined }) {
   const level = scoreLevel(attempt.estimatedScore);
   return (
     <div className="rounded-3xl border border-line bg-white shadow-card p-5">
@@ -174,7 +188,7 @@ function ResultCard({ title, attempt }: { title: string; attempt: typeof examAtt
         {level.label} · {attempt.rawCorrect}/{attempt.totalQuestions} נכונות
       </p>
       <Link href={`/exam/review/${attempt.id}`} className="mt-1 flex min-h-11 items-center text-sm font-semibold underline underline-offset-4">
-        ראה טעויות
+        {pick(g, v.seeMistakes)}
       </Link>
     </div>
   );

@@ -14,8 +14,8 @@ export const LEAD_SOURCE_LABEL: Record<LeadSource, string> = {
 export const COHORT_STATUSES = ["upcoming", "active", "closed"] as const;
 export type CohortStatus = (typeof COHORT_STATUSES)[number];
 
-export const PRODUCT_IDS = ["access", "course", "private"] as const;
+export const PRODUCT_IDS = ["access", "course", "private", "honors", "success"] as const;
 export type ProductId = (typeof PRODUCT_IDS)[number];
 
 // Short names for the admin screens (the shopper-facing names live in content/pricingCopy)
-export const PRODUCT_LABEL: Record<string, string> = { course: "קורס מלא", access: "גישה", private: "פרטי" };
+export const PRODUCT_LABEL: Record<string, string> = { course: "קורס מלא", access: "גישה", private: "פרטי", honors: "הצטיינות", success: "הצלחה" };

@@ -2,7 +2,7 @@
 // around Amirnet prep. No content is copied from NITE or any other site — written from scratch,
 // in Anglit's own voice. Kept separate from copy.ts for the same reason as examGuide.ts.
 
-import { EXAM_FORMAT, GROUP_SIZE_TEXT, GUARANTEE_CONDITION, NITE_FACTS, NITE_URLS, SCORE_MAX, SCORE_MIN } from "./facts";
+import { EXAM_FORMAT, GROUP_SIZE_TEXT, GUARANTEE_CONDITION, GUARANTEE_TITLE, NITE_FACTS, NITE_URLS, SCORE_MAX, SCORE_MIN } from "./facts";
 
 export type BlogSection = { heading?: string; paragraphs: string[] };
 export type BlogPost = {
@@ -58,7 +58,7 @@ export const blogPosts: BlogPost[] = [
         heading: "איך זה עובד אצלנו",
         paragraphs: [
           'הסמינר שלנו, "7 ימים לאמירנט", בנוי בדיוק סביב הנקודה הזו: שבוע של תרגול יומי עם הסבר מלא לכל שאלה, קבוצה קטנה עם מורה אמיתי, ומבחן פתיחה וסיום שמראים במספרים מה השתפר.',
-          `לא השתפרתם בין מבחן הפתיחה למבחן הסיום? המחזור הבא עלינו. ${GUARANTEE_CONDITION}. פרטים מלאים בתקנון.`,
+          `${GUARANTEE_TITLE} ${GUARANTEE_CONDITION}. פרטים מלאים בתקנון.`,
         ],
       },
     ],

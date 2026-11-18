@@ -10,6 +10,8 @@ export const STORAGE_KEYS = {
   extraTime: "anglit-extra-time",
   daily: "anglit-daily",
   examDate: "anglit-exam-date",
+  /** Answers to the questions before sign-up; read once by the sign-up form, then cleared */
+  onboarding: "anglit-onboarding",
   challengeBest: "anglit-challenge-best",
   chainBest: "anglit-chain-best",
   /** Shared by the two calm games: { thoughtsBest, eliminateBest } */

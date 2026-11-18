@@ -1,10 +1,31 @@
 import Link from "next/link";
-import { accountProgress as t } from "@/content/copy";
+import { accountPath as p, accountProgress as t, accountVoice as v } from "@/content/copy";
+import { pick } from "@/lib/gender";
 import { scoreLevel } from "@/lib/scoreLevels";
+
+// The score the student is at now: the latest test, or the opening one
+const shown_ = (open: number | null, latest: number | null) => latest ?? open;
 
 // The result leads the page: the opening score, the latest score, how far it moved, and one short line about it.
 // `latest` is the most recent regular test (null when there is only the opening one).
-export function ProgressCard({ open, latest }: { open: number | null; latest: number | null }) {
+export function ProgressCard({
+  open,
+  latest,
+  prior = null,
+  target = null,
+  daysLeft = null,
+  gender = null,
+}: {
+  open: number | null;
+  latest: number | null;
+  /** From sign-up: previous real score, target score, days to the exam */
+  prior?: number | null;
+  target?: number | null;
+  daysLeft?: number | null;
+  gender?: string | null;
+}) {
+  const gap = target !== null && shown_(open, latest) !== null ? target - shown_(open, latest)! : null;
+  const examSoon = daysLeft !== null && daysLeft >= 0 && daysLeft <= p.mistakesWithin;
   const delta = open !== null && latest !== null ? latest - open : null;
   const shown = latest ?? open;
   const message = delta === null ? t.onlyOpen : t.tiers.findLast((tier) => delta >= tier.from)!.text;
@@ -36,6 +57,24 @@ export function ProgressCard({ open, latest }: { open: number | null; latest: nu
         </p>
       )}
 
+      {(prior !== null || target !== null || (daysLeft !== null && daysLeft >= 0)) && (
+        <div className="mt-4 rounded-2xl border border-current/20 px-4 py-3 text-sm leading-relaxed">
+          {(prior !== null || target !== null) && (
+            <p className="flex flex-wrap items-center justify-between gap-x-3">
+              {prior !== null && <span>{p.prior} <bdi dir="ltr" className="font-bold">{prior}</bdi></span>}
+              {target !== null && <span>{p.target} <bdi dir="ltr" className="font-bold">{target}</bdi></span>}
+              {gap !== null && <span className="font-semibold">{gap > 0 ? p.gap(gap) : pick(gender, v.reached)}</span>}
+            </p>
+          )}
+          {daysLeft !== null && daysLeft >= 0 && <p className="mt-1 font-semibold">{p.days(daysLeft)}</p>}
+          {examSoon && (
+            <Link href="/practice?type=mistakes" className="mt-2 inline-flex min-h-11 items-center rounded-full bg-fg px-5 text-sm font-semibold text-bg">
+              {p.mistakes}
+            </Link>
+          )}
+        </div>
+      )}
+
       {open === null ? (
         <Link href="/exam" className="mt-5 flex items-center justify-between rounded-2xl bg-fg px-5 py-3.5 font-semibold text-bg">
           <span>{t.noOpen.cta}</span>
@@ -44,7 +83,7 @@ export function ProgressCard({ open, latest }: { open: number | null; latest: nu
       ) : (
         <p className="mt-5 rounded-2xl bg-fg/10 px-5 py-3.5 text-center font-semibold">{message}</p>
       )}
-      {open === null && <p className="mt-3 text-center text-sm opacity-70">{t.noOpen.text}</p>}
+      {open === null && <p className="mt-3 text-center text-sm opacity-70">{pick(gender, v.noOpen)}</p>}
     </div>
   );
 }

@@ -9,6 +9,7 @@ export const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": ["EducationalOrganization", "LocalBusiness"],
   name: site.name,
+  legalName: businessDetails.legalName,
   url: site.url,
   email: businessDetails.email,
   telephone: businessDetails.phone,

@@ -6,8 +6,12 @@ import type { Question, QuestionType, WordFormationQuestion } from "@/content/qu
 import { TYPE_LABELS } from "@/content/questionLabels";
 import type { QuestionNote } from "@/content/questionNotes";
 import { usePassage } from "@/components/PassageContext";
+import { SpeakButton } from "@/components/ReadAloud";
 import { askOhadLink } from "@/lib/askOhad";
 import { highlight, Stem } from "./Stem";
+import { screenVoice as sv } from "@/content/copy";
+import { pick } from "@/lib/gender";
+import { useGender } from "@/lib/useGender";
 
 type Size = "app" | "stage";
 
@@ -119,13 +123,13 @@ export function QuestionView({
           if (revealed && !isAnswer && !isPicked) state = "border-line bg-transparent opacity-70";
 
           return (
-            <li key={i}>
+            <li key={i} className="flex items-center gap-2">
               <button
                 type="button"
                 disabled={revealed || !onSelect}
                 onClick={() => onSelect?.(i)}
                 aria-pressed={isPicked}
-                className={`flex w-full touch-manipulation items-center border text-left transition-[background-color,border-color,opacity,transform] duration-200 disabled:cursor-default ${s.option} ${state}`}
+                className={`flex min-w-0 flex-1 touch-manipulation items-center border text-left transition-[background-color,border-color,opacity,transform] duration-200 disabled:cursor-default ${s.option} ${state}`}
               >
                 <span
                   className={`grid shrink-0 place-items-center rounded-full font-semibold tabular-nums ${s.badge} ${
@@ -138,6 +142,7 @@ export function QuestionView({
                 {revealed && isAnswer && <Tick className={s.icon} />}
                 {revealed && isPicked && !isAnswer && <Cross className={s.icon} />}
               </button>
+              <SpeakButton text={opt} label={`הקראת תשובה ${i + 1}`} />
             </li>
           );
         })}
@@ -268,10 +273,11 @@ export function WordFormationView({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const gender = useGender();
   return (
     <div className="flex flex-col gap-5">
       <p className="text-sm leading-relaxed opacity-80">
-        כתבו מילה אחת שמשלימה את המשפט. מילת הבסיס מופיעה למעלה. שימו לב לאיות ולדקדוק.
+        {pick(gender, sv.typeWord)}
       </p>
       <div className="rounded-3xl bg-sunk p-5">
         <p className="text-sm opacity-70">מילת הבסיס</p>

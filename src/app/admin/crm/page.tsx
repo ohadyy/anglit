@@ -93,6 +93,7 @@ export default async function CrmPage() {
       title="לידים ושיחות"
       intro="כל מי שהשאיר פרטים או נרשם לאתר, במקום אחד. אפשר לסמן מי כבר שוחחת איתו, לרשום הערות, לקבוע תזכורת, ולראות מי שילם."
       width="max-w-3xl"
+      tone="money"
     >
       <CrmBoard contacts={contacts} today={today} />
     </AdminShell>

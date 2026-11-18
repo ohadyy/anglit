@@ -6,6 +6,9 @@ import { localDay } from "@/lib/formatDate";
 import { STORAGE_KEYS } from "@/lib/storageKeys";
 import { CARD } from "@/lib/ui";
 import { useStored } from "@/lib/useStored";
+import { screenVoice as sv } from "@/content/copy";
+import { pick } from "@/lib/gender";
+import { useGender } from "@/lib/useGender";
 
 type Step = { text: string; links: { href: string; label: string }[] };
 
@@ -37,6 +40,7 @@ function planFor(daysLeft: number): Step {
 }
 
 export function ExamCountdown({ className = "" }: { className?: string }) {
+  const gender = useGender();
   const [stored, setStored] = useStored(STORAGE_KEYS.examDate, { date: "" });
   // Today's date is only known in the browser, so the countdown waits for mount
   const [today, setToday] = useState("");
@@ -48,7 +52,7 @@ export function ExamCountdown({ className = "" }: { className?: string }) {
 
   return (
     <section className={`${CARD} ${className}`}>
-      <h2 className="text-xl font-bold">מתי המבחן שלכם?</h2>
+      <h2 className="text-xl font-bold">{pick(gender, sv.countdownTitle)}</h2>
       <label className="mt-3 block text-sm opacity-70" htmlFor="exam-date">
         בוחרים תאריך, ומקבלים כמה ימים נשארו ומה כדאי לעשות היום
       </label>

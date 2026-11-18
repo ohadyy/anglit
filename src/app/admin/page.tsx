@@ -13,6 +13,8 @@ import {
 import { isStaffPhone, MANUAL_PROVIDER, requireStaffSession } from "@/lib/access";
 import { questionType } from "@/lib/examScore";
 import { countUncontactedLeads } from "@/lib/uncontactedLeads";
+import { daysUntil } from "@/lib/urgency";
+import { formatCohortDate } from "@/lib/jerusalemTime";
 import { TYPE_LABELS } from "@/content/questionLabels";
 import { AdminTable, type Row } from "./AdminTable";
 import { AdminShell, adminMetadata } from "./AdminShell";
@@ -27,7 +29,18 @@ export default async function AdminPage() {
   const authed = await requireStaffSession("/admin");
 
   const [users, paidOrders, enrollmentRows, attemptRows, vocabRows, sessionRows, cohortRows, waitingLeads] = await Promise.all([
-    db.select({ id: user.id, name: user.name, phone: user.phone, createdAt: user.createdAt }).from(user).orderBy(desc(user.createdAt)),
+    db
+      .select({
+        id: user.id,
+        name: user.name,
+        phone: user.phone,
+        createdAt: user.createdAt,
+        examDate: user.examDate,
+        priorScore: user.priorScore,
+        targetScore: user.targetScore,
+      })
+      .from(user)
+      .orderBy(desc(user.createdAt)),
     db.select({ userId: orders.userId, product: orders.product, provider: orders.provider }).from(orders).where(eq(orders.status, "paid")),
     db
       .select({ userId: enrollments.userId, status: enrollments.status, cohortStart: cohorts.startDate, cohortId: enrollments.cohortId })
@@ -77,6 +90,18 @@ export default async function AdminPage() {
     attemptMap.set(a.userId, s);
   }
 
+  // Each student's first exam, and the best score they got in any exam after it
+  const firstAttempt = new Map<string, { score: number; at: Date }>();
+  for (const a of attemptRows) {
+    const cur = firstAttempt.get(a.userId);
+    if (!cur || a.completedAt < cur.at) firstAttempt.set(a.userId, { score: a.score, at: a.completedAt });
+  }
+  const bestAfterFirst = new Map<string, number>();
+  for (const a of attemptRows) {
+    if (a.completedAt.getTime() === firstAttempt.get(a.userId)!.at.getTime()) continue;
+    bestAfterFirst.set(a.userId, Math.max(bestAfterFirst.get(a.userId) ?? -1, a.score));
+  }
+
   const vocabMap = new Map<string, number>();
   for (const v of vocabRows) vocabMap.set(v.userId, (vocabMap.get(v.userId) ?? 0) + 1);
 
@@ -94,6 +119,14 @@ export default async function AdminPage() {
     practiceMap.set(a.userId, tally);
   }
 
+  // Every exam a student took, oldest first, for the history dropdown in the table
+  const historyMap = new Map<string, { score: number; kind: "open" | "close"; at: Date }[]>();
+  for (const a of [...attemptRows].sort((x, y) => x.completedAt.getTime() - y.completedAt.getTime())) {
+    const list = historyMap.get(a.userId) ?? [];
+    list.push({ score: a.score, kind: a.kind, at: a.completedAt });
+    historyMap.set(a.userId, list);
+  }
+
   const lastSeenMap = new Map<string, Date>();
   for (const s of sessionRows) {
     const cur = lastSeenMap.get(s.userId);
@@ -105,7 +138,8 @@ export default async function AdminPage() {
     const products = paidMap.get(u.id);
     const acc = attemptMap.get(u.id);
     const attempts: Row["attempts"] = acc && { count: acc.count, best: acc.best, lastOpen: acc.lastOpen, lastClose: acc.lastClose };
-    const improved = acc?.lastOpen !== undefined && acc?.lastClose !== undefined ? acc.lastClose > acc.lastOpen : null;
+    // Improved = any later exam is at least one point above the very first one (null until a second exam exists)
+    const improved = firstAttempt.has(u.id) && (acc?.count ?? 0) > 1 ? (bestAfterFirst.get(u.id) ?? -1) >= firstAttempt.get(u.id)!.score + 1 : null;
 
     const tally = practiceMap.get(u.id) ?? {};
     const practice = Object.entries(tally)
@@ -123,6 +157,7 @@ export default async function AdminPage() {
       enrollment: enrollmentMap.get(u.id),
       attempts,
       improved,
+      history: historyMap.get(u.id) ?? [],
       vocabCount,
       practice,
       lastSeen: lastSeenMap.get(u.id),
@@ -140,7 +175,7 @@ export default async function AdminPage() {
     <AdminShell
       title="פאנל ניהול"
       intro={<>כל מי שנרשם לאתר, ההתקדמות והציונים שלהם. אפשר לתת או לבטל גישה מלאה בלי תשלום, ישר מהשורה. הכפתור &quot;ניהול&quot; פותח עריכת פרטים, שיבוץ למחזור ומחיקת חשבון.</>}
-      width="max-w-6xl"
+      width="max-w-screen-2xl"
       back={false}
     >
 
@@ -165,6 +200,14 @@ export default async function AdminPage() {
         <StatPill label="השתפרו" value={stats.improved} tone="accent" />
       </div>
 
+      <ImprovementBySegment rows={rows} />
+      <CohortSheets
+        rows={rows}
+        now={now.getTime()}
+        cohorts={cohortRows.map((c) => ({ id: c.id, start: c.startDate }))}
+        members={enrollmentRows.map((e) => ({ userId: e.userId, cohortId: e.cohortId }))}
+      />
+
       {rows.length === 0 ? (
         <p className="mt-10 rounded-3xl border border-dashed border-line p-6 text-center opacity-70">עוד אין משתמשים רשומים.</p>
       ) : (
@@ -181,6 +224,94 @@ export default async function AdminPage() {
         />
       )}
     </AdminShell>
+  );
+}
+
+const DAY_MS = 86_400_000;
+
+// Who improves more? Only students with at least two exams count, so the numbers are small at first: read them as a hint, not a result.
+function ImprovementBySegment({ rows }: { rows: Row[] }) {
+  const measured = rows.filter((r) => r.improved !== null);
+  if (measured.length === 0) return null;
+  const closeExam = (r: Row) => !!r.examDate && Date.parse(r.examDate) - r.createdAt.getTime() <= 30 * DAY_MS;
+  const segments: [string, (r: Row) => boolean][] = [
+    ["מבחן בתוך 30 יום", closeExam],
+    ["מבחן רחוק או בלי תאריך", (r) => !closeExam(r)],
+    ["יעד 120 ומעלה", (r) => (r.targetScore ?? 0) >= 120],
+    ["יעד נמוך מ-120", (r) => r.targetScore !== null && r.targetScore < 120],
+    ["ניגשו בעבר", (r) => r.priorScore !== null],
+    ["לא ניגשו בעבר", (r) => r.priorScore === null],
+  ];
+  return (
+    <section className="mt-8">
+      <h2 className="font-display text-lg font-bold">מי משתפר יותר</h2>
+      <p className="mt-1 text-xs opacity-60">רק מי שעשה לפחות שני מבחנים. כל עוד המספרים קטנים, זה כיוון ולא מסקנה.</p>
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {segments.map(([label, test]) => {
+          const group = measured.filter(test);
+          const better = group.filter((r) => r.improved).length;
+          return (
+            <div key={label} className="rounded-2xl border border-line bg-white p-3 shadow-card">
+              <p className="text-xs opacity-70">{label}</p>
+              <p className="mt-1 text-xl font-bold tabular-nums">{group.length ? `${Math.round((better / group.length) * 100)}%` : "—"}</p>
+              <p className="text-xs opacity-60">{better} מתוך {group.length}</p>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// One cheat sheet per open cohort: who is in it, what they answered, how close their exam is. For choosing groups and for opening the first session.
+function CohortSheets({
+  rows,
+  now,
+  cohorts,
+  members,
+}: {
+  rows: Row[];
+  now: number;
+  cohorts: { id: string; start: Date }[];
+  members: { userId: string; cohortId: string }[];
+}) {
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const sheets = cohorts
+    .map((c) => ({ c, people: members.filter((m) => m.cohortId === c.id).map((m) => byId.get(m.userId)).filter((r): r is Row => !!r) }))
+    .filter((s) => s.people.length > 0);
+  if (sheets.length === 0) return null;
+  return (
+    <section className="mt-8">
+      <h2 className="font-display text-lg font-bold">המחזורים הפתוחים</h2>
+      <div className="mt-3 flex flex-col gap-3">
+        {sheets.map(({ c, people }) => {
+          const targets = people.map((p) => p.targetScore).filter((n): n is number => n !== null);
+          const avgTarget = targets.length ? Math.round(targets.reduce((a, b) => a + b, 0) / targets.length) : null;
+          return (
+            <details key={c.id} className="rounded-2xl border border-line bg-white p-4 shadow-card">
+              <summary className="flex min-h-11 cursor-pointer flex-wrap items-center gap-x-3 font-semibold">
+                <span>מחזור {formatCohortDate(c.start)}</span>
+                <span className="text-sm font-normal opacity-70">{people.length} תלמידים{avgTarget !== null && ` · יעד ממוצע ${avgTarget}`}</span>
+              </summary>
+              <ul className="mt-3 divide-y divide-line text-sm">
+                {people.map((p) => {
+                  const left = daysUntil(p.examDate, now);
+                  return (
+                    <li key={p.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2">
+                      <span className="font-semibold">{p.name}</span>
+                      <span className="text-xs opacity-80">
+                        {p.priorScore === null ? "לא ניגש/ה בעבר" : `ציון קודם ${p.priorScore}`} · יעד {p.targetScore ?? "—"} ·{" "}
+                        {left === null ? "בלי תאריך מבחן" : left < 0 ? "המבחן עבר" : `מבחן בעוד ${left} ימים`}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </details>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

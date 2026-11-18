@@ -111,7 +111,7 @@ export default async function CheckoutPage({
                   <p className="mt-4 leading-relaxed opacity-80">{checkoutCopy.accountWhy}</p>
                   <div className="mt-5 flex flex-col gap-3">
                     <Link
-                      href={`/sign-up?next=${encodeURIComponent(next)}`}
+                      href={`/onboarding?next=${encodeURIComponent(next)}`}
                       className="flex w-full items-center justify-center rounded-full bg-fg px-6 py-4 font-semibold text-bg"
                     >
                       {checkoutCopy.signUp}

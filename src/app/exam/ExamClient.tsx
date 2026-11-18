@@ -20,6 +20,9 @@ import { LiquidGauge } from "@/components/LiquidGauge";
 import { ExtraTimePicker, useExtraTime, withExtraTime } from "@/components/ExtraTimePicker";
 import { countWords, WRITING_MINUTES, WRITING_MIN_WORDS } from "@/content/practiceFacts";
 import { EXAM_FORMAT, SCORE_MAX, SCORE_RANGE_TEXT } from "@/content/facts";
+import { screenVoice as sv } from "@/content/copy";
+import { pick } from "@/lib/gender";
+import { useGender } from "@/lib/useGender";
 import { ExamReview, type ReviewItem } from "@/components/ExamReview";
 
 type Phase = "intro" | "running" | "submitting" | "done";
@@ -46,12 +49,14 @@ export function ExamClient({
   /** Pool items met in earlier tests; an adaptive test avoids them (sent back on submit) */
   seen?: string[];
 }) {
+  const gender = useGender();
   const [phase, setPhase] = useState<Phase>("intro");
   const [includePilot, setIncludePilot] = useState(true);
   const [activePlan, setActivePlan] = useState<ExamPlanItem[]>(plan);
   const [sectionIndex, setSectionIndex] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
   const [result, setResult] = useState<Result | null>(null);
+  const [saveFailed, setSaveFailed] = useState(false);
   const [tally, setTally] = useState<TypeTally>([]);
   const [review, setReview] = useState<ReviewItem[]>([]);
   const [extraPct, setExtraPct] = useExtraTime();
@@ -84,24 +89,19 @@ export function ExamClient({
     setTally(tallyByType(activePlan, correctness));
     setReview(all.map((q) => ({ q, value: finalAnswers[q.id] ?? null })));
 
-    try {
-      const res = await fetch("/api/exam/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          kind,
-          testNumber,
-          includePilot,
-          answers: finalAnswers,
-          correctness,
-          seen,
-          startedAt: startedAtRef.current,
-        }),
-      });
-      setResult(res.ok ? await res.json() : fallback);
-    } catch {
-      setResult(fallback);
+    // A phone can lose the connection for a moment at the end of a test, so try a few times
+    const payload = JSON.stringify({ kind, testNumber, includePilot, answers: finalAnswers, correctness, seen, startedAt: startedAtRef.current });
+    let saved: Result | null = null;
+    for (let attempt = 0; attempt < 3 && !saved; attempt++) {
+      if (attempt) await new Promise((r) => setTimeout(r, 1500 * attempt));
+      try {
+        const res = await fetch("/api/exam/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: payload });
+        if (res.ok) saved = await res.json();
+        else if (res.status === 401 || res.status === 403) break; // retrying cannot fix these
+      } catch {}
     }
+    setSaveFailed(!saved);
+    setResult(saved ?? fallback);
     setPhase("done");
   }
 
@@ -129,13 +129,11 @@ export function ExamClient({
         <h1 className="font-display text-2xl font-bold">מבחן תרגול</h1>
         <p className="mt-2 text-sm font-semibold tabular-nums opacity-70">מספר מבחן: {testNumber}</p>
         <p className="mt-3 leading-relaxed opacity-80">
-          {totals.questions} שאלות ב-{totals.sections} פרקים מתוזמנים, {withExtraTime(totals.minutes, extraPct)} דקות בסך הכול. כל פרק עובר
-          אוטומטית כשהזמן נגמר, גם אם לא סיימתם. בתוך כל פרק אפשר לחזור לשאלות קודמות, אבל לא לפרק שהסתיים.
+          {totals.questions} שאלות ב-{totals.sections} פרקים מתוזמנים, {withExtraTime(totals.minutes, extraPct)} דקות בסך הכול. {pick(gender, sv.examAuto)} בתוך כל פרק אפשר לחזור לשאלות קודמות, אבל לא לפרק שהסתיים.
         </p>
         {findExamTest(testNumber)?.adaptive && (
           <p className="mt-3 text-sm leading-relaxed opacity-70">
-            כמו במבחן האמיתי, הפרק הראשון בינוני, וכל פרק אחריו מותאם לרמה שלכם לפי התשובות עד אז. אם השאלות נעשות קשות,
-            זה סימן שהלך לכם טוב.
+            {pick(gender, sv.examAdaptive)}
           </p>
         )}
 
@@ -198,10 +196,15 @@ export function ExamClient({
     return (
       <>
       <div className="mx-auto flex flex-1 max-w-sm flex-col items-center justify-center px-4 py-16 text-center">
-        <p className="text-sm font-semibold opacity-70">סיימתם!</p>
+        <p className="text-sm font-semibold opacity-70">{pick(gender, sv.examDone)}</p>
         <LiquidGauge score={result.estimatedScore} className="mt-4 w-56" />
         <p className="mt-2 text-sm font-semibold opacity-70">מתוך {SCORE_MAX}</p>
         <p className="mt-1 text-sm opacity-70">הערכה משוערת, לא הציון הרשמי</p>
+        {saveFailed && (
+          <p className="mt-4 rounded-2xl border border-line p-3 text-sm font-semibold text-warn">
+            המבחן לא נשמר באזור האישי, אז לא תראו אותו ברשימת המבחנים. אל תסגרו את העמוד, צלמו מסך של התוצאה ושלחו לנו.
+          </p>
+        )}
         <p className="mt-6 max-w-sm leading-relaxed">{scoreMessage(result.estimatedScore)}</p>
         <div className="mt-6 rounded-3xl border border-line bg-white shadow-card p-5">
           <p className="font-semibold">{level.label}</p>

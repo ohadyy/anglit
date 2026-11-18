@@ -1,5 +1,6 @@
 import { grammarQuestions } from "./grammarBank";
 import { audioCompletionSets, lectureExtras, lectureSets, pilotPassages, wordFormationSets } from "./pilotBank";
+import { listeningPassages, listeningQuestions } from "./listeningBank";
 import { extraPassages, extraQuestions } from "./extraBank";
 import { moreGrammarQuestions, moreRestatementQuestions, moreSentenceQuestions } from "./moreBank";
 import { connectorQuestions } from "./connectorsBank";
@@ -94,6 +95,7 @@ export const passages: Passage[] = [
     ],
   },
   ...pilotPassages,
+  ...listeningPassages,
   ...extraPassages,
   ...hardPracticePassages,
 ];
@@ -696,6 +698,7 @@ export const questions: Question[] = [
   ...grammarQuestions,
   ...lectureSets.flat(),
   ...lectureExtras,
+  ...listeningQuestions,
   ...audioCompletionSets.flat(),
   ...extraQuestions,
   ...moreSentenceQuestions,

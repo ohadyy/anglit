@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
+import { db } from "@/db";
+import { examAttempts } from "@/db/schema";
 import { hasPaidAccess, paidProducts } from "@/lib/access";
 import { findExamTest } from "@/content/examTests";
 import { seenPoolItems } from "@/lib/seenPoolItems";
@@ -33,13 +36,15 @@ export default async function ExamRunPage({ params }: PageProps<"/exam/[number]"
 
   // An adaptive test avoids pool items this student already met in earlier tests
   const seen = session ? await seenPoolItems(session.user.id) : [];
+  // The first exam a student takes is the baseline ("open"); every later one counts as their latest result ("close")
+  const [earlier] = session ? await db.select({ id: examAttempts.id }).from(examAttempts).where(eq(examAttempts.userId, session.user.id)).limit(1) : [];
   const plan = buildExam(number, {}, seen);
   const usedPassages = passagesForAdaptiveExam(plan.flatMap((part) => part.questions));
   return (
     <>
       <ReadAloud />
       <PassageProvider passages={usedPassages}>
-        <ExamClient plan={plan} kind="open" testNumber={number} freeUpsell={!paid} inCourse={inCourse} seen={seen} />
+        <ExamClient plan={plan} kind={earlier ? "close" : "open"} testNumber={number} freeUpsell={!paid} inCourse={inCourse} seen={seen} />
       </PassageProvider>
     </>
   );

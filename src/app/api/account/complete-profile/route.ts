@@ -5,6 +5,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { account, rateLimit, user } from "@/db/schema";
 import { isValidIlPhone, normalizePhone } from "@/lib/phoneAuth";
+import { SCORE_MAX, SCORE_MIN } from "@/content/facts";
+import { isGender } from "@/lib/gender";
 
 const WINDOW_MS = 15 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
@@ -36,19 +38,33 @@ export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const body = (await request.json()) as { phone?: unknown; birthDate?: unknown; terms?: unknown; marketing?: unknown };
+  const body = (await request.json()) as {
+    phone?: unknown;
+    birthDate?: unknown;
+    terms?: unknown;
+    marketing?: unknown;
+    onboarding?: { examDate?: unknown; priorScore?: unknown; targetScore?: unknown; gender?: unknown } | null;
+  };
   const phone = typeof body.phone === "string" ? normalizePhone(body.phone) : "";
   const birthDate = typeof body.birthDate === "string" ? body.birthDate : "";
   if (!isValidIlPhone(phone) || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate) || body.terms !== true) {
     return NextResponse.json({ error: "invalid" }, { status: 400 });
   }
 
+  // Optional answers from /onboarding, checked here because the browser can send anything
+  const ob = body.onboarding;
+  const examDate = typeof ob?.examDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(ob.examDate) ? ob.examDate : null;
+  const validScore = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v >= SCORE_MIN && v <= SCORE_MAX ? v : null);
+  const priorScore = validScore(ob?.priorScore);
+  const targetScore = validScore(ob?.targetScore);
+  const gender = isGender(ob?.gender) ? ob.gender : null;
+
   const [existing] = await db.select().from(user).where(eq(user.phone, phone)).limit(1);
 
   if (!existing) {
     const updated = await db
       .update(user)
-      .set({ phone, birthDate, termsAccepted: true, marketingConsent: body.marketing === true })
+      .set({ phone, birthDate, termsAccepted: true, marketingConsent: body.marketing === true, examDate, priorScore, targetScore, gender })
       .where(and(eq(user.id, session.user.id), isNull(user.phone)))
       .returning({ id: user.id })
       // Unique violation if the same number was registered a moment ago

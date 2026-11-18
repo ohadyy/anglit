@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 import Link from "next/link";
-import { featureRows, getProduct, loyaltyLabel, pricingCopy, products, type Product } from "@/content/pricingCopy";
+import { featureRows, getProduct, loyaltyLabel, pricingCopy, products, type ListedId, type Product } from "@/content/pricingCopy";
 import { LeadForm } from "@/components/LeadForm";
 import { FeatureToggle } from "@/components/FeatureToggle";
 import { TierPreview } from "@/components/TierPreview";
@@ -22,6 +22,8 @@ const desktopOrder: Record<Product["id"], string> = {
   access: "order-2 lg:order-3",
   course: "order-1 lg:order-2",
   private: "order-3 lg:order-1",
+  honors: "", // unlisted, never a card here
+  success: "",
 };
 
 // The grid narrows when a member already owns some of the products
@@ -34,7 +36,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
   const paid = viewer.tier === "access" || viewer.tier === "course";
   const loyal = isLoyal(viewer);
   // Never offer what they already have. Every product includes site access, so a paying member never sees it.
-  const shown = products.filter((p) => !viewer.owned.includes(p.id) && !(p.id === "access" && paid));
+  const shown = products.filter((p) => !p.unlisted && !viewer.owned.includes(p.id) && !(p.id === "access" && paid));
   const ownedNames = viewer.owned.map((id) => getProduct(id)?.name).filter(Boolean).join(" + ") || getProduct("access")?.name;
 
   const hero =
@@ -198,7 +200,7 @@ function ProductCard({
       <FeatureToggle label="מה כלול">
       <ul className="mt-4 flex flex-1 flex-col text-start lg:mt-8">
         {featureRows.map((row, i) => {
-          const cell = row[product.id];
+          const cell = row[product.id as ListedId];
           const included = typeof cell === "string";
           const text = included ? cell : cell.missing;
           return (

@@ -17,10 +17,8 @@ export async function POST(request: Request) {
     return NextResponse.redirect(new URL("/sign-in?next=/pricing", request.url));
   }
 
-  // Google sign-ins have no phone until /complete-profile; checkout and the follow-up calls need it
-  if (!session.user.phone) {
-    return NextResponse.redirect(new URL("/complete-profile?next=/pricing", request.url), { status: 303 });
-  }
+  // A Google user who skipped /complete-profile may pay without a phone; the checkout form still takes terms.
+  // ponytail: no phone means no WhatsApp thanks and the owner calls from the Google name only.
 
   const form = await request.formData();
   const product = getProduct(form.get("product")?.toString());

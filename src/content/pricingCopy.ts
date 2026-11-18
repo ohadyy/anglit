@@ -1,4 +1,10 @@
-import { REFUND_SUMMARY } from "./facts";
+import {
+  GUARANTEE_CONDITION,
+  GUARANTEE_DETAILS,
+  GUARANTEE_TITLE,
+  REFUND_SUMMARY,
+  SUPPORT_TEXT,
+} from "./facts";
 import type { ProductId } from "@/lib/enums";
 
 export type Product = {
@@ -12,7 +18,12 @@ export type Product = {
   note?: string;
   included: string[];
   excluded: string[];
+  /** Sold only through a direct /checkout?product=<id> link, never shown on /pricing */
+  unlisted?: boolean;
 };
+
+/** The products shown as cards on /pricing */
+export type ListedId = Exclude<ProductId, "honors" | "success">;
 
 // One shared list of rows for all three cards. Each row is the same kind of thing on every card,
 // so the same row sits at the same height. A card without that row shows it as not included.
@@ -20,7 +31,7 @@ export type Product = {
 // A cell is either the text the card includes, or { missing } with the text the card does not include
 type FeatureCell = string | { missing: string };
 
-export const featureRows: Record<ProductId, FeatureCell>[] = [
+export const featureRows: Record<ListedId, FeatureCell>[] = [
   {
     access: "גישה מלאה לאתר, כולל התרגולים והסימולציות, ללא הגבלת זמן",
     course: "גישה מלאה לאתר, כולל התרגולים והסימולציות, ללא הגבלת זמן",
@@ -28,7 +39,7 @@ export const featureRows: Record<ProductId, FeatureCell>[] = [
   },
   {
     access: "הסבר מלא לכל תשובה",
-    course: "הסבר מלא לכל תשובה בתרגול היומי",
+    course: "הסבר מלא לכל תשובה",
     private: "הסבר מלא לכל תשובה",
   },
   {
@@ -37,23 +48,33 @@ export const featureRows: Record<ProductId, FeatureCell>[] = [
     private: "שישה שיעורים פרטיים, פרונטליים, אחד על אחד",
   },
   {
+    access: { missing: "הקלטה של כל מפגש" },
+    course: "הקלטה של כל מפגש",
+    private: { missing: "הקלטה של כל מפגש" },
+  },
+  {
     access: { missing: "קבוצת וואטסאפ עם המחזור שלכם" },
     course: "קבוצת וואטסאפ עם המחזור שלכם",
     private: "קשר ישיר בוואטסאפ עם המורה",
   },
   {
-    access: { missing: "ליווי אישי מלא 24/7" },
-    course: "ליווי אישי מלא 24/7",
-    private: "ליווי אישי מלא 24/7",
+    access: { missing: SUPPORT_TEXT },
+    course: SUPPORT_TEXT,
+    private: SUPPORT_TEXT,
   },
   {
     access: { missing: "מבחן פתיחה ומבחן סיום, עם מדידה" },
     course: "מדידת ביצועים: מבחן פתיחה ומבחן סיום",
     private: "מעקב אחרי ההתקדמות שלכם",
   },
+  {
+    access: { missing: "החזר כספי מלא או מחזור חינם אם לא השתפרתם" },
+    course: "לא השתפרתם? החזר כספי מלא או מחזור חינם (בתנאים)",
+    private: { missing: "החזר כספי מלא או מחזור חינם אם לא השתפרתם" },
+  },
 ];
 
-function includedFor(id: ProductId): string[] {
+function includedFor(id: ListedId): string[] {
   return featureRows.map((row) => row[id]).filter((c): c is string => typeof c === "string");
 }
 
@@ -81,11 +102,42 @@ export const products: Product[] = [
   {
     id: "private",
     name: "שיעורים פרטיים",
-    priceIls: 897,
+    priceIls: 1297,
     priceUnit: "ל-6 שיעורים פרטיים, תשלום חד פעמי",
     note: "מתאים במיוחד למי שמתקשה ללמוד מרחוק, ומעדיף ללמוד פנים מול פנים.",
     included: includedFor("private"),
     excluded: [],
+  },
+  {
+    // A personal offer for one student who is close to exemption. Sent as a link, not listed.
+    id: "honors",
+    name: "מסלול הצטיינות",
+    priceIls: 550,
+    priceUnit: "ל-4 שיעורים פרטיים בזום, תשלום חד פעמי",
+    included: [
+      "ארבעה שיעורים פרטיים בזום, אחד על אחד",
+      "שיעור אבחון: עוברים ביחד על הטעויות ומוצאים איפה הולכות הנקודות",
+      "תוכנית אישית עד המבחן, וסיכום כתוב אחרי כל שיעור",
+      "גישה מלאה לאתר, כולל התרגולים והסימולציות, ללא הגבלת זמן",
+      "קשר ישיר בוואטסאפ עם המורה",
+    ],
+    excluded: [],
+    unlisted: true,
+  },
+  {
+    // A personal offer: six weekly Zoom lessons with weekly practice sheets, for a student below ~100. Sent as a link.
+    id: "success",
+    name: "מסלול הצלחה",
+    priceIls: 600,
+    priceUnit: "ל-6 שיעורים פרטיים בזום, תשלום חד פעמי",
+    included: [
+      "שישה שיעורים פרטיים בזום, אחד על אחד, עם הקלטה",
+      "דף תרגול ומשימות לכל שבוע",
+      "גישה מלאה לאתר, כולל התרגולים והסימולציות, ללא הגבלת זמן",
+      "קשר ישיר בוואטסאפ עם המורה, עד המבחן",
+    ],
+    excluded: [],
+    unlisted: true,
   },
 ];
 
@@ -123,6 +175,8 @@ export const checkoutCopy = {
       "הגישה לאתר נפתחת מיד אחרי התשלום. אחר כך אהד מתקשר אליכם לתאם את המחזור.",
     private:
       "הגישה לאתר נפתחת מיד אחרי התשלום. אחר כך נחזור אליכם לתאם את השיעורים הפרטיים.",
+    honors: "הגישה לאתר נפתחת מיד אחרי התשלום. אחר כך אהד חוזר אליכם לקבוע את שיעור האבחון.",
+    success: "הגישה לאתר נפתחת מיד אחרי התשלום. אחר כך אהד חוזר אליכם לקבוע את השיעור הראשון.",
   } satisfies Record<ProductId, string>,
   backToPricing: "חזרה למחירים",
 };
@@ -154,7 +208,11 @@ export const pricingCopy = {
   faq: [
     {
       q: "מה כלול בכל אפשרות?",
-      a: "בסמינר: מפגשי זום בקבוצה קטנה, תרגול יומי באתר, מבחן פתיחה ומבחן סיום, קבוצת וואטסאפ עם המחזור, וליווי אישי מלא 24/7.",
+      a: `בסמינר: מפגשי זום בקבוצה קטנה עם הקלטה לכל מפגש, תרגול יומי באתר, מבחן פתיחה ומבחן סיום, קבוצת וואטסאפ עם המחזור, ו${SUPPORT_TEXT}.`,
+    },
+    {
+      q: "מה אם לא השתפרתי?",
+      a: `${GUARANTEE_TITLE} ${GUARANTEE_CONDITION}. ${GUARANTEE_DETAILS}`,
     },
     {
       q: "מה אם אני צריך לבטל?",

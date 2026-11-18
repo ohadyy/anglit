@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { trackMeta } from "@/components/MetaPixel";
 import { AuthShell, authInput as input } from "@/components/AuthShell";
 import { signIn } from "@/lib/auth-client";
+import { clearOnboarding, readOnboarding } from "@/lib/onboarding";
 
 export function CompleteProfileForm({ next, name }: { next: string; name: string }) {
   const router = useRouter();
@@ -15,6 +16,14 @@ export function CompleteProfileForm({ next, name }: { next: string; name: string
   const [marketing, setMarketing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // New Google users answer the /onboarding questions first, same as phone sign-ups
+  const [answered, setAnswered] = useState(false);
+  useEffect(() => {
+    if (!readOnboarding()) {
+      router.replace(`/onboarding?next=${encodeURIComponent(`/complete-profile?next=${encodeURIComponent(next)}`)}`);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- read the browser's saved answers once
+    } else setAnswered(true);
+  }, [router, next]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -23,7 +32,8 @@ export function CompleteProfileForm({ next, name }: { next: string; name: string
     const res = await fetch("/api/account/complete-profile", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone, birthDate, terms, marketing }),
+      // A Google sign-up carries the answers from /onboarding (exam date, scores) to the new account
+      body: JSON.stringify({ phone, birthDate, terms, marketing, onboarding: readOnboarding() }),
     });
     if (!res.ok) {
       setLoading(false);
@@ -49,8 +59,11 @@ export function CompleteProfileForm({ next, name }: { next: string; name: string
     setLoading(false);
     // Phone is real now, so this is a genuine lead
     trackMeta("Lead", crypto.randomUUID());
+    clearOnboarding();
     router.push(next);
   }
+
+  if (!answered) return null;
 
   return (
     <AuthShell>
@@ -105,6 +118,9 @@ export function CompleteProfileForm({ next, name }: { next: string; name: string
           >
             {loading ? "שומר..." : "המשך"}
           </button>
+          <Link href={next} className="flex min-h-11 items-center justify-center text-sm underline opacity-70">
+            דלגו בינתיים, אפשר להשלים אחר כך
+          </Link>
         </form>
       </div>
     </AuthShell>

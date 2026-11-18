@@ -2,7 +2,19 @@
 
 export const GROUP_SIZE_TEXT = "עד 6 אנשים";
 
-export const GUARANTEE_CONDITION = "בתנאי שהשתתפתם בכל המפגשים והגשתם את התרגולים";
+// The one guarantee: the student chooses a full refund or the next cohort free. Every text pulls from here.
+export const GUARANTEE_CEILING = 130;
+export const GUARANTEE_CLAIM_DAYS = 10;
+
+export const GUARANTEE_TITLE = "לא השתפרתם בין מבחן הפתיחה למבחן הסיום? בוחרים: החזר כספי מלא, או המחזור הבא בחינם.";
+
+export const GUARANTEE_CONDITION = `בתנאי שהשתתפתם בכל המפגשים, הגשתם את התרגולים, וקיבלתם פחות מ-${GUARANTEE_CEILING} במבחן הפתיחה`;
+
+/** What counts as improving, and when to ask. Shown in the terms and the FAQ. */
+export const GUARANTEE_DETAILS = `השתפרתם אם קיבלתם בסימולציה מלאה באתר, שבוצעה עד ${GUARANTEE_CLAIM_DAYS} ימים ממבחן הסיום, ציון גבוה בנקודה אחת לפחות מציון מבחן הפתיחה. את הבקשה להחזר או למחזור חינם מגישים תוך ${GUARANTEE_CLAIM_DAYS} ימים ממבחן הסיום.`;
+
+/** Support lasts until the student's real exam, by WhatsApp and phone calls with the teacher. */
+export const SUPPORT_TEXT = "ליווי אישי עד יום המבחן, בוואטסאפ ובשיחות טלפון עם אהד";
 
 export const REFUND_DAYS = 14;
 
@@ -52,7 +64,7 @@ export const SEMINAR_SESSIONS_TEXT = `${countWord(SEMINAR.sessions, "m")} מפג
 // Steps of "how the week works" that the home page and the ads page word identically
 export const PERSONAL_GUIDANCE_STEP = {
   step: "ליווי והתייעצות אישית עם אהד",
-  text: "אהד זמין לכל שאלה ולכל עזרה שצריך, ויש גם התייעצות אישית איתו לאורך השבוע.",
+  text: "אהד זמין לכל שאלה ולכל עזרה שצריך, בוואטסאפ ובשיחות טלפון, לא רק בשבוע הסמינר אלא עד יום המבחן.",
 };
 export const GROUP_CHAT_STEP = {
   step: "קבוצה משותפת",

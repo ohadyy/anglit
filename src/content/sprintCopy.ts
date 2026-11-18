@@ -6,10 +6,13 @@ import {
   countWord,
   GROUP_CHAT_STEP,
   GUARANTEE_CONDITION,
+  GUARANTEE_DETAILS,
+  GUARANTEE_TITLE,
   PERSONAL_GUIDANCE_STEP,
   REFUND_SUMMARY,
   SEMINAR,
   SEMINAR_SESSIONS_TEXT,
+  SUPPORT_TEXT,
 } from "./facts";
 import { getProduct } from "./pricingCopy";
 
@@ -57,7 +60,7 @@ export const sprintCopy = {
     `${SEMINAR_SESSIONS_TEXT} בקבוצה קטנה, עם הקלטה לכל מפגש`,
     "תרגול יומי באתר, עם הסבר לכל שאלה",
     "קבוצת וואטסאפ עם המחזור",
-    "ליווי צמוד אישי של אהד, זמין לכל שאלה ולכל עזרה שצריך",
+    SUPPORT_TEXT,
     "גישה לכל התרגולים והסימולציות באתר",
     "״הטעויות שלי״: כל שאלה שטעיתם בה חוזרת עד שעונים נכון",
     "מבחן פתיחה ומבחן סיום, כדי למדוד את השיפור",
@@ -74,7 +77,7 @@ export const sprintCopy = {
   objections: [
     {
       q: "כמה זה עולה, ומה מקבלים?",
-      a: `המחזור הקרוב עולה ${getProduct("course")!.priceIls} ₪, עשירית מעלות קורס אנגלית באוניברסיטה שעולה בממוצע ${COST_PER_COURSE_TEXT}. בתמורה מקבלים ${SEMINAR_SESSIONS_TEXT} בקבוצה קטנה עם הקלטה לכל מפגש, תרגול יומי עם הסבר לכל שאלה, וקבוצת וואטסאפ לאורך השבוע. ואם אתם עדיין חוששים שזה לא יעזור לכם, אנחנו כל כך בטוחים בשיטה, שאם לא השתפרתם בין המבחנים, המחזור הבא עלינו, ${GUARANTEE_CONDITION}.`,
+      a: `המחזור הקרוב עולה ${getProduct("course")!.priceIls} ₪, עשירית מעלות קורס אנגלית באוניברסיטה שעולה בממוצע ${COST_PER_COURSE_TEXT}. בתמורה מקבלים ${SEMINAR_SESSIONS_TEXT} בקבוצה קטנה עם הקלטה לכל מפגש, תרגול יומי עם הסבר לכל שאלה, וקבוצת וואטסאפ של המחזור, וגם ליווי אישי של אהד עד יום המבחן. ואם אתם עדיין חוששים שזה לא יעזור לכם: ${GUARANTEE_TITLE} ${GUARANTEE_CONDITION}.`,
     },
     {
       q: "אין לי זמן, ואני לא בטוח שאצליח להגיע לכל המפגשים.",
@@ -118,7 +121,7 @@ export const sprintCopy = {
     },
     {
       q: "מה אם לא משתפרים?",
-      a: `משווים בין מבחן הפתיחה למבחן הסיום. לא השתפרתם? מצטרפים למחזור הבא בחינם, ${GUARANTEE_CONDITION}.`,
+      a: `משווים בין מבחן הפתיחה למבחן הסיום. ${GUARANTEE_TITLE} ${GUARANTEE_CONDITION}. ${GUARANTEE_DETAILS}`,
     },
     {
       q: "מה קורה אחרי התשלום?",

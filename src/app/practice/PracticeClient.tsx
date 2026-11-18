@@ -17,6 +17,9 @@ import { countWord } from "@/content/facts";
 import type { QuestionNote } from "@/content/questionNotes";
 import { FreeNextCard } from "@/components/FreeNextCard";
 import { MiniTile, PREVIEWS } from "@/components/MiniPreviews";
+import { screenVoice as sv } from "@/content/copy";
+import { pick } from "@/lib/gender";
+import { useGender } from "@/lib/useGender";
 import { DailyQuestion } from "./daily/DailyQuestion";
 
 export type PracticeMode = QuestionType | "free" | "mistakes" | "connectors" | "affixes";
@@ -294,10 +297,11 @@ function LevelPicker({ type, picker }: { type: PracticeMode; picker: NonNullable
 }
 
 function Summary({ correct, total, mode, paid }: { correct: number; total: number; mode: PracticeMode; paid: boolean }) {
+  const gender = useGender();
   const others = ALL_TYPES.filter((t) => t !== mode);
   return (
     <div className="rise">
-      <p className="font-hand text-2xl opacity-70">סיימתם את התרגול</p>
+      <p className="font-hand text-2xl opacity-70">{pick(gender, sv.practiceDone)}</p>
       <p className="mt-2 text-6xl font-bold tabular-nums">
         {correct}
         <span className="opacity-40">/{total}</span>
@@ -307,7 +311,7 @@ function Summary({ correct, total, mode, paid }: { correct: number; total: numbe
           ? "מושלם. עכשיו נשאר רק לשמור על זה בזמן אמת."
           : correct >= total * 0.7
             ? "בסיס טוב. בשבוע של עבודה ממוקדת סוגרים את הפער."
-            : "אם אתם רוצים לענות נכון על כל השאלות בזמן אמת, אנחנו מזמינים אתכם להצטרף למחזור הקרוב של \"7 ימים לאמירנט\"."}
+            : pick(gender, sv.practiceJoin)}
       </p>
 
       {mode === "free" && !paid ? (

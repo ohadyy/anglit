@@ -35,6 +35,10 @@ export const auth = betterAuth({
       "/sign-up/email": { window: 15 * 60, max: 10 },
     },
   },
+  // The browser cookie keeps the expiry it got at sign-in: server pages refresh the DB row first, and a
+  // server component cannot write cookies, so the sliding refresh never reached the browser and everyone
+  // was signed out exactly 7 days after logging in. A long fixed window avoids that.
+  session: { expiresIn: 60 * 60 * 24 * 30, updateAge: 60 * 60 * 24 * 30 },
   baseURL: process.env.BETTER_AUTH_URL,
   secret: process.env.BETTER_AUTH_SECRET,
   user: {
@@ -43,11 +47,15 @@ export const auth = betterAuth({
       birthDate: { type: "string", required: false },
       termsAccepted: { type: "boolean", required: false, defaultValue: false, input: true },
       marketingConsent: { type: "boolean", required: false, defaultValue: false, input: true },
-      // Asked in a one-time gate right after sign-up, so follow-up WhatsApp messages can
+      // Asked in /onboarding before sign-up, so follow-up WhatsApp messages can
       // reference a real date/score instead of being generic. Both optional — most people
       // signing up haven't taken the exam yet or don't know a date.
       examDate: { type: "string", required: false, input: true },
       priorScore: { type: "number", required: false, input: true },
+      // The score the student is aiming for, asked in /onboarding before sign-up
+      targetScore: { type: "number", required: false, input: true },
+      // "f" or "m": the wording of the logged-in site follows it (lib/gender.ts)
+      gender: { type: "string", required: false, input: true },
     },
   },
   databaseHooks: {
